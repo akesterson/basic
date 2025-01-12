@@ -387,7 +387,6 @@ func (self *BasicScanner) addToken(token BasicTokenType, lexeme string) {
 	self.tokens[self.nexttoken] = BasicToken{
 		tokentype: token,
 		lineno: self.context.lineno,
-		literal: "",
 		lexeme: lexeme}
 	fmt.Printf("%+v\n", self.tokens[self.nexttoken])
 	self.nexttoken += 1

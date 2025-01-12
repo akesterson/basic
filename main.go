@@ -65,6 +65,7 @@ func main() {
 	context.init()
 	scanner.init(context)
 	//scanner.repl(os.Stdin)
+	/*
 	scanner.scanTokens("10 PRINT \"HELLO\"")
 	scanner.scanTokens("20 ABC#=3+2")
 	scanner.scanTokens("30 XYZ%=(3+(4*5))")
@@ -72,4 +73,16 @@ func main() {
 	scanner.scanTokens("40 REM THIS IS A COMMENT !!!!")
 	scanner.scanTokens("50 ABC# = (XYZ% * ABC#)")
 	scanner.scanTokens("60 PRINT ABC#")
+	*/
+	var exprleaf BasicASTLeaf
+	var unaryleaf BasicASTLeaf
+	var unaryliteralleaf BasicASTLeaf
+	var groupleaf BasicASTLeaf
+	var groupleafexpr BasicASTLeaf
+	unaryliteralleaf.newLiteralInt(123)
+	unaryleaf.newUnary(MINUS, &unaryliteralleaf)
+	groupleafexpr.newLiteralFloat(45.67)
+	groupleaf.newGrouping(&groupleafexpr)
+	exprleaf.newBinary(&unaryleaf, STAR, &groupleaf)
+	fmt.Println(exprleaf.toString())
 }
