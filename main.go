@@ -62,10 +62,12 @@ func basicError(line int, errno BasicError, message string) {
 func main() {
 	var context BasicContext;
 	var scanner BasicScanner;
+	var parser BasicParser;
 	context.init()
-	scanner.init(context)
+	parser.init(&context)
+	scanner.init(&context, &parser)
 	//scanner.repl(os.Stdin)
-	/*
+	
 	scanner.scanTokens("10 PRINT \"HELLO\"")
 	scanner.scanTokens("20 ABC#=3+2")
 	scanner.scanTokens("30 XYZ%=(3+(4*5))")
@@ -73,16 +75,33 @@ func main() {
 	scanner.scanTokens("40 REM THIS IS A COMMENT !!!!")
 	scanner.scanTokens("50 ABC# = (XYZ% * ABC#)")
 	scanner.scanTokens("60 PRINT ABC#")
-	*/
-	var exprleaf BasicASTLeaf
+	
+	/*
+	   var exprleaf BasicASTLeaf
 	var unaryleaf BasicASTLeaf
 	var unaryliteralleaf BasicASTLeaf
 	var groupleaf BasicASTLeaf
 	var groupleafexpr BasicASTLeaf
-	unaryliteralleaf.newLiteralInt(123)
-	unaryleaf.newUnary(MINUS, &unaryliteralleaf)
-	groupleafexpr.newLiteralFloat(45.67)
-	groupleaf.newGrouping(&groupleafexpr)
-	exprleaf.newBinary(&unaryleaf, STAR, &groupleaf)
+	err := unaryliteralleaf.newLiteralInt(123)
+	if ( err != nil ) {
+		panic(err)
+	}
+	err = unaryleaf.newUnary(MINUS, &unaryliteralleaf)
+	if ( err != nil ) {
+		panic(err)
+	}
+	err = groupleafexpr.newLiteralFloat(45.67)
+	if ( err != nil ) {
+		panic(err)
+	}
+	err = groupleaf.newGrouping(&groupleafexpr)
+	if ( err != nil ) {
+		panic(err)
+	}
+	err = exprleaf.newBinary(&unaryleaf, STAR, &groupleaf)
+	if ( err != nil ) {
+		panic(err)
+	}
 	fmt.Println(exprleaf.toString())
+	*/
 }

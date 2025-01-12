@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"errors"
 )
 
 /*
-
    expression -> literal
 	       | unary
 	       | binary
@@ -18,6 +18,18 @@ import (
    binary      -> expression operator expression
    operator    -> "=" | "<" | ">" | "<=" | ">=" | "<>"
                 | "+" | "-" | "*" | "/"
+
+   The crafting interpreters book proposes this grammar ... I'm not sure it actually
+   improves beyond the simpler grammar we already have, for BASIC:
+   
+   equality   -> BASIC does not have an explicit equality operator useful as a generic operator 
+
+   comparison -> term [ < <= <> > >= ] term
+   term       -> factor ( ( "-" | "+" ) factor )*
+   factor     -> unary ( ( "/" | "*" ) unary )*
+   unary      -> ( "NOT" | "-" ) primary
+   primary    -> INT | FLOAT | STRING | "(" expression ")"
+
 */
 
 type BasicASTLeafType int
@@ -30,6 +42,10 @@ const (
 	LEAF_UNARY
 	LEAF_BINARY
 	LEAF_GROUPING
+	LEAF_EQUALITY
+	LEAF_COMPARISON
+	LEAF_TERM
+	LEAF_PRIMARY
 )
 
 type BasicASTLeaf struct {
@@ -53,37 +69,92 @@ func (self *BasicASTLeaf) init(leaftype BasicASTLeafType) {
 	self.expr = nil
 }
 
-func (self *BasicASTLeaf) newBinary(left *BasicASTLeaf, op BasicTokenType, right *BasicASTLeaf) {
+func (self *BasicASTLeaf) newPrimary(group *BasicASTLeaf, literal_string *string, literal_int *int, literal_float *float64) error {
+	self.init(LEAF_PRIMARY)
+	if ( group != nil ) {
+		self.expr = group
+		return nil
+	} else if ( literal_string != nil ) {
+		self.literal_string = *literal_string
+		return nil
+	} else if ( literal_int != nil ) {
+		self.literal_int = *literal_int
+		return nil
+	} else if ( literal_float != nil ) {
+		self.literal_float = *literal_float
+		return nil
+	}
+	return errors.New("Gramattically incorrect primary leaf")
+}
+
+func (self *BasicASTLeaf) newComparison(left *BasicASTLeaf, op BasicTokenType, right *BasicASTLeaf) error {
+	if ( left == nil || right == nil ) {
+		return errors.New("nil pointer arguments")
+	}
+	self.init(LEAF_COMPARISON)
+	self.left = left
+	self.right = right
+	switch (op) {
+	case LESS_THAN: fallthrough
+	case LESS_THAN_EQUAL: fallthrough
+	case NOT_EQUAL: fallthrough
+	case GREATER_THAN: fallthrough
+	case GREATER_THAN_EQUAL:
+		return nil
+	default:
+		return errors.New(fmt.Sprintf("Invalid operator %d for comparison", op))
+	}
+}
+
+func (self *BasicASTLeaf) newBinary(left *BasicASTLeaf, op BasicTokenType, right *BasicASTLeaf) error {
+	if ( left == nil || right == nil ) {
+		return errors.New("nil pointer arguments")
+	}
 	self.init(LEAF_BINARY)
 	self.left = left
 	self.right = right
 	self.operator = op
+	return nil
 }
 
-func (self *BasicASTLeaf) newUnary(op BasicTokenType, right *BasicASTLeaf) {
+func (self *BasicASTLeaf) newUnary(op BasicTokenType, right *BasicASTLeaf) error {
+	if ( right == nil ) {
+		return errors.New("nil pointer arguments")
+	}
 	self.init(LEAF_UNARY)
+	if ( right.leaftype != LEAF_PRIMARY ) {
+		return errors.New("Right hand side of unary grammar requires primary leaftype")
+	}
 	self.right = right
 	self.operator = op
+	return nil
 }
 
-func (self *BasicASTLeaf) newGrouping(expr *BasicASTLeaf) {
+func (self *BasicASTLeaf) newGrouping(expr *BasicASTLeaf) error {
+	if ( expr == nil ) {
+		return errors.New("nil pointer arguments")
+	}
 	self.init(LEAF_GROUPING)
 	self.expr = expr
+	return nil
 }
 
-func (self *BasicASTLeaf) newLiteralInt(val int) {
+func (self *BasicASTLeaf) newLiteralInt(val int) error {
 	self.init(LEAF_LITERAL_INT)
 	self.literal_int = val
+	return nil
 }
 
-func (self *BasicASTLeaf) newLiteralFloat(val float64) {
+func (self *BasicASTLeaf) newLiteralFloat(val float64) error {
 	self.init(LEAF_LITERAL_FLOAT)
 	self.literal_float = val
+	return nil
 }
 
-func (self *BasicASTLeaf) newLiteralString(val string) {
+func (self *BasicASTLeaf) newLiteralString(val string) error {
 	self.init(LEAF_LITERAL_STRING)
 	self.literal_string = val
+	return nil
 }
 
 func (self *BasicASTLeaf) toString() string {
@@ -108,7 +179,7 @@ func (self *BasicASTLeaf) toString() string {
 	case LEAF_LITERAL_FLOAT:
 		return fmt.Sprintf("%f", self.literal_float)
 	case LEAF_LITERAL_STRING:
-		return fmt.Sprintf("%s", self.literal_string)
+ 		return fmt.Sprintf("%s", self.literal_string)
 	case LEAF_IDENTIFIER:
 		return fmt.Sprintf("%s", self.identifier)
 	case LEAF_UNARY:

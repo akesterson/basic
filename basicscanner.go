@@ -205,20 +205,23 @@ type BasicScanner struct {
 	c rune
 	start int
 	tokentype BasicTokenType
-	context BasicContext
+	context *BasicContext
+	parser *BasicParser
 	line string
-	tokens [16]BasicToken
-	nexttoken int
 	hasError bool
 	reservedwords map[string]BasicTokenType
 }
 
-func (self *BasicScanner) init(context BasicContext) {
+func (self *BasicScanner) init(context *BasicContext, parser *BasicParser) error {
+	if ( context == nil || parser == nil ) {
+		return errors.New("nil pointer argument")
+	}
 	self.current = 0
 	self.start = 0
 	self.tokentype = UNDEFINED
 	self.context = context
-	self.nexttoken = 0
+	self.parser = parser
+	self.parser.nexttoken = 0
 	self.hasError = false
 	self.reservedwords = make(map[string]BasicTokenType)
 	self.reservedwords["REM"] = REM
@@ -381,15 +384,16 @@ func (self *BasicScanner) init(context BasicContext) {
 	self.reservedwords["WIDTH"] = WIDTH
 	self.reservedwords["WINDOW"] = WINDOW
 	self.reservedwords["XOR"] = XOR
+	return nil
 }
 
 func (self *BasicScanner) addToken(token BasicTokenType, lexeme string) {
-	self.tokens[self.nexttoken] = BasicToken{
+	self.parser.token[self.parser.nexttoken] = BasicToken{
 		tokentype: token,
 		lineno: self.context.lineno,
 		lexeme: lexeme}
-	fmt.Printf("%+v\n", self.tokens[self.nexttoken])
-	self.nexttoken += 1
+	fmt.Printf("%+v\n", self.parser.token[self.parser.nexttoken])
+	self.parser.nexttoken += 1
 }
 
 func (self *BasicScanner) getLexeme() string {
@@ -459,7 +463,7 @@ func (self *BasicScanner) matchString() {
 }
 
 func (self *BasicScanner) matchNumber() {
-	var linenumber bool = (self.nexttoken == 0)
+	var linenumber bool = (self.parser.nexttoken == 0)
 	self.tokentype = LITERAL_INT
 	for !self.isAtEnd() {
 		// Discard the error, we're checking isAtEnd()
@@ -531,7 +535,7 @@ func (self *BasicScanner) scanTokens(line string) {
 
 	var c rune
 	self.line = line
-	self.nexttoken = 0
+	self.parser.nexttoken = 0
 	self.current = 0
 	self.start = 0
 	self.hasError = false
