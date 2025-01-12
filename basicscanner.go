@@ -185,6 +185,7 @@ func (self *BasicScanner) matchNumber() {
 func (self *BasicScanner) matchIdentifier() {
 	var matchedReservedWord = false
 	var identifierSoFar string
+	var reservedIdentifier BasicTokenType
 	for !self.isAtEnd() {
 		// Discard the error, we're checking isAtEnd()
 		c, _ := self.peek()
@@ -192,7 +193,8 @@ func (self *BasicScanner) matchIdentifier() {
 			self.current += 1
 		} else {
 			identifierSoFar = strings.ToUpper(self.getLexeme())
-			if ( self.reservedwords[identifierSoFar] != UNDEFINED ) {
+			reservedIdentifier = self.reservedwords[identifierSoFar]
+			if ( reservedIdentifier != UNDEFINED ) {
 				matchedReservedWord = true
 			}
 			
@@ -217,6 +219,8 @@ func (self *BasicScanner) matchIdentifier() {
 	if ( self.tokentype != IDENTIFIER && matchedReservedWord ) {
 		basicError(self.context.lineno, SYNTAX, "Reserved word in variable name\n")
 		self.hasError = true
+	} else if ( reservedIdentifier != UNDEFINED ) {
+		self.tokentype = reservedIdentifier
 	}
 }
 
