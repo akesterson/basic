@@ -73,4 +73,5 @@ func main() {
 	scanner.scanTokens("20 ABC#=3+2")
 	scanner.scanTokens("30 XYZ%=(3+(4*5))")
 	scanner.scanTokens("40 PRINT# = 123456")
+	scanner.scanTokens("40 REM THIS IS A COMMENT !!!!")
 }

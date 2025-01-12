@@ -42,9 +42,10 @@ const (
 	AND                                  // 23
 	OR                                   // 24
 	NOT                                  // 25
-	PRINT                                // 26
-	GOTO                                 // 27
-	REM                                  // 28
+	REM                                  // 26
+	// -------- BUILTIN FUNCTIONS ------------
+	PRINT                                // 27
+	GOTO                                 // 28
 )
 
 type BasicScanner struct {
@@ -68,12 +69,12 @@ func (self *BasicScanner) init(context BasicContext) {
 	self.nexttoken = 0
 	self.hasError = false
 	self.reservedwords = make(map[string]BasicTokenType)
-	self.reservedwords["PRINT"] = PRINT
-	self.reservedwords["GOTO"] = GOTO
 	self.reservedwords["REM"] = REM
 	self.reservedwords["AND"] = AND
 	self.reservedwords["OR"] = OR
 	self.reservedwords["NOT"] = NOT
+	self.reservedwords["PRINT"] = PRINT
+	self.reservedwords["GOTO"] = GOTO
 }
 
 func (self *BasicScanner) addToken(token BasicTokenType, lexeme string) {
@@ -183,7 +184,6 @@ func (self *BasicScanner) matchNumber() {
 }
 
 func (self *BasicScanner) matchIdentifier() {
-	var matchedReservedWord = false
 	var identifierSoFar string
 	var reservedIdentifier BasicTokenType
 	for !self.isAtEnd() {
@@ -194,9 +194,6 @@ func (self *BasicScanner) matchIdentifier() {
 		} else {
 			identifierSoFar = strings.ToUpper(self.getLexeme())
 			reservedIdentifier = self.reservedwords[identifierSoFar]
-			if ( reservedIdentifier != UNDEFINED ) {
-				matchedReservedWord = true
-			}
 			
 			switch (c) {
 			case '$':
@@ -216,9 +213,10 @@ func (self *BasicScanner) matchIdentifier() {
 		}
 	}
 	// Look for reserved words in variable identifiers
-	if ( self.tokentype != IDENTIFIER && matchedReservedWord ) {
+	if ( self.tokentype != IDENTIFIER && reservedIdentifier != UNDEFINED ) {
 		basicError(self.context.lineno, SYNTAX, "Reserved word in variable name\n")
 		self.hasError = true
+		return
 	} else if ( reservedIdentifier != UNDEFINED ) {
 		self.tokentype = reservedIdentifier
 	}
@@ -270,14 +268,18 @@ func (self *BasicScanner) scanTokens(line string) {
 			}
 		}
 		if ( self.tokentype != UNDEFINED && self.hasError == false ) {
-			self.addToken(self.tokentype, self.getLexeme())
-			if ( self.tokentype == LITERAL_STRING ) {
-				// String parsing stops on the final ",
-				// move past it.
-				self.current += 1
+			if ( self.tokentype == REM ) {
+				return
+			} else {
+				self.addToken(self.tokentype, self.getLexeme())
+				if ( self.tokentype == LITERAL_STRING ) {
+					// String parsing stops on the final ",
+					// move past it.
+					self.current += 1
+				}
+				self.tokentype = UNDEFINED
+				self.start = self.current
 			}
-			self.tokentype = UNDEFINED
-			self.start = self.current
 		}
 	}
 }
