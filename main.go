@@ -47,14 +47,10 @@ func (self BasicContext) init() {
 
 func errorCodeToString(errno BasicError) string {
 	switch (errno) {
-	case IO:
-		return "IO ERROR"
-	case PARSE:
-		return "PARSE ERROR"
-	case EXECUTE:
-		return "EXEC ERROR"
-	case SYNTAX:
-		return "SYNTAX ERROR"
+	case IO: return "IO ERROR"
+	case PARSE: return "PARSE ERROR"
+	case EXECUTE: return "EXEC ERROR"
+	case SYNTAX: return "SYNTAX ERROR"
 	}
 	return "UNDEF"
 }
@@ -74,4 +70,6 @@ func main() {
 	scanner.scanTokens("30 XYZ%=(3+(4*5))")
 	scanner.scanTokens("40 PRINT# = 123456")
 	scanner.scanTokens("40 REM THIS IS A COMMENT !!!!")
+	scanner.scanTokens("50 ABC# = (XYZ% * ABC#)")
+	scanner.scanTokens("60 PRINT ABC#")
 }
