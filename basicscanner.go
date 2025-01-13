@@ -206,13 +206,13 @@ type BasicScanner struct {
 	start int
 	tokentype BasicTokenType
 	context *BasicContext
-	parser *BasicParser
+	parser *LanguageParser
 	line string
 	hasError bool
 	reservedwords map[string]BasicTokenType
 }
 
-func (self *BasicScanner) init(context *BasicContext, parser *BasicParser) error {
+func (self *BasicScanner) init(context *BasicContext, parser *LanguageParser) error {
 	if ( context == nil || parser == nil ) {
 		return errors.New("nil pointer argument")
 	}

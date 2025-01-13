@@ -62,7 +62,7 @@ func basicError(line int, errno BasicError, message string) {
 func main() {
 	var context BasicContext;
 	var scanner BasicScanner;
-	var parser BasicParser;
+	var parser LoxParser;
 	context.init()
 	parser.init(&context)
 	scanner.init(&context, &parser)
