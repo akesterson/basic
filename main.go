@@ -39,7 +39,7 @@ func main() {
 	/*
 	var err error;
 	var leaf *BasicASTLeaf;
-	scanner.scanTokens("10 NOT 8")
+	scanner.scanTokens("10 \"Hello\" < \"World\"")
 	leaf, err = parser.parse()
 	if ( err != nil ) {
 		fmt.Println(fmt.Sprintf("? %s", err))
@@ -48,7 +48,8 @@ func main() {
 		fmt.Println(fmt.Sprintf("? %s", leaf.toString()))
 	}
 	runtime.interpret(leaf)
-		scanner.scanTokens("10 PRINT \"HELLO\"")
+	
+	scanner.scanTokens("10 PRINT \"HELLO\"")
 	scanner.scanTokens("20 ABC#=3+2")
 	scanner.scanTokens("30 XYZ%=(3+(4*5))")
 	scanner.scanTokens("40 PRINT# = 123456")

@@ -44,6 +44,7 @@ func (self *BasicValue) toString() string {
 	case TYPE_STRING: return self.stringval
 	case TYPE_INTEGER: return fmt.Sprintf("%d", self.intval)
 	case TYPE_FLOAT: return fmt.Sprintf("%f", self.floatval)
+	case TYPE_BOOLEAN: return fmt.Sprintf("%t", (self.boolvalue == BASIC_TRUE))
 	}
 	return "(UNDEFINED STRING REPRESENTATION)"
 }
@@ -141,7 +142,7 @@ func (self *BasicValue) mathMultiply(rval *BasicValue) error {
 		return errors.New("nil rval")
 	}
 	if ( self.valuetype == TYPE_STRING || rval.valuetype == TYPE_STRING ) {
-		return errors.New("Cannot perform subtraction on strings")
+		return errors.New("Cannot perform multiplication on strings")
 	}
 	if ( self.valuetype == TYPE_INTEGER ) {
 		self.intval = self.intval * (rval.intval + int64(rval.floatval))
@@ -249,6 +250,7 @@ func (self *BasicValue) basicBoolValue(result bool) {
 	self.valuetype = TYPE_BOOLEAN
 	if ( result == true ) {
 		self.boolvalue = BASIC_TRUE
+		return
 	}
 	self.boolvalue = BASIC_FALSE
 }
@@ -376,6 +378,7 @@ func (self *BasicRuntime) interpret(expr *BasicASTLeaf) {
 	value, err = self.evaluate(expr)
 	if ( err != nil ) {
 		fmt.Println(err)
+		return
 	}
 	fmt.Println(value.toString())
 }
