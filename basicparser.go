@@ -7,11 +7,11 @@ import (
 
 type BasicParser struct {
 	context *BasicContext
-	tokens [16]BasicToken
+	tokens [32]BasicToken
 	errorToken *BasicToken
 	nexttoken int
 	curtoken int
-	leaves [16]BasicASTLeaf
+	leaves [32]BasicASTLeaf
 	nextleaf int
 }
 
@@ -128,7 +128,7 @@ func (self *BasicParser) logicalnot() (*BasicASTLeaf, error) {
 		if ( err != nil ) {
 			return nil, err
 		}
-		right, err = self.logicalnot()
+		right, err = self.relation()
 		if ( err != nil ) {
 			return nil, err
 		}

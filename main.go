@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	//"os"
+	"os"
 )
 
 type BasicError int
@@ -66,9 +66,9 @@ func main() {
 	context.init()
 	parser.init(&context)
 	scanner.init(&context, &parser)
-	//scanner.repl(os.Stdin)
+	scanner.repl(os.Stdin)
 
-		
+	/*	
 	var err error;
 	var leaf *BasicASTLeaf;
 	scanner.scanTokens("10 3 <> 6")
@@ -79,7 +79,7 @@ func main() {
 	if ( leaf != nil ) {
 		fmt.Println(fmt.Sprintf("? %s", leaf.toString()))
 	}
-	/*
+	
 	scanner.scanTokens("20 3 < 6")
 	leaf, err = parser.parse()
 	if ( err != nil ) {
