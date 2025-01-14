@@ -439,14 +439,20 @@ func (self *BasicScanner) isAtEnd() bool {
 	return (self.current >= len(self.line))
 }
 
-func (self *BasicScanner) matchNextChar(cm rune, truetype BasicTokenType, falsetype BasicTokenType) {
-	if ( self.current == len(self.line)-1 ) {
-		self.tokentype = falsetype
-	} else if ( rune(self.line[self.current+1]) == cm ) {
+func (self *BasicScanner) matchNextChar(cm rune, truetype BasicTokenType, falsetype BasicTokenType) bool {
+	var nc rune
+	var err error
+	nc, err = self.peek()
+	if ( err != nil ) {
+		return false
+	}
+	if ( nc == cm ) {
 		self.current += 1
 		self.tokentype = truetype
+		return true
 	} else {
 		self.tokentype = falsetype
+		return false
 	}
 }
 
@@ -562,10 +568,9 @@ func (self *BasicScanner) scanTokens(line string) {
 		case '=': self.tokentype = EQUAL
 		case ':': self.tokentype = COLON
 		case '<':
-			// I'm being lazy here.
-			// This is inefficient but PROBABLY not a problem.
-			self.matchNextChar('=', LESS_THAN_EQUAL, LESS_THAN)
-			self.matchNextChar('>', NOT_EQUAL, LESS_THAN)
+			if ( ! self.matchNextChar('=', LESS_THAN_EQUAL, LESS_THAN) ) {
+				self.matchNextChar('>', NOT_EQUAL, LESS_THAN)
+			}
 		case '>': self.matchNextChar('=', GREATER_THAN_EQUAL, GREATER_THAN)
 		case '"':
 			self.start = self.current
