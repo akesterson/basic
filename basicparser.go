@@ -314,7 +314,37 @@ func (self *BasicParser) unary() (*BasicASTLeaf, error) {
 		expr.newUnary(operator.tokentype, right)
 		return expr, nil
 	}
-	return self.primary()
+	return self.exponent()
+}
+
+func (self *BasicParser) exponent() (*BasicASTLeaf, error) {
+	var expr *BasicASTLeaf = nil
+	var primary *BasicASTLeaf = nil
+	var operator *BasicToken = nil
+	var right *BasicASTLeaf = nil
+	var err error = nil
+
+	primary, err = self.primary()
+	if ( err != nil ) {
+		return nil, err
+	}
+	for self.match(CARAT) {
+		operator, err = self.previous()
+		if ( err != nil ) {
+			return nil, err
+		}
+		right, err = self.primary()
+		if ( err != nil ) {
+			return nil, err
+		}
+		expr, err = self.newLeaf()
+		if ( err != nil ) {
+			return nil, err
+		}
+		expr.newBinary(primary, operator.tokentype, right)
+		return expr, nil
+	}
+	return primary, nil
 }
 
 func (self *BasicParser) primary() (*BasicASTLeaf, error) {

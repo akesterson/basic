@@ -31,7 +31,7 @@ const (
 	MINUS                                // 12
 	LEFT_SLASH                           // 13
 	STAR                                 // 14
-	UP_ARROW                             // 15
+	CARAT                                // 15
 	LITERAL_STRING                       // 16
 	LITERAL_INT                          // 17
 	LITERAL_FLOAT                        // 18
@@ -475,9 +475,7 @@ func (self *BasicScanner) matchNumber() {
 		c, _ := self.peek()
 		// We support hex so allow 'x' as a valid part of a number and let
 		// the parser detect invalid number formats
-		if ( !unicode.IsDigit(c) && c != 'x' ) {
-			break
-		} else if ( c == '.' ) {
+		if ( c == '.' ) {
 			nc, err := self.peekNext()
 			if ( err != nil || !unicode.IsDigit(nc) ) {
 				basicError(self.context.lineno, PARSE, "INVALID FLOATING POINT LITERAL\n")
@@ -485,6 +483,8 @@ func (self *BasicScanner) matchNumber() {
 				return
 			}
 			self.tokentype = LITERAL_FLOAT
+		} else if ( !unicode.IsDigit(c) && c != 'x' ) {
+			break
 		}
 		self.current += 1
 	}
@@ -551,7 +551,7 @@ func (self *BasicScanner) scanTokens(line string) {
 		// Discard the error, we're doing our own isAtEnd()
 		c, _ = self.advance()
 		switch (c) {
-		case '^': self.tokentype = UP_ARROW
+		case '^': self.tokentype = CARAT
 		case '(': self.tokentype = LEFT_PAREN
 		case ')': self.tokentype = RIGHT_PAREN
 		case '+': self.tokentype = PLUS
@@ -567,7 +567,9 @@ func (self *BasicScanner) scanTokens(line string) {
 			self.matchNextChar('=', LESS_THAN_EQUAL, LESS_THAN)
 			self.matchNextChar('>', NOT_EQUAL, LESS_THAN)
 		case '>': self.matchNextChar('=', GREATER_THAN_EQUAL, GREATER_THAN)
-		case '"': self.matchString()
+		case '"':
+			self.start = self.current
+			self.matchString()
 		case ' ':
 			self.start = self.current
 			break
@@ -581,7 +583,7 @@ func (self *BasicScanner) scanTokens(line string) {
 			} else if ( unicode.IsLetter(c) ) {
 				self.matchIdentifier()
 			} else {
-				basicError(self.context.lineno, PARSE, fmt.Sprintf("UKNOWN TOKEN %c\n", c))
+				basicError(self.context.lineno, PARSE, fmt.Sprintf("UNKNOWN TOKEN %c\n", c))
 				self.hasError = true
 				self.start = self.current
 			}

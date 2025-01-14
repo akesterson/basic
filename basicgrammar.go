@@ -195,6 +195,7 @@ func (self *BasicASTLeaf) toString() string {
 		case MINUS: return "-"
 		case STAR: return "*"
 		case LEFT_SLASH: return "/"
+		case CARAT: return "^"
 		}
 		return ""
 	}
