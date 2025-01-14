@@ -115,6 +115,7 @@ func (self *BasicParser) logicalandor() (*BasicASTLeaf, error) {
 			return nil, err
 		}
 		expr.newBinary(logicalnot, operator.tokentype, right)
+		return expr, nil
 	}
 	return logicalnot, nil
 }
