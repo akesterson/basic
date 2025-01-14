@@ -71,7 +71,7 @@ func main() {
 		
 	var err error;
 	var leaf *BasicASTLeaf;
-	scanner.scanTokens("10 A# < GOSUB")
+	scanner.scanTokens("10 GOSUB MYTHING")
 	leaf, err = parser.parse()
 	if ( err != nil ) {
 		fmt.Println(fmt.Sprintf("? %s", err))
