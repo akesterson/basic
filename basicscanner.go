@@ -198,6 +198,9 @@ const (
 	WINDOW // 178
 	XOR // 179
 	COLON // 180 (:)
+	EOL // 181 (End of Line)
+	EOF // 182 (End of File)
+	LINE_NUMBER // 183 (a literal integer that was encountered at the beginning of the line and thus is a line number)
 )
 
 type BasicScanner struct {
@@ -206,13 +209,13 @@ type BasicScanner struct {
 	start int
 	tokentype BasicTokenType
 	context *BasicContext
-	parser *LanguageParser
+	parser *BasicParser
 	line string
 	hasError bool
 	reservedwords map[string]BasicTokenType
 }
 
-func (self *BasicScanner) init(context *BasicContext, parser *LanguageParser) error {
+func (self *BasicScanner) init(context *BasicContext, parser *BasicParser) error {
 	if ( context == nil || parser == nil ) {
 		return errors.New("nil pointer argument")
 	}
@@ -223,176 +226,178 @@ func (self *BasicScanner) init(context *BasicContext, parser *LanguageParser) er
 	self.parser = parser
 	self.parser.nexttoken = 0
 	self.hasError = false
-	self.reservedwords = make(map[string]BasicTokenType)
-	self.reservedwords["REM"] = REM
-	self.reservedwords["AND"] = AND
-	self.reservedwords["OR"] = OR
-	self.reservedwords["NOT"] = NOT
-	self.reservedwords["PRINT"] = PRINT
-	self.reservedwords["GOTO"] = GOTO
-	self.reservedwords["ABS"] = ABS
-	self.reservedwords["APPEND"] = APPEND
-	self.reservedwords["ASC"] = ASC
-	self.reservedwords["ATN"] = ATN
-	self.reservedwords["AUTO"] = AUTO
-	self.reservedwords["BACKUP"] = BACKUP
-	self.reservedwords["BANK"] = BANK
-	self.reservedwords["BEGIN"] = BEGIN
-	self.reservedwords["BEND"] = BEND
-	self.reservedwords["BLOAD"] = BLOAD
-	self.reservedwords["BOOT"] = BOOT
-	self.reservedwords["BOX"] = BOX
-	self.reservedwords["BSAVE"] = BSAVE
-	self.reservedwords["BUMP"] = BUMP
-	self.reservedwords["CALLFN"] = CALLFN
-	self.reservedwords["CATALOG"] = CATALOG
-	self.reservedwords["CHAR"] = CHAR
-	self.reservedwords["CHARCIRCLE"] = CHARCIRCLE
-	self.reservedwords["CHR"] = CHR
-	self.reservedwords["CLOSE"] = CLOSE
-	self.reservedwords["CLR"] = CLR
-	self.reservedwords["CMD"] = CMD
-	self.reservedwords["COLLECT"] = COLLECT
-	self.reservedwords["COLLISION"] = COLLISION
-	self.reservedwords["COLOR"] = COLOR
-	self.reservedwords["CONCAT"] = CONCAT
-	self.reservedwords["CONT"] = CONT
-	self.reservedwords["COPY"] = COPY
-	self.reservedwords["COS"] = COS
-	self.reservedwords["DATA"] = DATA
-	self.reservedwords["DCLEAR"] = DCLEAR
-	self.reservedwords["DCLOSE"] = DCLOSE
-	self.reservedwords["DEFFN"] = DEFFN
-	self.reservedwords["DELETE"] = DELETE
-	self.reservedwords["DIM"] = DIM
-	self.reservedwords["DIRECTORY"] = DIRECTORY
-	self.reservedwords["DLOAD"] = DLOAD
-	self.reservedwords["DO"] = DO
-	self.reservedwords["DOPEN"] = DOPEN
-	self.reservedwords["DRAW"] = DRAW
-	self.reservedwords["DSAVE"] = DSAVE
-	self.reservedwords["DVERIFY"] = DVERIFY
-	self.reservedwords["ELSE"] = ELSE
-	self.reservedwords["END"] = END
-	self.reservedwords["ENVELOPE"] = ENVELOPE
-	self.reservedwords["ER"] = ER
-	self.reservedwords["ERR"] = ERR
-	self.reservedwords["EXIT"] = EXIT
-	self.reservedwords["FAST"] = FAST
-	self.reservedwords["FETCH"] = FETCH
-	self.reservedwords["FILTER"] = FILTER
-	self.reservedwords["FOR"] = FOR
-	self.reservedwords["FRE"] = FRE
-	self.reservedwords["GET"] = GET
-	self.reservedwords["GETIO"] = GETIO
-	self.reservedwords["GETKEY"] = GETKEY
-	self.reservedwords["GOSUB"] = GOSUB
-	self.reservedwords["GOTO"] = GOTO
-	self.reservedwords["GRAPHIC"] = GRAPHIC
-	self.reservedwords["GSHAPE"] = GSHAPE
-	self.reservedwords["HEADER"] = HEADER
-	self.reservedwords["HELP"] = HELP
-	self.reservedwords["HEX"] = HEX
-	self.reservedwords["IF"] = IF
-	self.reservedwords["INPUT"] = INPUT
-	self.reservedwords["INPUTIO"] = INPUTIO
-	self.reservedwords["INSTR"] = INSTR
-	self.reservedwords["INT"] = INT
-	self.reservedwords["JOY"] = JOY
-	self.reservedwords["KEY"] = KEY
-	self.reservedwords["LEFT"] = LEFT
-	self.reservedwords["LEN"] = LEN
-	self.reservedwords["LET"] = LET
-	self.reservedwords["LIST"] = LIST
-	self.reservedwords["LOAD"] = LOAD
-	self.reservedwords["LOCATE"] = LOCATE
-	self.reservedwords["LOG"] = LOG
-	self.reservedwords["LOOP"] = LOOP
-	self.reservedwords["MID"] = MID
-	self.reservedwords["MONITOR"] = MONITOR
-	self.reservedwords["MOVSPR"] = MOVSPR
-	self.reservedwords["NEW"] = NEW
-	self.reservedwords["NEXT"] = NEXT
-	self.reservedwords["ON"] = ON
-	self.reservedwords["OPENIO"] = OPENIO
-	self.reservedwords["PAINT"] = PAINT
-	self.reservedwords["PEEK"] = PEEK
-	self.reservedwords["PLAY"] = PLAY
-	self.reservedwords["POINTER"] = POINTER
-	self.reservedwords["POKE"] = POKE
-	self.reservedwords["POS"] = POS
-	self.reservedwords["POT"] = POT
-	self.reservedwords["PRINT"] = PRINT
-	self.reservedwords["PRINTIO"] = PRINTIO
-	self.reservedwords["PUDEF"] = PUDEF
-	self.reservedwords["RCLR"] = RCLR
-	self.reservedwords["RDOT"] = RDOT
-	self.reservedwords["READ"] = READ
-	self.reservedwords["RECORDIO"] = RECORDIO
-	self.reservedwords["RENAME"] = RENAME
-	self.reservedwords["RENUMBER"] = RENUMBER
-	self.reservedwords["RESTORE"] = RESTORE
-	self.reservedwords["RESUME"] = RESUME
-	self.reservedwords["RETURN"] = RETURN
-	self.reservedwords["RGR"] = RGR
-	self.reservedwords["RIGHT"] = RIGHT
-	self.reservedwords["RND"] = RND
-	self.reservedwords["RSPCOLOR"] = RSPCOLOR
-	self.reservedwords["RSPPOS"] = RSPPOS
-	self.reservedwords["RSPRITE"] = RSPRITE
-	self.reservedwords["RUN"] = RUN
-	self.reservedwords["RWINDOW"] = RWINDOW
-	self.reservedwords["SAVE"] = SAVE
-	self.reservedwords["SCALE"] = SCALE
-	self.reservedwords["SCNCLR"] = SCNCLR
-	self.reservedwords["SCRATCH"] = SCRATCH
-	self.reservedwords["SGN"] = SGN
-	self.reservedwords["SIN"] = SIN
-	self.reservedwords["SLEEP"] = SLEEP
-	self.reservedwords["SOUND"] = SOUND
-	self.reservedwords["SPC"] = SPC
-	self.reservedwords["SPRCOLOR"] = SPRCOLOR
-	self.reservedwords["SPRDEF"] = SPRDEF
-	self.reservedwords["SPRITE"] = SPRITE
-	self.reservedwords["SPRSAV"] = SPRSAV
-	self.reservedwords["SQR"] = SQR
-	self.reservedwords["SSHAPE"] = SSHAPE
-	self.reservedwords["STASH"] = STASH
-	self.reservedwords["STEP"] = STEP
-	self.reservedwords["STOP"] = STOP
-	self.reservedwords["STR"] = STR
-	self.reservedwords["SWAP"] = SWAP
-	self.reservedwords["SYS"] = SYS
-	self.reservedwords["TAB"] = TAB
-	self.reservedwords["TAN"] = TAN
-	self.reservedwords["TEMPO"] = TEMPO
-	self.reservedwords["THEN"] = THEN
-	self.reservedwords["TI"] = TI
-	self.reservedwords["TO"] = TO
-	self.reservedwords["TRAP"] = TRAP
-	self.reservedwords["TROFF"] = TROFF
-	self.reservedwords["TRON"] = TRON
-	self.reservedwords["UNTIL"] = UNTIL
-	self.reservedwords["USING"] = USING
-	self.reservedwords["USR"] = USR
-	self.reservedwords["VAL"] = VAL
-	self.reservedwords["VERIFY"] = VERIFY
-	self.reservedwords["VOL"] = VOL
-	self.reservedwords["WAIT"] = WAIT
-	self.reservedwords["WAIT"] = WAIT
-	self.reservedwords["WHILE"] = WHILE
-	self.reservedwords["WIDTH"] = WIDTH
-	self.reservedwords["WINDOW"] = WINDOW
-	self.reservedwords["XOR"] = XOR
+	if len(self.reservedwords) == 0 {
+		self.reservedwords = make(map[string]BasicTokenType)
+		self.reservedwords["REM"] = REM
+		self.reservedwords["AND"] = AND
+		self.reservedwords["OR"] = OR
+		self.reservedwords["NOT"] = NOT
+		self.reservedwords["PRINT"] = PRINT
+		self.reservedwords["GOTO"] = GOTO
+		self.reservedwords["ABS"] = ABS
+		self.reservedwords["APPEND"] = APPEND
+		self.reservedwords["ASC"] = ASC
+		self.reservedwords["ATN"] = ATN
+		self.reservedwords["AUTO"] = AUTO
+		self.reservedwords["BACKUP"] = BACKUP
+		self.reservedwords["BANK"] = BANK
+		self.reservedwords["BEGIN"] = BEGIN
+		self.reservedwords["BEND"] = BEND
+		self.reservedwords["BLOAD"] = BLOAD
+		self.reservedwords["BOOT"] = BOOT
+		self.reservedwords["BOX"] = BOX
+		self.reservedwords["BSAVE"] = BSAVE
+		self.reservedwords["BUMP"] = BUMP
+		self.reservedwords["CALLFN"] = CALLFN
+		self.reservedwords["CATALOG"] = CATALOG
+		self.reservedwords["CHAR"] = CHAR
+		self.reservedwords["CHARCIRCLE"] = CHARCIRCLE
+		self.reservedwords["CHR"] = CHR
+		self.reservedwords["CLOSE"] = CLOSE
+		self.reservedwords["CLR"] = CLR
+		self.reservedwords["CMD"] = CMD
+		self.reservedwords["COLLECT"] = COLLECT
+		self.reservedwords["COLLISION"] = COLLISION
+		self.reservedwords["COLOR"] = COLOR
+		self.reservedwords["CONCAT"] = CONCAT
+		self.reservedwords["CONT"] = CONT
+		self.reservedwords["COPY"] = COPY
+		self.reservedwords["COS"] = COS
+		self.reservedwords["DATA"] = DATA
+		self.reservedwords["DCLEAR"] = DCLEAR
+		self.reservedwords["DCLOSE"] = DCLOSE
+		self.reservedwords["DEFFN"] = DEFFN
+		self.reservedwords["DELETE"] = DELETE
+		self.reservedwords["DIM"] = DIM
+		self.reservedwords["DIRECTORY"] = DIRECTORY
+		self.reservedwords["DLOAD"] = DLOAD
+		self.reservedwords["DO"] = DO
+		self.reservedwords["DOPEN"] = DOPEN
+		self.reservedwords["DRAW"] = DRAW
+		self.reservedwords["DSAVE"] = DSAVE
+		self.reservedwords["DVERIFY"] = DVERIFY
+		self.reservedwords["ELSE"] = ELSE
+		self.reservedwords["END"] = END
+		self.reservedwords["ENVELOPE"] = ENVELOPE
+		self.reservedwords["ER"] = ER
+		self.reservedwords["ERR"] = ERR
+		self.reservedwords["EXIT"] = EXIT
+		self.reservedwords["FAST"] = FAST
+		self.reservedwords["FETCH"] = FETCH
+		self.reservedwords["FILTER"] = FILTER
+		self.reservedwords["FOR"] = FOR
+		self.reservedwords["FRE"] = FRE
+		self.reservedwords["GET"] = GET
+		self.reservedwords["GETIO"] = GETIO
+		self.reservedwords["GETKEY"] = GETKEY
+		self.reservedwords["GOSUB"] = GOSUB
+		self.reservedwords["GOTO"] = GOTO
+		self.reservedwords["GRAPHIC"] = GRAPHIC
+		self.reservedwords["GSHAPE"] = GSHAPE
+		self.reservedwords["HEADER"] = HEADER
+		self.reservedwords["HELP"] = HELP
+		self.reservedwords["HEX"] = HEX
+		self.reservedwords["IF"] = IF
+		self.reservedwords["INPUT"] = INPUT
+		self.reservedwords["INPUTIO"] = INPUTIO
+		self.reservedwords["INSTR"] = INSTR
+		self.reservedwords["INT"] = INT
+		self.reservedwords["JOY"] = JOY
+		self.reservedwords["KEY"] = KEY
+		self.reservedwords["LEFT"] = LEFT
+		self.reservedwords["LEN"] = LEN
+		self.reservedwords["LET"] = LET
+		self.reservedwords["LIST"] = LIST
+		self.reservedwords["LOAD"] = LOAD
+		self.reservedwords["LOCATE"] = LOCATE
+		self.reservedwords["LOG"] = LOG
+		self.reservedwords["LOOP"] = LOOP
+		self.reservedwords["MID"] = MID
+		self.reservedwords["MONITOR"] = MONITOR
+		self.reservedwords["MOVSPR"] = MOVSPR
+		self.reservedwords["NEW"] = NEW
+		self.reservedwords["NEXT"] = NEXT
+		self.reservedwords["ON"] = ON
+		self.reservedwords["OPENIO"] = OPENIO
+		self.reservedwords["PAINT"] = PAINT
+		self.reservedwords["PEEK"] = PEEK
+		self.reservedwords["PLAY"] = PLAY
+		self.reservedwords["POINTER"] = POINTER
+		self.reservedwords["POKE"] = POKE
+		self.reservedwords["POS"] = POS
+		self.reservedwords["POT"] = POT
+		self.reservedwords["PRINT"] = PRINT
+		self.reservedwords["PRINTIO"] = PRINTIO
+		self.reservedwords["PUDEF"] = PUDEF
+		self.reservedwords["RCLR"] = RCLR
+		self.reservedwords["RDOT"] = RDOT
+		self.reservedwords["READ"] = READ
+		self.reservedwords["RECORDIO"] = RECORDIO
+		self.reservedwords["RENAME"] = RENAME
+		self.reservedwords["RENUMBER"] = RENUMBER
+		self.reservedwords["RESTORE"] = RESTORE
+		self.reservedwords["RESUME"] = RESUME
+		self.reservedwords["RETURN"] = RETURN
+		self.reservedwords["RGR"] = RGR
+		self.reservedwords["RIGHT"] = RIGHT
+		self.reservedwords["RND"] = RND
+		self.reservedwords["RSPCOLOR"] = RSPCOLOR
+		self.reservedwords["RSPPOS"] = RSPPOS
+		self.reservedwords["RSPRITE"] = RSPRITE
+		self.reservedwords["RUN"] = RUN
+		self.reservedwords["RWINDOW"] = RWINDOW
+		self.reservedwords["SAVE"] = SAVE
+		self.reservedwords["SCALE"] = SCALE
+		self.reservedwords["SCNCLR"] = SCNCLR
+		self.reservedwords["SCRATCH"] = SCRATCH
+		self.reservedwords["SGN"] = SGN
+		self.reservedwords["SIN"] = SIN
+		self.reservedwords["SLEEP"] = SLEEP
+		self.reservedwords["SOUND"] = SOUND
+		self.reservedwords["SPC"] = SPC
+		self.reservedwords["SPRCOLOR"] = SPRCOLOR
+		self.reservedwords["SPRDEF"] = SPRDEF
+		self.reservedwords["SPRITE"] = SPRITE
+		self.reservedwords["SPRSAV"] = SPRSAV
+		self.reservedwords["SQR"] = SQR
+		self.reservedwords["SSHAPE"] = SSHAPE
+		self.reservedwords["STASH"] = STASH
+		self.reservedwords["STEP"] = STEP
+		self.reservedwords["STOP"] = STOP
+		self.reservedwords["STR"] = STR
+		self.reservedwords["SWAP"] = SWAP
+		self.reservedwords["SYS"] = SYS
+		self.reservedwords["TAB"] = TAB
+		self.reservedwords["TAN"] = TAN
+		self.reservedwords["TEMPO"] = TEMPO
+		self.reservedwords["THEN"] = THEN
+		self.reservedwords["TI"] = TI
+		self.reservedwords["TO"] = TO
+		self.reservedwords["TRAP"] = TRAP
+		self.reservedwords["TROFF"] = TROFF
+		self.reservedwords["TRON"] = TRON
+		self.reservedwords["UNTIL"] = UNTIL
+		self.reservedwords["USING"] = USING
+		self.reservedwords["USR"] = USR
+		self.reservedwords["VAL"] = VAL
+		self.reservedwords["VERIFY"] = VERIFY
+		self.reservedwords["VOL"] = VOL
+		self.reservedwords["WAIT"] = WAIT
+		self.reservedwords["WAIT"] = WAIT
+		self.reservedwords["WHILE"] = WHILE
+		self.reservedwords["WIDTH"] = WIDTH
+		self.reservedwords["WINDOW"] = WINDOW
+		self.reservedwords["XOR"] = XOR
+	}
 	return nil
 }
 
 func (self *BasicScanner) addToken(token BasicTokenType, lexeme string) {
-	self.parser.token[self.parser.nexttoken] = BasicToken{
-		tokentype: token,
-		lineno: self.context.lineno,
-		lexeme: lexeme}
-	fmt.Printf("%+v\n", self.parser.token[self.parser.nexttoken])
+	self.parser.tokens[self.parser.nexttoken].tokentype = token
+	self.parser.tokens[self.parser.nexttoken].lineno = self.context.lineno
+	self.parser.tokens[self.parser.nexttoken].lexeme = lexeme
+	
+	fmt.Printf("%+v\n", self.parser.tokens[self.parser.nexttoken])
 	self.parser.nexttoken += 1
 }
 
@@ -468,7 +473,9 @@ func (self *BasicScanner) matchNumber() {
 	for !self.isAtEnd() {
 		// Discard the error, we're checking isAtEnd()
 		c, _ := self.peek()
-		if ( ! unicode.IsDigit(c) ) {
+		// We support hex so allow 'x' as a valid part of a number and let
+		// the parser detect invalid number formats
+		if ( !unicode.IsDigit(c) && c != 'x' ) {
 			break
 		} else if ( c == '.' ) {
 			nc, err := self.peekNext()
@@ -489,6 +496,7 @@ func (self *BasicScanner) matchNumber() {
 		}
 		self.context.lineno = lineno
 		self.context.source[self.context.lineno] = self.line
+		self.tokentype = LINE_NUMBER
 	}
 }
 
@@ -597,10 +605,19 @@ func (self *BasicScanner) scanTokens(line string) {
 
 func (self *BasicScanner) repl(fileobj io.Reader) {
 	var readbuff = bufio.NewScanner(fileobj)
+	var leaf *BasicASTLeaf = nil
+	var err error = nil
 	
 	fmt.Println("READY")
 	for readbuff.Scan() {
 		self.scanTokens(readbuff.Text())
+		leaf, err = self.parser.parse()
+		if ( err != nil ) {
+			fmt.Println(fmt.Sprintf("? %s", err))
+		}
+		if ( leaf != nil ) {
+			fmt.Println(fmt.Sprintf("? %s", leaf.toString()))
+		}
 		fmt.Println("READY")
 	}	
 }

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	/*"os"*/
+	"os"
 )
 
 type BasicError int
@@ -62,12 +62,31 @@ func basicError(line int, errno BasicError, message string) {
 func main() {
 	var context BasicContext;
 	var scanner BasicScanner;
-	var parser LoxParser;
+	var parser BasicParser;
 	context.init()
 	parser.init(&context)
 	scanner.init(&context, &parser)
-	//scanner.repl(os.Stdin)
-	
+	scanner.repl(os.Stdin)
+
+	/*	
+	var err error;
+	var leaf *BasicASTLeaf;
+	scanner.scanTokens("10 3 < 6")
+	leaf, err = parser.parse()
+	if ( err != nil ) {
+		fmt.Println(fmt.Sprintf("? %s", err))
+	}
+	if ( leaf != nil ) {
+		fmt.Println(fmt.Sprintf("? %s", leaf.toString()))
+	}
+	scanner.scanTokens("20 3 < 6")
+	leaf, err = parser.parse()
+	if ( err != nil ) {
+		fmt.Println(fmt.Sprintf("? %s", err))
+	}
+	if ( leaf != nil ) {
+		fmt.Println(fmt.Sprintf("? %s", leaf.toString()))
+	}
 	scanner.scanTokens("10 PRINT \"HELLO\"")
 	scanner.scanTokens("20 ABC#=3+2")
 	scanner.scanTokens("30 XYZ%=(3+(4*5))")
@@ -75,9 +94,8 @@ func main() {
 	scanner.scanTokens("40 REM THIS IS A COMMENT !!!!")
 	scanner.scanTokens("50 ABC# = (XYZ% * ABC#)")
 	scanner.scanTokens("60 PRINT ABC#")
-	
-	/*
-	   var exprleaf BasicASTLeaf
+
+        var exprleaf BasicASTLeaf
 	var unaryleaf BasicASTLeaf
 	var unaryliteralleaf BasicASTLeaf
 	var groupleaf BasicASTLeaf

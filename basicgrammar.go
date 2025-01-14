@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"errors"
 )
 
@@ -66,7 +67,7 @@ const (
 
 type BasicASTLeaf struct {
 	leaftype BasicASTLeafType
-	literal_int int
+	literal_int int64
 	literal_string string
 	literal_float float64
 	identifier string
@@ -85,7 +86,7 @@ func (self *BasicASTLeaf) init(leaftype BasicASTLeafType) {
 	self.expr = nil
 }
 
-func (self *BasicASTLeaf) newPrimary(group *BasicASTLeaf, literal_string *string, literal_int *int, literal_float *float64) error {
+func (self *BasicASTLeaf) newPrimary(group *BasicASTLeaf, literal_string *string, literal_int *int64, literal_float *float64) error {
 	self.init(LEAF_PRIMARY)
 	if ( group != nil ) {
 		self.expr = group
@@ -155,21 +156,29 @@ func (self *BasicASTLeaf) newGrouping(expr *BasicASTLeaf) error {
 	return nil
 }
 
-func (self *BasicASTLeaf) newLiteralInt(val int) error {
+func (self *BasicASTLeaf) newLiteralInt(lexeme string) error {
+	var base int = 10
+	var err error = nil
 	self.init(LEAF_LITERAL_INT)
-	self.literal_int = val
-	return nil
+	if ( len(lexeme) > 2 && lexeme[0:2] == "0x" ) {
+		base = 16
+	} else if ( lexeme[0] == '0' ) {
+		base = 8
+	}
+	self.literal_int, err = strconv.ParseInt(lexeme, base, 64)
+	return err
 }
 
-func (self *BasicASTLeaf) newLiteralFloat(val float64) error {
+func (self *BasicASTLeaf) newLiteralFloat(lexeme string) error {
+	var err error = nil
 	self.init(LEAF_LITERAL_FLOAT)
-	self.literal_float = val
-	return nil
+	self.literal_float, err = strconv.ParseFloat(lexeme, 64)
+	return err
 }
 
-func (self *BasicASTLeaf) newLiteralString(val string) error {
+func (self *BasicASTLeaf) newLiteralString(lexeme string) error {
 	self.init(LEAF_LITERAL_STRING)
-	self.literal_string = val
+	self.literal_string = lexeme
 	return nil
 }
 

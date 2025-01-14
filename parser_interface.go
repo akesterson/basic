@@ -1,3 +1,5 @@
+package main
+
 import (
 	"fmt"
 	"errors"
@@ -5,6 +7,8 @@ import (
 
 type LanguageParser interface {
 	parse() error
-	nextLeaf() *BasicASTLeaf, error
+	nextLeaf() (*BasicASTLeaf, error)
+	getToken(idx int) (*BasicToken, error)
+	addToken(idx int) 
 }
 
