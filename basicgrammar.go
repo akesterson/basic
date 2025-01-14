@@ -56,6 +56,9 @@ const (
 	LEAF_LITERAL_FLOAT
 	LEAF_LITERAL_STRING
 	LEAF_IDENTIFIER
+	LEAF_IDENTIFIER_INT
+	LEAF_IDENTIFIER_FLOAT
+	LEAF_IDENTIFIER_STRING
 	LEAF_UNARY
 	LEAF_BINARY
 	LEAF_GROUPING
@@ -179,6 +182,12 @@ func (self *BasicASTLeaf) newLiteralString(lexeme string) error {
 	return nil
 }
 
+func (self *BasicASTLeaf) newIdentifier(leaftype BasicASTLeafType, lexeme string) error {
+	self.init(leaftype)
+	self.identifier = lexeme
+	return nil
+}
+
 func (self *BasicASTLeaf) toString() string {
 	operatorToStr := func() string {
 		switch (self.operator) {
@@ -207,6 +216,9 @@ func (self *BasicASTLeaf) toString() string {
 		return fmt.Sprintf("%f", self.literal_float)
 	case LEAF_LITERAL_STRING:
  		return fmt.Sprintf("%s", self.literal_string)
+	case LEAF_IDENTIFIER_INT: fallthrough
+	case LEAF_IDENTIFIER_FLOAT: fallthrough
+	case LEAF_IDENTIFIER_STRING: fallthrough
 	case LEAF_IDENTIFIER:
 		return fmt.Sprintf("%s", self.identifier)
 	case LEAF_UNARY:

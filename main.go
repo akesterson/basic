@@ -71,7 +71,7 @@ func main() {
 		
 	var err error;
 	var leaf *BasicASTLeaf;
-	scanner.scanTokens("10 NOT 6")
+	scanner.scanTokens("10 A# < B#")
 	leaf, err = parser.parse()
 	if ( err != nil ) {
 		fmt.Println(fmt.Sprintf("? %s", err))
@@ -80,23 +80,6 @@ func main() {
 		fmt.Println(fmt.Sprintf("? %s", leaf.toString()))
 	}
 	
-	scanner.scanTokens("20 -6")
-	leaf, err = parser.parse()
-	if ( err != nil ) {
-		fmt.Println(fmt.Sprintf("? %s", err))
-	}
-	if ( leaf != nil ) {
-		fmt.Println(fmt.Sprintf("? %s", leaf.toString()))
-	}
-
-	scanner.scanTokens("30 3 AND 6")
-	leaf, err = parser.parse()
-	if ( err != nil ) {
-		fmt.Println(fmt.Sprintf("? %s", err))
-	}
-	if ( leaf != nil ) {
-		fmt.Println(fmt.Sprintf("? %s", leaf.toString()))
-	}
 	/*
 	scanner.scanTokens("10 PRINT \"HELLO\"")
 	scanner.scanTokens("20 ABC#=3+2")
