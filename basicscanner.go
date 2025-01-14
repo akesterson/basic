@@ -507,17 +507,15 @@ func (self *BasicScanner) matchNumber() {
 }
 
 func (self *BasicScanner) matchIdentifier() {
-	var identifierSoFar string
+	var identifier string
 	var reservedIdentifier BasicTokenType
+	self.tokentype = IDENTIFIER
 	for !self.isAtEnd() {
 		// Discard the error, we're checking isAtEnd()
 		c, _ := self.peek()
 		if ( unicode.IsDigit(c) || unicode.IsLetter(c) ) {
 			self.current += 1
 		} else {
-			identifierSoFar = strings.ToUpper(self.getLexeme())
-			reservedIdentifier = self.reservedwords[identifierSoFar]
-			
 			switch (c) {
 			case '$':
 				self.tokentype = IDENTIFIER_STRING
@@ -528,20 +526,17 @@ func (self *BasicScanner) matchIdentifier() {
 			case '#':
 				self.tokentype = IDENTIFIER_INT
 				self.current += 1
-			default:
-				self.tokentype = IDENTIFIER
 			}
-			
 			break
 		}
 	}
+	identifier = strings.ToUpper(self.getLexeme())
+	reservedIdentifier = self.reservedwords[identifier]
 	// Look for reserved words in variable identifiers
 	if ( self.tokentype != IDENTIFIER && reservedIdentifier != UNDEFINED ) {
 		basicError(self.context.lineno, SYNTAX, "Reserved word in variable name\n")
 		self.hasError = true
 		return
-	} else if ( reservedIdentifier != UNDEFINED ) {
-		self.tokentype = reservedIdentifier
 	}
 }
 
