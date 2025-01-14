@@ -139,9 +139,6 @@ func (self *BasicASTLeaf) newUnary(op BasicTokenType, right *BasicASTLeaf) error
 		return errors.New("nil pointer arguments")
 	}
 	self.init(LEAF_UNARY)
-	if ( right.leaftype != LEAF_PRIMARY ) {
-		return errors.New("Right hand side of unary grammar requires primary leaftype")
-	}
 	self.right = right
 	self.operator = op
 	return nil
@@ -196,6 +193,10 @@ func (self *BasicASTLeaf) toString() string {
 		case STAR: return "*"
 		case LEFT_SLASH: return "/"
 		case CARAT: return "^"
+		case NOT: return "NOT"
+		case AND: return "AND"
+		case OR: return "OR"
+		
 		}
 		return ""
 	}

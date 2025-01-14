@@ -68,9 +68,11 @@ func (self *BasicParser) parse() (*BasicASTLeaf, error) {
 }
 
 func (self *BasicParser) newLeaf() (*BasicASTLeaf, error) {
+	var leaf *BasicASTLeaf
 	if ( self.nextleaf < 15 ) {
+		leaf = &self.leaves[self.nextleaf]
 		self.nextleaf += 1
-		return &self.leaves[self.nextleaf], nil
+		return leaf, nil
 	} else {
 		return nil, errors.New("No more leaves available")
 	}
@@ -95,7 +97,7 @@ func (self *BasicParser) logicalandor() (*BasicASTLeaf, error) {
 	var right *BasicASTLeaf = nil
 	var err error = nil
 
-	logicalnot, err = self.logicalnot()
+ 	logicalnot, err = self.logicalnot()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -139,7 +141,7 @@ func (self *BasicParser) logicalnot() (*BasicASTLeaf, error) {
 		expr.newUnary(operator.tokentype, right)
 		return expr, nil
 	}
-	return self.relation()
+ 	return self.relation()
 }
 
 func (self *BasicParser) relation() (*BasicASTLeaf, error) {
