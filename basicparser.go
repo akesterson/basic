@@ -5,13 +5,24 @@ import (
 	"errors"
 )
 
+type BasicToken struct {
+	tokentype BasicTokenType
+	lineno int
+	literal string
+	lexeme string
+}
+
+func (self BasicToken) toString() string {
+	return fmt.Sprintf("%d %s %s", self.tokentype, self.lexeme, self.literal)
+}
+
 type BasicParser struct {
-	context *BasicContext
-	tokens [32]BasicToken
+	runtime *BasicRuntime
+	tokens [MAX_TOKENS]BasicToken
 	errorToken *BasicToken
 	nexttoken int
 	curtoken int
-	leaves [32]BasicASTLeaf
+	leaves [MAX_TOKENS]BasicASTLeaf
 	nextleaf int
 }
 
@@ -41,9 +52,9 @@ type BasicParser struct {
    
 */
 
-func (self *BasicParser) init(context *BasicContext) error {
-	if ( context == nil ) {
-		return errors.New("nil context argument")
+func (self *BasicParser) init(runtime *BasicRuntime) error {
+	if ( runtime == nil ) {
+		return errors.New("nil runtime argument")
 	}
 	for _, leaf := range self.leaves {
 		leaf.leaftype = LEAF_UNDEFINED
@@ -52,7 +63,7 @@ func (self *BasicParser) init(context *BasicContext) error {
 		token.tokentype = UNDEFINED
 	}
 	self.nexttoken = 0
-	self.context = context
+	self.runtime = runtime
 	self.nextleaf = 0
 	return nil
 }
@@ -447,7 +458,7 @@ func (self *BasicParser) advance() (*BasicToken, error) {
 }
 
 func (self *BasicParser) isAtEnd() bool {
-	return (self.curtoken >= 15)
+	return (self.curtoken >= (MAX_TOKENS - 1))
 }
 
 func (self *BasicParser) peek() *BasicToken {

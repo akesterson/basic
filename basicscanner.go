@@ -49,6 +49,7 @@ const (
 	LINE_NUMBER // 30 (a literal integer that was encountered at the beginning of the line and thus is a line number)
 	COMMAND // 31
 	FUNCTION // 32
+	ASSIGNMENT // 33
 )
 
 type BasicScanner struct {
@@ -56,7 +57,7 @@ type BasicScanner struct {
 	c rune
 	start int
 	tokentype BasicTokenType
-	context *BasicContext
+	runtime *BasicRuntime
 	parser *BasicParser
 	line string
 	hasError bool
@@ -65,14 +66,14 @@ type BasicScanner struct {
 	functions map[string]BasicTokenType
 }
 
-func (self *BasicScanner) init(context *BasicContext, parser *BasicParser) error {
-	if ( context == nil || parser == nil ) {
+func (self *BasicScanner) init(runtime *BasicRuntime, parser *BasicParser) error {
+	if ( runtime == nil || parser == nil ) {
 		return errors.New("nil pointer argument")
 	}
 	self.current = 0
 	self.start = 0
 	self.tokentype = UNDEFINED
-	self.context = context
+	self.runtime = runtime
 	self.parser = parser
 	self.parser.nexttoken = 0
 	self.hasError = false
@@ -250,10 +251,10 @@ func (self *BasicScanner) init(context *BasicContext, parser *BasicParser) error
 
 func (self *BasicScanner) addToken(token BasicTokenType, lexeme string) {
 	self.parser.tokens[self.parser.nexttoken].tokentype = token
-	self.parser.tokens[self.parser.nexttoken].lineno = self.context.lineno
+	self.parser.tokens[self.parser.nexttoken].lineno = self.runtime.lineno
 	self.parser.tokens[self.parser.nexttoken].lexeme = lexeme
 	
-	fmt.Printf("%+v\n", self.parser.tokens[self.parser.nexttoken])
+	//fmt.Printf("%+v\n", self.parser.tokens[self.parser.nexttoken])
 	self.parser.nexttoken += 1
 }
 
@@ -316,7 +317,7 @@ func (self *BasicScanner) matchString() {
 	for !self.isAtEnd() {
 		c, err := self.peek()
 		if ( err != nil ) {
-			basicError(self.context.lineno, PARSE, "UNTERMINATED STRING LITERAL\n")
+			basicError(self.runtime.lineno, PARSE, "UNTERMINATED STRING LITERAL\n")
 			self.hasError = true
 			return
 		}
@@ -340,7 +341,7 @@ func (self *BasicScanner) matchNumber() {
 		if ( c == '.' ) {
 			nc, err := self.peekNext()
 			if ( err != nil || !unicode.IsDigit(nc) ) {
-				basicError(self.context.lineno, PARSE, "INVALID FLOATING POINT LITERAL\n")
+				basicError(self.runtime.lineno, PARSE, "INVALID FLOATING POINT LITERAL\n")
 				self.hasError = true
 				return
 			}
@@ -353,11 +354,11 @@ func (self *BasicScanner) matchNumber() {
 	if ( self.tokentype == LITERAL_INT && linenumber == true ) {
 		lineno, err := strconv.Atoi(self.getLexeme())
 		if ( err != nil ) {
-			basicError(self.context.lineno, PARSE, fmt.Sprintf("INTEGER CONVERSION ON '%s'", self.getLexeme()))
+			basicError(self.runtime.lineno, PARSE, fmt.Sprintf("INTEGER CONVERSION ON '%s'", self.getLexeme()))
 			self.hasError = true
 		}
-		self.context.lineno = lineno
-		self.context.source[self.context.lineno] = self.line
+		self.runtime.lineno = lineno
+		self.runtime.source[self.runtime.lineno] = self.line
 		self.tokentype = LINE_NUMBER
 	}
 }
@@ -400,7 +401,7 @@ func (self *BasicScanner) matchIdentifier() {
 		}
 	} else if ( self.tokentype != IDENTIFIER ) {
 		if ( resexists || cmdexists || fexists ) {
-			basicError(self.context.lineno, SYNTAX, "Reserved word in variable name\n")
+			basicError(self.runtime.lineno, SYNTAX, "Reserved word in variable name\n")
 			self.hasError = true
 		}
 	}
@@ -449,7 +450,7 @@ func (self *BasicScanner) scanTokens(line string) {
 			} else if ( unicode.IsLetter(c) ) {
 				self.matchIdentifier()
 			} else {
-				basicError(self.context.lineno, PARSE, fmt.Sprintf("UNKNOWN TOKEN %c\n", c))
+				basicError(self.runtime.lineno, PARSE, fmt.Sprintf("UNKNOWN TOKEN %c\n", c))
 				self.hasError = true
 				self.start = self.current
 			}
@@ -484,7 +485,8 @@ func (self *BasicScanner) repl(fileobj io.Reader) {
 			fmt.Println(fmt.Sprintf("? %s", err))
 		}
 		if ( leaf != nil ) {
-			fmt.Println(fmt.Sprintf("? %s", leaf.toString()))
+			self.runtime.interpret(leaf)
+			//fmt.Println(fmt.Sprintf("? %s", leaf.toString()))
 		}
 		fmt.Println("READY")
 	}	

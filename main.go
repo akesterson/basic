@@ -2,48 +2,16 @@ package main
 
 import (
 	"fmt"
-	//"os"
+	"os"
 )
 
-type BasicError int
 const (
-	IO           BasicError = iota
-	PARSE
-	SYNTAX
-	EXECUTE	
+	MAX_LEAVES = 32
+	MAX_TOKENS = 32
+	MAX_VALUES = 32
+	BASIC_TRUE = -1
+	BASIC_FALSE = 0
 )
-
-type BasicType int
-const (
-	INTEGER      BasicType = iota
-	STRING
-)
-
-type BasicLiteral struct {
-	literaltype BasicType
-	stringval string
-	intval int
-}
-
-type BasicToken struct {
-	tokentype BasicTokenType
-	lineno int
-	literal string
-	lexeme string
-}
-
-func (self BasicToken) toString() string {
-	return fmt.Sprintf("%d %s %s", self.tokentype, self.lexeme, self.literal)
-}
-
-type BasicContext struct {
-	source [9999]string
-	lineno int
-}
-
-func (self BasicContext) init() {
-	self.lineno = 0
-}
 
 func errorCodeToString(errno BasicError) string {
 	switch (errno) {
@@ -60,18 +28,18 @@ func basicError(line int, errno BasicError, message string) {
 }
 
 func main() {
-	var context BasicContext;
+	var runtime BasicRuntime;
 	var scanner BasicScanner;
 	var parser BasicParser;
-	context.init()
-	parser.init(&context)
-	scanner.init(&context, &parser)
-	//scanner.repl(os.Stdin)
+	runtime.init()
+	parser.init(&runtime)
+	scanner.init(&runtime, &parser)
+	scanner.repl(os.Stdin)
 
-		
+	/*
 	var err error;
 	var leaf *BasicASTLeaf;
-	scanner.scanTokens("10 GOSUB MYTHING")
+	scanner.scanTokens("10 NOT 8")
 	leaf, err = parser.parse()
 	if ( err != nil ) {
 		fmt.Println(fmt.Sprintf("? %s", err))
@@ -79,9 +47,8 @@ func main() {
 	if ( leaf != nil ) {
 		fmt.Println(fmt.Sprintf("? %s", leaf.toString()))
 	}
-	
-	/*
-	scanner.scanTokens("10 PRINT \"HELLO\"")
+	runtime.interpret(leaf)
+		scanner.scanTokens("10 PRINT \"HELLO\"")
 	scanner.scanTokens("20 ABC#=3+2")
 	scanner.scanTokens("30 XYZ%=(3+(4*5))")
 	scanner.scanTokens("40 PRINT# = 123456")
