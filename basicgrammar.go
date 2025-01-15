@@ -66,6 +66,8 @@ const (
 	LEAF_COMPARISON
 	LEAF_TERM
 	LEAF_PRIMARY
+	LEAF_COMMAND
+	LEAF_FUNCTION
 )
 
 type BasicASTLeaf struct {
@@ -134,6 +136,17 @@ func (self *BasicASTLeaf) newBinary(left *BasicASTLeaf, op BasicTokenType, right
 	self.left = left
 	self.right = right
 	self.operator = op
+	return nil
+}
+
+func (self *BasicASTLeaf) newCommand(cmdname string, right *BasicASTLeaf) error {
+	if ( right == nil ) {
+		return errors.New("nil pointer arguments")
+	}
+	self.init(LEAF_COMMAND)
+	self.right = right
+	self.operator = COMMAND
+	self.identifier = cmdname
 	return nil
 }
 

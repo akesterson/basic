@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"errors"
 	"strings"
+	"io"
+	"bufio"
+	"os"
 )
 
 type BasicError int
@@ -260,10 +263,15 @@ type BasicRuntime struct {
 	lineno int
 	values [MAX_VALUES]BasicValue
 	nextvalue int
+	nextline int
+	mode int
+	scanner BasicScanner
+	parser BasicParser
 }
 
 func (self BasicRuntime) init() {
 	self.lineno = 0
+	self.nextline = 0
 	self.nextvalue = 0
 }
 
@@ -330,6 +338,30 @@ func (self BasicRuntime) evaluate(expr *BasicASTLeaf) (*BasicValue, error) {
 		default:
 			return nil, errors.New(fmt.Sprintf("Don't know how to perform operation %d on unary type %d", expr.operator, rval.valuetype))
 		}
+	case LEAF_COMMAND:
+		if ( expr.right != nil ) {
+			rval, err = self.evaluate(expr.right)
+			if ( err != nil ) {
+				return nil, err
+			}
+		}
+		if ( strings.Compare(expr.identifier, "PRINT") == 0 ) {
+			if ( rval == nil ) {
+				return nil, errors.New("Expected expression")
+			}
+			fmt.Println(rval.toString())
+			return nil, nil
+		} else if ( strings.Compare(expr.identifier, "RUN" ) == 0 ) {
+			if ( rval == nil ) {
+				self.nextline = 0
+			} else {
+				self.nextline = int(rval.intval)
+			}
+			self.mode = MODE_RUN
+			return nil, nil
+		} else if ( strings.Compare(expr.identifier, "QUIT" ) == 0 ) {
+			self.mode = MODE_QUIT
+		}
 	case LEAF_BINARY:
 		lval, err = self.evaluate(expr.left)
 		if ( err != nil ) {
@@ -340,6 +372,8 @@ func (self BasicRuntime) evaluate(expr *BasicASTLeaf) (*BasicValue, error) {
 			return nil, err
 		}
 		switch (expr.operator) {
+		case ASSIGNMENT:
+			return nil, errors.New("Assignment not implemented yet")
 		case MINUS:
 			err = lval.mathMinus(rval)
 		case PLUS:
@@ -378,7 +412,76 @@ func (self *BasicRuntime) interpret(expr *BasicASTLeaf) {
 	value, err = self.evaluate(expr)
 	if ( err != nil ) {
 		fmt.Println(err)
+		self.mode = MODE_REPL
 		return
 	}
-	fmt.Println(value.toString())
+	if ( self.mode == MODE_REPL && value != nil ) {
+		fmt.Println(value.toString())
+	}
+}
+
+func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
+	var readbuff = bufio.NewScanner(fileobj)
+	var leaf *BasicASTLeaf = nil
+	var err error = nil
+	var enable_repl = true
+	var line string
+
+	self.parser.init(self)
+	self.scanner.init(self, &self.parser)
+	self.mode = mode
+	for {
+		switch (self.mode) {
+		case MODE_QUIT:
+			os.Exit(0)
+		case MODE_RUNSTREAM:
+			enable_repl = false
+			for readbuff.Scan() {
+				line = readbuff.Text()
+				self.scanner.scanTokens(line)
+				leaf, err = self.parser.parse()
+				if ( err != nil ) {
+					fmt.Println(fmt.Sprintf("? %s", err))
+				}
+				if ( leaf != nil ) {
+					self.interpret(leaf)
+				}
+			}
+			self.mode = MODE_QUIT
+		case MODE_REPL:
+			if ( enable_repl == false ) {
+				self.mode = MODE_QUIT
+				break
+			}
+			fmt.Println("READY")
+			if ( readbuff.Scan() ) {
+				self.scanner.scanTokens(readbuff.Text())
+				leaf, err = self.parser.parse()
+				if ( err != nil ) {
+					fmt.Println(fmt.Sprintf("? %s", err))
+				}
+			}
+		case MODE_RUN:
+			fmt.Println("Entering RUN mode starting at %d", self.nextline)
+			for index, value := range self.source[self.nextline:] {
+				self.nextline = index + 1
+				self.lineno = index
+				if ( value == "" ) {
+					continue
+				}
+				fmt.Println(value)
+				self.scanner.scanTokens(value)
+				leaf, err = self.parser.parse()
+				if ( err != nil ) {
+					fmt.Println(fmt.Sprintf("? %s", err))
+				}
+				if ( leaf != nil ) {
+					self.interpret(leaf)
+				}
+				if ( self.mode != MODE_RUN ) {
+					break
+				}
+			}
+		}
+	}
 }

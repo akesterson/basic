@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"errors"
+	"slices"
 )
 
 type BasicToken struct {
@@ -24,6 +25,7 @@ type BasicParser struct {
 	curtoken int
 	leaves [MAX_TOKENS]BasicASTLeaf
 	nextleaf int
+	immediate_commands []string
 }
 
 /*
@@ -65,6 +67,10 @@ func (self *BasicParser) init(runtime *BasicRuntime) error {
 	self.nexttoken = 0
 	self.runtime = runtime
 	self.nextleaf = 0
+	self.immediate_commands = append(self.immediate_commands,
+		"RUN",
+		"QUIT",
+	)
 	return nil
 }
 
@@ -90,11 +96,83 @@ func (self *BasicParser) newLeaf() (*BasicASTLeaf, error) {
 }
 
 func (self *BasicParser) linenumber() (*BasicASTLeaf, error) {
-
+	var command *BasicASTLeaf = nil
+	var err error = nil
+	
 	for self.match(LINE_NUMBER) {
-		return self.expression()
+		return self.command()
+		
 	}
-	return nil, self.error("Expected line number")
+	// Some commands can run immediately without a line number...
+	command, err = self.command()
+	if ( err == nil &&  slices.Contains(self.immediate_commands, command.identifier) ) {
+		return command, err
+	}
+	return nil, self.error(fmt.Sprintf("%s\nExpected line number or immediate command", self.runtime.source[self.runtime.lineno]))
+}
+
+func (self *BasicParser) command() (*BasicASTLeaf, error) {
+	var expr *BasicASTLeaf = nil
+	var operator *BasicToken = nil
+	var righttoken *BasicToken = nil
+	var right *BasicASTLeaf = nil
+	var err error = nil
+
+	for self.match(COMMAND) {
+		operator, err = self.previous()
+		if ( err != nil ) {
+			return nil, err
+		}
+		
+		// some commands don't require an rval. Don't fail if there
+		// isn't one. But fail if there is one and it fails to parse.
+		righttoken = self.peek()
+		if ( righttoken != nil ) {	
+			right, err = self.expression()
+			if ( err != nil ) {
+				return nil, err
+			}
+		}
+		
+		expr, err = self.newLeaf()
+		if ( err != nil ) {
+			return nil, err
+		}
+		expr.newCommand(operator.lexeme, right)
+		return expr, nil
+	}
+	return self.assignment()
+}
+
+func (self *BasicParser) assignment() (*BasicASTLeaf, error) {
+	var expr *BasicASTLeaf = nil
+	var right *BasicASTLeaf = nil
+	var err error = nil
+	var identifier_leaf_types = []BasicASTLeafType{
+		LEAF_IDENTIFIER_INT,
+		LEAF_IDENTIFIER_FLOAT,
+		LEAF_IDENTIFIER_STRING,
+	}
+
+	expr, err = self.expression()
+	if ( err != nil ) {
+		return nil, err
+	} else if ( ! slices.Contains(identifier_leaf_types, expr.leaftype) ) {
+		return expr, err
+	}
+	for self.match(EQUAL) {
+		right, err = self.expression()
+		if ( err != nil ) {
+			return nil, err
+		}
+		expr, err = self.newLeaf()
+		if ( err != nil ) {
+			return nil, err
+		}
+		expr.newBinary(expr, ASSIGNMENT, right)
+		return expr, nil
+	}
+	return expr, err
 }
 
 func (self *BasicParser) expression() (*BasicASTLeaf, error) {

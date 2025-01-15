@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	//"strings"
 )
 
 const (
@@ -11,6 +12,10 @@ const (
 	MAX_VALUES = 32
 	BASIC_TRUE = -1
 	BASIC_FALSE = 0
+	MODE_REPL = 1
+	MODE_RUN = 2
+	MODE_RUNSTREAM = 3
+	MODE_QUIT = 4
 )
 
 func errorCodeToString(errno BasicError) string {
@@ -32,14 +37,15 @@ func main() {
 	var scanner BasicScanner;
 	var parser BasicParser;
 	runtime.init()
-	parser.init(&runtime)
-	scanner.init(&runtime, &parser)
-	scanner.repl(os.Stdin)
+	runtime.scanner = scanner
+	runtime.parser = parser
+	runtime.run(os.Stdin, MODE_REPL)
+	//runtime.run(strings.NewReader("10 PRINT \"Hello World\""), MODE_RUNSTREAM)
 
 	/*
 	var err error;
 	var leaf *BasicASTLeaf;
-	scanner.scanTokens("10 \"Hello\" < \"World\"")
+	scanner.scanTokens("10 PRINT \"Hello, World!\"")
 	leaf, err = parser.parse()
 	if ( err != nil ) {
 		fmt.Println(fmt.Sprintf("? %s", err))

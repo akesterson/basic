@@ -7,8 +7,6 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"io"
-	"bufio"
 	"unicode"
 	"errors"
 	"strings"
@@ -166,6 +164,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime, parser *BasicParser) error
 		self.commands["PRINT"] =  COMMAND
 		self.commands["PRINTIO"] =  COMMAND
 		self.commands["PUDEF"] =  COMMAND
+		self.commands["QUIT"] = COMMAND
 		self.commands["READ"] =  COMMAND
 		self.commands["RECORDIO"] =  COMMAND
 		self.commands["RENAME"] =  COMMAND
@@ -470,24 +469,4 @@ func (self *BasicScanner) scanTokens(line string) {
 			}
 		}
 	}
-}
-
-func (self *BasicScanner) repl(fileobj io.Reader) {
-	var readbuff = bufio.NewScanner(fileobj)
-	var leaf *BasicASTLeaf = nil
-	var err error = nil
-	
-	fmt.Println("READY")
-	for readbuff.Scan() {
-		self.scanTokens(readbuff.Text())
-		leaf, err = self.parser.parse()
-		if ( err != nil ) {
-			fmt.Println(fmt.Sprintf("? %s", err))
-		}
-		if ( leaf != nil ) {
-			self.runtime.interpret(leaf)
-			//fmt.Println(fmt.Sprintf("? %s", leaf.toString()))
-		}
-		fmt.Println("READY")
-	}	
 }
