@@ -1,5 +1,3 @@
 Implement variables
 
-Implement GOTO
-
 Stop comparing function names to determine what code to run and start using a hashmap of function pointers instead

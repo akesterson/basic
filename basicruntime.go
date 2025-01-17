@@ -55,7 +55,7 @@ func (self *BasicRuntime) errorCodeToString(errno BasicError) string {
 }
 
 func (self *BasicRuntime) basicError(errno BasicError, message string) {
-	fmt.Printf("? %d : %s %s", self.lineno, self.errorCodeToString(errno), message)
+	fmt.Printf("? %d : %s %s\n", self.lineno, self.errorCodeToString(errno), message)
 }
 
 func (self *BasicRuntime) newValue() (*BasicValue, error) {
@@ -137,6 +137,14 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 			}
 			fmt.Println(rval.toString())
 			return nil, nil
+		} else if ( strings.Compare(expr.identifier, "GOTO") == 0 ) {
+			if ( rval == nil ) {
+				return nil, errors.New("Expected expression")
+			}
+			if ( rval.valuetype != TYPE_INTEGER ) {
+				return nil, errors.New("Expected integer")
+			}
+			self.nextline = int(rval.intval)
 		} else if ( strings.Compare(expr.identifier, "RUN" ) == 0 ) {
 			//fmt.Println("Processing RUN")
 			if ( rval == nil ) {
@@ -199,7 +207,7 @@ func (self *BasicRuntime) interpret(expr *BasicASTLeaf) (*BasicValue, error) {
 	var err error
 	value, err = self.evaluate(expr)
 	if ( err != nil ) {
-		fmt.Println(err)
+		self.basicError(RUNTIME, err.Error())
 		return nil, err
 	}
 	return value, nil
