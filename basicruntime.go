@@ -58,17 +58,18 @@ func (self *BasicRuntime) basicError(errno BasicError, message string) {
 	fmt.Printf("? %d : %s %s", self.lineno, self.errorCodeToString(errno), message)
 }
 
-func (self BasicRuntime) newValue() (*BasicValue, error) {
+func (self *BasicRuntime) newValue() (*BasicValue, error) {
 	var value *BasicValue
 	if ( self.nextvalue < MAX_VALUES ) {
 		value = &self.values[self.nextvalue]
 		self.nextvalue += 1
+		value.runtime = self
 		return value, nil
 	}
 	return nil, errors.New("Maximum values per line reached")
 }
 
-func (self BasicRuntime) isTrue(value *BasicValue) (bool, error) {
+func (self *BasicRuntime) isTrue(value *BasicValue) (bool, error) {
 	if ( value.valuetype == TYPE_STRING ) {
 		return false, errors.New("strings cannot evaluate to true (-1) or false (0)")
 	}
@@ -115,17 +116,9 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		}
 		switch (expr.operator) {
 		case MINUS:
-			err = rval.invert()
-			if ( err != nil ) {
-				return nil, err
-			}
-			return rval, nil
+			return rval.invert()
 		case NOT:
-			err = rval.bitwiseNot()
-			if ( err != nil ) {
-				return nil, err
-			}
-			return rval, nil
+			return rval.bitwiseNot()
 		default:
 			return nil, errors.New(fmt.Sprintf("Don't know how to perform operation %d on unary type %d", expr.operator, rval.valuetype))
 		}
@@ -170,29 +163,29 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		case ASSIGNMENT:
 			return nil, errors.New("Assignment not implemented yet")
 		case MINUS:
-			err = lval.mathMinus(rval)
+			return lval.mathMinus(rval)
 		case PLUS:
-			err = lval.mathPlus(rval)
+			return lval.mathPlus(rval)
 		case LEFT_SLASH:
-			err = lval.mathDivide(rval)
+			return lval.mathDivide(rval)
 		case STAR:
-			err = lval.mathMultiply(rval)
+			return lval.mathMultiply(rval)
 		case AND:
-			err = lval.bitwiseAnd(rval)
+			return lval.bitwiseAnd(rval)
 		case OR:
-			err = lval.bitwiseOr(rval)
+			return lval.bitwiseOr(rval)
 		case LESS_THAN:
-			err = lval.lessThan(rval)
+			return lval.lessThan(rval)
 		case LESS_THAN_EQUAL:
-			err = lval.lessThanEqual(rval)
+			return lval.lessThanEqual(rval)
 		case EQUAL:
-			err = lval.isEqual(rval)
+			return lval.isEqual(rval)
 		case NOT_EQUAL:
-			err = lval.isNotEqual(rval)
+			return lval.isNotEqual(rval)
 		case GREATER_THAN:
-			err = lval.greaterThan(rval)
+			return lval.greaterThan(rval)
 		case GREATER_THAN_EQUAL:
-			err = lval.greaterThanEqual(rval)
+			return lval.greaterThanEqual(rval)
 		}
 		if ( err != nil ) {
 			return nil, err
