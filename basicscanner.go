@@ -51,6 +51,7 @@ const (
 	ASSIGNMENT // 34
 )
 
+
 type BasicScanner struct {
 	current int
 	c rune

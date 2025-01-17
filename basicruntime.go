@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	"errors"
-	"strings"
 	"io"
 	"bufio"
 	"os"
 	"slices"
+	"reflect"
 )
 
 type BasicError int
@@ -28,6 +28,7 @@ type BasicRuntime struct {
 	run_finished_mode int
 	scanner BasicScanner
 	parser BasicParser
+	
 }
 
 func (self *BasicRuntime) zero() {
@@ -131,33 +132,7 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 				return nil, err
 			}
 		}
-		if ( strings.Compare(expr.identifier, "PRINT") == 0 ) {
-			if ( rval == nil ) {
-				return nil, errors.New("Expected expression")
-			}
-			fmt.Println(rval.toString())
-			return nil, nil
-		} else if ( strings.Compare(expr.identifier, "GOTO") == 0 ) {
-			if ( rval == nil ) {
-				return nil, errors.New("Expected expression")
-			}
-			if ( rval.valuetype != TYPE_INTEGER ) {
-				return nil, errors.New("Expected integer")
-			}
-			self.nextline = int(rval.intval)
-		} else if ( strings.Compare(expr.identifier, "RUN" ) == 0 ) {
-			//fmt.Println("Processing RUN")
-			if ( rval == nil ) {
-				self.nextline = 0
-			} else {
-				self.nextline = int(rval.intval)
-			}
-			self.mode = MODE_RUN
-			//fmt.Printf("Set mode %d with nextline %d\n", self.mode, self.nextline)
-			return nil, nil
-		} else if ( strings.Compare(expr.identifier, "QUIT" ) == 0 ) {
-			self.mode = MODE_QUIT
-		}
+		return self.commandByReflection(expr, lval, rval)
 	case LEAF_BINARY:
 		lval, err = self.evaluate(expr.left)
 		if ( err != nil ) {
@@ -200,6 +175,36 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		}
 	}
 	return lval, nil
+}
+
+func (self *BasicRuntime) commandByReflection(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var methodiface interface{}
+	var reflector reflect.Value
+	var rmethod reflect.Value
+
+	// TODO : There is some possibility (I think, maybe) that the way I'm
+	// getting the method through reflection might break the receiver
+	// assignment on the previously bound methods. If `self.` starts
+	// behaving strangely on command methods, revisit this.
+	
+	reflector = reflect.ValueOf(self)
+	if ( reflector.IsNil() || reflector.Kind() != reflect.Ptr ) {
+		return nil, errors.New("Unable to reflect runtime structure to find command method")
+	}
+	rmethod = reflector.MethodByName(fmt.Sprintf("Command%s", expr.identifier))
+	if ( !rmethod.IsValid() ) {
+		return nil, fmt.Errorf("Unknown command %s", expr.identifier)
+	}
+	if ( !rmethod.CanInterface() ) {
+		return nil, fmt.Errorf("Unable to execute command %s", expr.identifier)
+	}
+	methodiface = rmethod.Interface()
+	
+	methodfunc, ok := methodiface.(func(*BasicASTLeaf, *BasicValue, *BasicValue) (*BasicValue, error))
+	if ( !ok ) {
+		return nil, fmt.Errorf("Command %s has an invalid function signature", expr.identifier)
+	}
+	return methodfunc(expr, lval, rval)
 }
 
 func (self *BasicRuntime) interpret(expr *BasicASTLeaf) (*BasicValue, error) {

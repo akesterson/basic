@@ -27,7 +27,7 @@ func main() {
 	runtime.parser = parser
 	runtime.run(os.Stdin, MODE_REPL)
 	//runtime.run(strings.NewReader("10 PRINT \"Hello World\"\nRUN\nQUIT"), MODE_RUNSTREAM)
-	//runtime.run(strings.NewReader("10 PRINT \"Hello World\"\nQUIT"), MODE_REPL)
+	//runtime.run(strings.NewReader("10 PRINT \"Hello World\"\nRUN\nQUIT"), MODE_REPL)
 	//runtime.source[10] = "10 PRINT \"Hello World\""
 	//runtime.source[20] = "QUIT"
 	//runtime.run(strings.NewReader(""), MODE_RUN)
