@@ -4,13 +4,21 @@ import (
 	"fmt"
 	"errors"
 	"slices"
+	"strconv"
 )
 
 type BasicToken struct {
 	tokentype BasicTokenType
 	lineno int
-	literal string
+literal string
 	lexeme string
+}
+
+func (self *BasicToken) init() {
+	self.tokentype = UNDEFINED
+	self.lineno = 0
+	self.literal = ""
+	self.lexeme = ""
 }
 
 func (self BasicToken) toString() string {
@@ -30,18 +38,11 @@ type BasicParser struct {
 
 /*
    This hierarcy is as-per "Commodore 128 Programmer's Reference Guide" page 23
-   
-   expression -> logicalandor
-              -> logicalnot
-              -> relation
-              -> subtraction
-              -> addition
-              -> multiplication
-              -> division
-              -> unary
-              -> exponent
-              -> primary
 
+   program        -> line*
+   line           -> expression? ( statement expression )
+   statement      -> identifier expression*
+   expression     -> logicalandor
    logicalandor   -> logicalnot ( "OR" "AND" ) logicalnot
    logicalnot     -> "NOT" relation
    relation       -> subtraction [ < <= = <> >= > ] subtraction
@@ -58,15 +59,8 @@ func (self *BasicParser) init(runtime *BasicRuntime) error {
 	if ( runtime == nil ) {
 		return errors.New("nil runtime argument")
 	}
-	for _, leaf := range self.leaves {
-		leaf.leaftype = LEAF_UNDEFINED
-	}
-	for _, token := range self.tokens {
-		token.tokentype = UNDEFINED
-	}
-	self.nexttoken = 0
+	self.zero()
 	self.runtime = runtime
-	self.nextleaf = 0
 	self.immediate_commands = append(self.immediate_commands,
 		"RUN",
 		"QUIT",
@@ -74,14 +68,16 @@ func (self *BasicParser) init(runtime *BasicRuntime) error {
 	return nil
 }
 
-func (self *BasicParser) parse() (*BasicASTLeaf, error) {
-	// var leaf *BasicASTLeaf = nil
-	// var err error = nil
-	self.nextleaf = 0
+func (self *BasicParser) zero() {
+	for i, _ := range self.leaves {
+		self.leaves[i].init(LEAF_UNDEFINED)
+	}
+	for i, _ := range self.tokens {
+		self.tokens[i].init()
+	}
 	self.curtoken = 0
-	return self.linenumber()
-	// later on when we add statements we may need to handle the error
-	// internally; for now just pass it straight out.
+	self.nexttoken = 0
+	self.nextleaf = 0
 }
 
 func (self *BasicParser) newLeaf() (*BasicASTLeaf, error) {
@@ -95,20 +91,41 @@ func (self *BasicParser) newLeaf() (*BasicASTLeaf, error) {
 	}
 }
 
-func (self *BasicParser) linenumber() (*BasicASTLeaf, error) {
-	var command *BasicASTLeaf = nil
+func (self *BasicParser) parse() (*BasicASTLeaf, error) {
+	// var leaf *BasicASTLeaf = nil
+	// var err error = nil
+	return self.line()
+	// later on when we add statements we may need to handle the error
+	// internally; for now just pass it straight out.
+}
+
+func (self *BasicParser) line() (*BasicASTLeaf, error) {
+	var token *BasicToken = nil
 	var err error = nil
-	
+
 	for self.match(LINE_NUMBER) {
+		token, err = self.previous()
+		if ( err != nil ) {
+			return nil, err
+		}
+		self.runtime.lineno, err = strconv.Atoi(token.lexeme)
+		if ( err != nil ) {
+			return nil, err
+		}
 		return self.command()
 		
 	}
-	// Some commands can run immediately without a line number...
-	command, err = self.command()
-	if ( err == nil &&  slices.Contains(self.immediate_commands, command.identifier) ) {
-		return command, err
+	for self.check(COMMAND) {
+		// Some commands can run immediately without a line number...
+		token = self.peek()
+		if ( token != nil && slices.Contains(self.immediate_commands, token.lexeme) ) {
+			return self.command()
+		} else if ( err != nil ) {
+			return nil, err
+		}
+		return nil, self.error(fmt.Sprintf("Command %s is not immediate", token.lexeme))
 	}
-	return nil, self.error(fmt.Sprintf("%s\nExpected line number or immediate command", self.runtime.source[self.runtime.lineno]))
+	return nil, self.error(fmt.Sprintf("Expected line number"))
 }
 
 func (self *BasicParser) command() (*BasicASTLeaf, error) {
@@ -127,7 +144,7 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 		// some commands don't require an rval. Don't fail if there
 		// isn't one. But fail if there is one and it fails to parse.
 		righttoken = self.peek()
-		if ( righttoken != nil ) {	
+		if ( righttoken != nil && righttoken.tokentype != UNDEFINED ) {
 			right, err = self.expression()
 			if ( err != nil ) {
 				return nil, err
@@ -541,7 +558,7 @@ func (self *BasicParser) isAtEnd() bool {
 
 func (self *BasicParser) peek() *BasicToken {
 	if ( self.isAtEnd() ) {
-		return  nil
+		return nil
 	}
 	return &self.tokens[self.curtoken]
 }

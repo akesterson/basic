@@ -64,17 +64,20 @@ type BasicScanner struct {
 	functions map[string]BasicTokenType
 }
 
+func (self *BasicScanner) zero() {
+	self.current = 0
+	self.start = 0
+	self.hasError = false
+}
+
 func (self *BasicScanner) init(runtime *BasicRuntime, parser *BasicParser) error {
 	if ( runtime == nil || parser == nil ) {
 		return errors.New("nil pointer argument")
 	}
-	self.current = 0
-	self.start = 0
-	self.tokentype = UNDEFINED
+	self.zero()
 	self.runtime = runtime
 	self.parser = parser
-	self.parser.nexttoken = 0
-	self.hasError = false
+	self.parser.zero()
 	if len(self.reservedwords) == 0 {
 		self.reservedwords = make(map[string]BasicTokenType)
 		self.reservedwords["REM"] = REM
@@ -316,7 +319,7 @@ func (self *BasicScanner) matchString() {
 	for !self.isAtEnd() {
 		c, err := self.peek()
 		if ( err != nil ) {
-			basicError(self.runtime.lineno, PARSE, "UNTERMINATED STRING LITERAL\n")
+			self.runtime.basicError(PARSE, "UNTERMINATED STRING LITERAL\n")
 			self.hasError = true
 			return
 		}
@@ -340,7 +343,7 @@ func (self *BasicScanner) matchNumber() {
 		if ( c == '.' ) {
 			nc, err := self.peekNext()
 			if ( err != nil || !unicode.IsDigit(nc) ) {
-				basicError(self.runtime.lineno, PARSE, "INVALID FLOATING POINT LITERAL\n")
+				self.runtime.basicError(PARSE, "INVALID FLOATING POINT LITERAL\n")
 				self.hasError = true
 				return
 			}
@@ -353,7 +356,7 @@ func (self *BasicScanner) matchNumber() {
 	if ( self.tokentype == LITERAL_INT && linenumber == true ) {
 		lineno, err := strconv.Atoi(self.getLexeme())
 		if ( err != nil ) {
-			basicError(self.runtime.lineno, PARSE, fmt.Sprintf("INTEGER CONVERSION ON '%s'", self.getLexeme()))
+			self.runtime.basicError(PARSE, fmt.Sprintf("INTEGER CONVERSION ON '%s'", self.getLexeme()))
 			self.hasError = true
 		}
 		self.runtime.lineno = lineno
@@ -400,7 +403,7 @@ func (self *BasicScanner) matchIdentifier() {
 		}
 	} else if ( self.tokentype != IDENTIFIER ) {
 		if ( resexists || cmdexists || fexists ) {
-			basicError(self.runtime.lineno, SYNTAX, "Reserved word in variable name\n")
+			self.runtime.basicError(SYNTAX, "Reserved word in variable name\n")
 			self.hasError = true
 		}
 	}
@@ -410,7 +413,7 @@ func (self *BasicScanner) scanTokens(line string) {
 
 	var c rune
 	self.line = line
-	self.parser.nexttoken = 0
+	self.parser.zero()
 	self.current = 0
 	self.start = 0
 	self.hasError = false
@@ -449,7 +452,7 @@ func (self *BasicScanner) scanTokens(line string) {
 			} else if ( unicode.IsLetter(c) ) {
 				self.matchIdentifier()
 			} else {
-				basicError(self.runtime.lineno, PARSE, fmt.Sprintf("UNKNOWN TOKEN %c\n", c))
+				self.runtime.basicError(PARSE, fmt.Sprintf("UNKNOWN TOKEN %c\n", c))
 				self.hasError = true
 				self.start = self.current
 			}

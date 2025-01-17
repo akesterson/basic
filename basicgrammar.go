@@ -89,6 +89,10 @@ func (self *BasicASTLeaf) init(leaftype BasicASTLeafType) {
 	self.left = nil
 	self.right = nil
 	self.expr = nil
+	self.literal_int = 0
+	self.literal_float = 0.0
+	self.literal_string = ""
+	self.operator = UNDEFINED
 }
 
 func (self *BasicASTLeaf) newPrimary(group *BasicASTLeaf, literal_string *string, literal_int *int64, literal_float *float64) error {

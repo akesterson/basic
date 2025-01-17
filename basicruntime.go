@@ -14,252 +14,11 @@ const (
 	IO           BasicError = iota
 	PARSE
 	SYNTAX
-	EXECUTE	
+	RUNTIME
 )
-
-type BasicType int
-const (
-	TYPE_UNDEFINED    BasicType = iota
-	TYPE_INTEGER  
-	TYPE_FLOAT
-	TYPE_STRING
-	TYPE_BOOLEAN
-)
-
-type BasicValue struct {
-	valuetype BasicType
-	stringval string
-	intval int64
-	floatval float64
-	boolvalue int64
-}
-
-func (self *BasicValue) init() {
-	self.valuetype = TYPE_UNDEFINED
-	self.stringval = ""
-	self.intval = 0
-	self.floatval = 0.0
-	self.boolvalue = BASIC_FALSE
-}
-
-func (self *BasicValue) toString() string {
-	switch ( self.valuetype ) {
-	case TYPE_STRING: return self.stringval
-	case TYPE_INTEGER: return fmt.Sprintf("%d", self.intval)
-	case TYPE_FLOAT: return fmt.Sprintf("%f", self.floatval)
-	case TYPE_BOOLEAN: return fmt.Sprintf("%t", (self.boolvalue == BASIC_TRUE))
-	}
-	return "(UNDEFINED STRING REPRESENTATION)"
-}
-
-func (self *BasicValue) invert() error {
-	if ( self.valuetype == TYPE_STRING ) {
-		return errors.New("Cannot invert a string")
-	}
-	self.intval = -(self.intval)
-	self.floatval = -(self.floatval)
-	return nil
-}
-
-func (self *BasicValue) bitwiseNot() error {
-	if ( self.valuetype != TYPE_INTEGER ) {
-		return errors.New("Cannot only perform bitwise operations on integers")
-	}
-	self.intval = ^self.intval
-	return nil
-}
-
-func (self *BasicValue) bitwiseAnd(rval *BasicValue) error {
-	if ( rval == nil ) {
-		return errors.New("nil rval")
-	}
-	if ( self.valuetype != TYPE_INTEGER ) {
-		return errors.New("Cannot perform bitwise operations on string or float")
-	}
-	self.intval &= rval.intval
-	return nil
-}
-
-func (self *BasicValue) bitwiseOr(rval *BasicValue) error {
-	if ( rval == nil ) {
-		return errors.New("nil rval")
-	}
-	if ( self.valuetype != TYPE_INTEGER ) {
-		return errors.New("Cannot only perform bitwise operations on integers")
-	}
-	self.intval |= rval.intval
-	return nil
-}
-
-// TODO: Implement - (remove) * (duplicate) and / (split) on string types, that would be cool
-
-func (self *BasicValue) mathPlus(rval *BasicValue) error {
-	if ( rval == nil ) {
-		return errors.New("nil rval")
-	}
-	if ( self.valuetype == TYPE_INTEGER ) {
-		self.intval += (rval.intval + int64(rval.floatval))
-	} else if ( self.valuetype == TYPE_FLOAT ) {
-		self.floatval += (rval.floatval + float64(rval.intval))
-	} else if ( self.valuetype == TYPE_STRING && rval.valuetype == TYPE_STRING ){
-		self.stringval += rval.stringval
-	} else {
-		return errors.New("Invalid arithmetic operation")
-	}
-	return nil
-}
-
-
-func (self *BasicValue) mathMinus(rval *BasicValue) error {
-	if ( rval == nil ) {
-		return errors.New("nil rval")
-	}
-	if ( self.valuetype == TYPE_STRING || rval.valuetype == TYPE_STRING ) {
-		return errors.New("Cannot perform subtraction on strings")
-	}
-	if ( self.valuetype == TYPE_INTEGER ) {
-		self.intval -= (rval.intval + int64(rval.floatval))
-	} else {
-		self.floatval -= (rval.floatval + float64(rval.intval))
-	}
-	return nil
-}
-
-func (self *BasicValue) mathDivide(rval *BasicValue) error {
-	if ( rval == nil ) {
-		return errors.New("nil rval")
-	}
-	if ( self.valuetype == TYPE_STRING || rval.valuetype == TYPE_STRING ) {
-		return errors.New("Cannot perform division on strings")
-	}
-	if ( self.valuetype == TYPE_INTEGER ) {
-		self.intval = self.intval / (rval.intval + int64(rval.floatval))
-	} else {
-		self.floatval = self.floatval / (rval.floatval + float64(rval.intval))
-	}
-	return nil
-}
-
-func (self *BasicValue) mathMultiply(rval *BasicValue) error {
-	if ( rval == nil ) {
-		return errors.New("nil rval")
-	}
-	if ( self.valuetype == TYPE_STRING || rval.valuetype == TYPE_STRING ) {
-		return errors.New("Cannot perform multiplication on strings")
-	}
-	if ( self.valuetype == TYPE_INTEGER ) {
-		self.intval = self.intval * (rval.intval + int64(rval.floatval))
-	} else {
-		self.floatval = self.floatval * (rval.floatval + float64(rval.intval))
-	}
-	return nil
-}
-
-func (self *BasicValue) lessThan(rval *BasicValue) error {
-	if ( rval == nil ) {
-		return errors.New("nil rval")
-	}
-	if ( self.valuetype == TYPE_INTEGER ) {
-		self.basicBoolValue(self.intval < (rval.intval + int64(rval.floatval)))
-	} else if ( self.valuetype == TYPE_FLOAT ) {
-		self.basicBoolValue(self.floatval < (rval.floatval + float64(rval.intval)))
-	} else {
-		self.basicBoolValue(strings.Compare(self.stringval, rval.stringval) < 0)
-	}
-	return nil
-}
-
-func (self *BasicValue) lessThanEqual(rval *BasicValue) error {
-	var result int
-	if ( rval == nil ) {
-		return errors.New("nil rval")
-	}
-	if ( self.valuetype == TYPE_INTEGER ) {
-		self.basicBoolValue(self.intval <= (rval.intval + int64(rval.floatval)))
-	} else if ( self.valuetype == TYPE_FLOAT ) {
-		self.basicBoolValue(self.floatval <= (rval.floatval + float64(rval.intval)))
-	} else {
-		result = strings.Compare(self.stringval, rval.stringval)
-		self.basicBoolValue(result < 0 || result == 0)
-	}
-	return nil
-}
-
-func (self *BasicValue) greaterThan(rval *BasicValue) error {
-	var result int
-	if ( rval == nil ) {
-		return errors.New("nil rval")
-	}
-	if ( self.valuetype == TYPE_INTEGER ) {
-		self.basicBoolValue(self.intval > (rval.intval + int64(rval.floatval)))
-	} else if ( self.valuetype == TYPE_FLOAT ) {
-		self.basicBoolValue(self.floatval > (rval.floatval + float64(rval.intval)))
-	} else {
-		result = strings.Compare(self.stringval, rval.stringval)
-		self.basicBoolValue((result > 0))
-	}
-	return nil
-}
-
-func (self *BasicValue) greaterThanEqual(rval *BasicValue) error {
-	var result int
-	if ( rval == nil ) {
-		return errors.New("nil rval")
-	}
-	if ( self.valuetype == TYPE_INTEGER ) {
-		self.basicBoolValue(self.intval >= (rval.intval + int64(rval.floatval)))
-	} else if ( self.valuetype == TYPE_FLOAT ) {
-		self.basicBoolValue(self.floatval >= (rval.floatval + float64(rval.intval)))
-	} else {
-		result = strings.Compare(self.stringval, rval.stringval)
-		self.basicBoolValue(result > 0 || result == 0)
-	}
-	return nil
-}
-
-func (self *BasicValue) isEqual(rval *BasicValue) error {
-	var result int
-	if ( rval == nil ) {
-		return errors.New("nil rval")
-	}
-	if ( self.valuetype == TYPE_INTEGER ) {
-		self.basicBoolValue(self.intval == (rval.intval + int64(rval.floatval)))
-	} else if ( self.valuetype == TYPE_FLOAT ) {
-		self.basicBoolValue(self.floatval == (rval.floatval + float64(rval.intval)))
-	} else {
-		result = strings.Compare(self.stringval, rval.stringval)
-		self.basicBoolValue(result == 0)
-	}
-	return nil
-}
-
-func (self *BasicValue) isNotEqual(rval *BasicValue) error {
-	var result int
-	if ( rval == nil ) {
-		return errors.New("nil rval")
-	}
-	if ( self.valuetype == TYPE_INTEGER ) {
-		self.basicBoolValue(self.intval != (rval.intval + int64(rval.floatval)))
-	} else if ( self.valuetype == TYPE_FLOAT ) {
-		self.basicBoolValue(self.floatval != (rval.floatval + float64(rval.intval)))
-	} else {
-		result = strings.Compare(self.stringval, rval.stringval)
-		self.basicBoolValue(result != 0)
-	}
-	return nil
-}
-
-func (self *BasicValue) basicBoolValue(result bool) {
-	self.valuetype = TYPE_BOOLEAN
-	if ( result == true ) {
-		self.boolvalue = BASIC_TRUE
-		return
-	}
-	self.boolvalue = BASIC_FALSE
-}
 
 type BasicRuntime struct {
-	source [9999]string
+	source [MAX_SOURCE_LINES]string
 	lineno int
 	values [MAX_VALUES]BasicValue
 	nextvalue int
@@ -269,10 +28,32 @@ type BasicRuntime struct {
 	parser BasicParser
 }
 
-func (self BasicRuntime) init() {
+func (self *BasicRuntime) zero() {
+	for i, _ := range self.values {
+		self.values[i].init()
+	}
+	self.nextvalue = 0
+}
+
+
+func (self *BasicRuntime) init() {
 	self.lineno = 0
 	self.nextline = 0
-	self.nextvalue = 0
+	self.zero()
+}
+
+func (self *BasicRuntime) errorCodeToString(errno BasicError) string {
+	switch (errno) {
+	case IO: return "IO ERROR"
+	case PARSE: return "PARSE ERROR"
+	case RUNTIME: return "RUNTIME ERROR"
+	case SYNTAX: return "SYNTAX ERROR"
+	}
+	return "UNDEF"
+}
+
+func (self *BasicRuntime) basicError(errno BasicError, message string) {
+	fmt.Printf("? %d : %s %s", self.lineno, self.errorCodeToString(errno), message)
 }
 
 func (self BasicRuntime) newValue() (*BasicValue, error) {
@@ -406,18 +187,16 @@ func (self BasicRuntime) evaluate(expr *BasicASTLeaf) (*BasicValue, error) {
 	return lval, nil
 }
 
-func (self *BasicRuntime) interpret(expr *BasicASTLeaf) {
+func (self *BasicRuntime) interpret(expr *BasicASTLeaf) *BasicValue{
 	var value *BasicValue
 	var err error
 	value, err = self.evaluate(expr)
 	if ( err != nil ) {
 		fmt.Println(err)
 		self.mode = MODE_REPL
-		return
+		return nil
 	}
-	if ( self.mode == MODE_REPL && value != nil ) {
-		fmt.Println(value.toString())
-	}
+	return value
 }
 
 func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
@@ -431,23 +210,22 @@ func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 	self.scanner.init(self, &self.parser)
 	self.mode = mode
 	for {
+		self.zero()
+		self.parser.zero()
+		self.scanner.zero()
 		switch (self.mode) {
 		case MODE_QUIT:
 			os.Exit(0)
 		case MODE_RUNSTREAM:
 			enable_repl = false
-			for readbuff.Scan() {
+			if ( readbuff.Scan() ) {
 				line = readbuff.Text()
+				// All we're doing is getting the line #
+				// and storing the source line.
 				self.scanner.scanTokens(line)
-				leaf, err = self.parser.parse()
-				if ( err != nil ) {
-					fmt.Println(fmt.Sprintf("? %s", err))
-				}
-				if ( leaf != nil ) {
-					self.interpret(leaf)
-				}
+			} else {
+				self.mode = MODE_RUN
 			}
-			self.mode = MODE_QUIT
 		case MODE_REPL:
 			if ( enable_repl == false ) {
 				self.mode = MODE_QUIT
@@ -458,29 +236,31 @@ func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 				self.scanner.scanTokens(readbuff.Text())
 				leaf, err = self.parser.parse()
 				if ( err != nil ) {
-					fmt.Println(fmt.Sprintf("? %s", err))
+					self.basicError(RUNTIME, err.Error())
 				}
 			}
 		case MODE_RUN:
-			fmt.Println("Entering RUN mode starting at %d", self.nextline)
-			for index, value := range self.source[self.nextline:] {
-				self.nextline = index + 1
-				self.lineno = index
-				if ( value == "" ) {
-					continue
-				}
-				fmt.Println(value)
-				self.scanner.scanTokens(value)
-				leaf, err = self.parser.parse()
-				if ( err != nil ) {
-					fmt.Println(fmt.Sprintf("? %s", err))
-				}
-				if ( leaf != nil ) {
-					self.interpret(leaf)
-				}
-				if ( self.mode != MODE_RUN ) {
-					break
-				}
+			if ( self.nextline >= MAX_SOURCE_LINES ) {
+				self.mode = MODE_QUIT
+				continue
+			}
+			line = self.source[self.nextline]
+			self.lineno = self.nextline
+			self.nextline += 1
+			if ( line == "" ) {
+				continue
+			}
+			fmt.Println(line)
+			self.scanner.scanTokens(line)
+			leaf, err = self.parser.parse()
+			if ( err != nil ) {
+				self.basicError(RUNTIME, err.Error())
+				self.mode = MODE_QUIT
+			} else {
+				_ = self.interpret(leaf)
+			}
+			if ( self.mode != MODE_RUN ) {
+				break
 			}
 		}
 	}
