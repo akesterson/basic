@@ -46,8 +46,9 @@ const (
 	EOF // 29 (End of File)
 	LINE_NUMBER // 30 (a literal integer that was encountered at the beginning of the line and thus is a line number)
 	COMMAND // 31
-	FUNCTION // 32
-	ASSIGNMENT // 33
+	COMMAND_IMMEDIATE // 32
+	FUNCTION // 33
+	ASSIGNMENT // 34
 )
 
 type BasicScanner struct {
@@ -167,7 +168,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime, parser *BasicParser) error
 		self.commands["PRINT"] =  COMMAND
 		self.commands["PRINTIO"] =  COMMAND
 		self.commands["PUDEF"] =  COMMAND
-		self.commands["QUIT"] = COMMAND
+		self.commands["QUIT"] = COMMAND_IMMEDIATE
 		self.commands["READ"] =  COMMAND
 		self.commands["RECORDIO"] =  COMMAND
 		self.commands["RENAME"] =  COMMAND
@@ -175,7 +176,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime, parser *BasicParser) error
 		self.commands["RESTORE"] =  COMMAND
 		self.commands["RESUME"] =  COMMAND
 		self.commands["RETURN"] =  COMMAND
-		self.commands["RUN"] =  COMMAND
+		self.commands["RUN"] =  COMMAND_IMMEDIATE
 		self.commands["SAVE"] =  COMMAND
 		self.commands["SCALE"] =  COMMAND
 		self.commands["SCNCLR"] =  COMMAND

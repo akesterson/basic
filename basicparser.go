@@ -61,10 +61,6 @@ func (self *BasicParser) init(runtime *BasicRuntime) error {
 	}
 	self.zero()
 	self.runtime = runtime
-	self.immediate_commands = append(self.immediate_commands,
-		"RUN",
-		"QUIT",
-	)
 	return nil
 }
 
@@ -92,9 +88,13 @@ func (self *BasicParser) newLeaf() (*BasicASTLeaf, error) {
 }
 
 func (self *BasicParser) parse() (*BasicASTLeaf, error) {
-	// var leaf *BasicASTLeaf = nil
-	// var err error = nil
-	return self.line()
+	var leaf *BasicASTLeaf = nil
+	var err error = nil
+	leaf, err = self.line()
+	if ( leaf != nil ) {
+		//fmt.Printf("%+v\n", leaf)
+	}
+	return leaf, err
 	// later on when we add statements we may need to handle the error
 	// internally; for now just pass it straight out.
 }
@@ -115,17 +115,12 @@ func (self *BasicParser) line() (*BasicASTLeaf, error) {
 		return self.command()
 		
 	}
-	for self.check(COMMAND) {
+	for self.check(COMMAND_IMMEDIATE) {
+		//fmt.Println("Found immediate mode command token")
 		// Some commands can run immediately without a line number...
-		token = self.peek()
-		if ( token != nil && slices.Contains(self.immediate_commands, token.lexeme) ) {
-			return self.command()
-		} else if ( err != nil ) {
-			return nil, err
-		}
-		return nil, self.error(fmt.Sprintf("Command %s is not immediate", token.lexeme))
+		return self.command()
 	}
-	return nil, self.error(fmt.Sprintf("Expected line number"))
+	return nil, self.error(fmt.Sprintf("Expected line number or immediate mode command"))
 }
 
 func (self *BasicParser) command() (*BasicASTLeaf, error) {
@@ -135,7 +130,7 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 	var right *BasicASTLeaf = nil
 	var err error = nil
 
-	for self.match(COMMAND) {
+	for self.match(COMMAND, COMMAND_IMMEDIATE) {
 		operator, err = self.previous()
 		if ( err != nil ) {
 			return nil, err
@@ -155,7 +150,12 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 		if ( err != nil ) {
 			return nil, err
 		}
-		expr.newCommand(operator.lexeme, right)
+		if ( operator.tokentype == COMMAND_IMMEDIATE ) {
+			expr.newImmediateCommand(operator.lexeme, right)
+		} else {
+			expr.newCommand(operator.lexeme, right)
+		}
+		//fmt.Printf("Returning %+v\n", expr)
 		return expr, nil
 	}
 	return self.assignment()

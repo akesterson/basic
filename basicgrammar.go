@@ -52,22 +52,23 @@ import (
 type BasicASTLeafType int
 const (
 	LEAF_UNDEFINED           BasicASTLeafType = iota
-	LEAF_LITERAL_INT
-	LEAF_LITERAL_FLOAT
-	LEAF_LITERAL_STRING
-	LEAF_IDENTIFIER
-	LEAF_IDENTIFIER_INT
-	LEAF_IDENTIFIER_FLOAT
-	LEAF_IDENTIFIER_STRING
-	LEAF_UNARY
-	LEAF_BINARY
-	LEAF_GROUPING
-	LEAF_EQUALITY
-	LEAF_COMPARISON
-	LEAF_TERM
-	LEAF_PRIMARY
-	LEAF_COMMAND
-	LEAF_FUNCTION
+	LEAF_LITERAL_INT // 1
+	LEAF_LITERAL_FLOAT // 2
+	LEAF_LITERAL_STRING // 3
+	LEAF_IDENTIFIER // 4
+	LEAF_IDENTIFIER_INT // 5
+	LEAF_IDENTIFIER_FLOAT // 6
+	LEAF_IDENTIFIER_STRING // 7
+	LEAF_UNARY // 8
+	LEAF_BINARY // 9
+	LEAF_GROUPING // 10
+	LEAF_EQUALITY // 11
+	LEAF_COMPARISON // 12
+	LEAF_TERM // 13
+	LEAF_PRIMARY // 14
+	LEAF_COMMAND // 15
+	LEAF_COMMAND_IMMEDIATE // 16
+	LEAF_FUNCTION // 17
 )
 
 type BasicASTLeaf struct {
@@ -144,12 +145,18 @@ func (self *BasicASTLeaf) newBinary(left *BasicASTLeaf, op BasicTokenType, right
 }
 
 func (self *BasicASTLeaf) newCommand(cmdname string, right *BasicASTLeaf) error {
-	if ( right == nil ) {
-		return errors.New("nil pointer arguments")
-	}
 	self.init(LEAF_COMMAND)
 	self.right = right
 	self.operator = COMMAND
+	self.identifier = cmdname
+	return nil
+}
+
+func (self *BasicASTLeaf) newImmediateCommand(cmdname string, right *BasicASTLeaf) error {
+	//fmt.Println("Creating new immediate command leaf")
+	self.init(LEAF_COMMAND_IMMEDIATE)
+	self.right = right
+	self.operator = COMMAND_IMMEDIATE
 	self.identifier = cmdname
 	return nil
 }

@@ -7,6 +7,7 @@ import (
 	"io"
 	"bufio"
 	"os"
+	"slices"
 )
 
 type BasicError int
@@ -24,6 +25,7 @@ type BasicRuntime struct {
 	nextvalue int
 	nextline int
 	mode int
+	run_finished_mode int
 	scanner BasicScanner
 	parser BasicParser
 }
@@ -76,17 +78,25 @@ func (self BasicRuntime) isTrue(value *BasicValue) (bool, error) {
 	return false, nil
 }
 
-func (self BasicRuntime) evaluate(expr *BasicASTLeaf) (*BasicValue, error) {
+func (self *BasicRuntime) evaluateSome(expr *BasicASTLeaf, leaftypes ...BasicASTLeafType) (*BasicValue, error) {
+	if ( slices.Contains(leaftypes, expr.leaftype)) {
+		return self.evaluate(expr)
+	}
+	return nil, nil
+}
+
+func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeafType) (*BasicValue, error) {
 	var lval *BasicValue
 	var rval *BasicValue
 	var err error = nil
-	
+
 	lval, err = self.newValue()
 	if ( err != nil ) {
 		return nil, err
 	}
 	lval.init()
-	
+
+	//fmt.Printf("Evaluating leaf type %d\n", expr.leaftype)
 	switch (expr.leaftype) {
 	case LEAF_GROUPING: return self.evaluate(expr.expr)
 	case LEAF_LITERAL_INT:
@@ -119,7 +129,9 @@ func (self BasicRuntime) evaluate(expr *BasicASTLeaf) (*BasicValue, error) {
 		default:
 			return nil, errors.New(fmt.Sprintf("Don't know how to perform operation %d on unary type %d", expr.operator, rval.valuetype))
 		}
+	case LEAF_COMMAND_IMMEDIATE: fallthrough
 	case LEAF_COMMAND:
+		//fmt.Printf("Processing command %s\n", expr.identifier)
 		if ( expr.right != nil ) {
 			rval, err = self.evaluate(expr.right)
 			if ( err != nil ) {
@@ -133,12 +145,14 @@ func (self BasicRuntime) evaluate(expr *BasicASTLeaf) (*BasicValue, error) {
 			fmt.Println(rval.toString())
 			return nil, nil
 		} else if ( strings.Compare(expr.identifier, "RUN" ) == 0 ) {
+			//fmt.Println("Processing RUN")
 			if ( rval == nil ) {
 				self.nextline = 0
 			} else {
 				self.nextline = int(rval.intval)
 			}
 			self.mode = MODE_RUN
+			//fmt.Printf("Set mode %d with nextline %d\n", self.mode, self.nextline)
 			return nil, nil
 		} else if ( strings.Compare(expr.identifier, "QUIT" ) == 0 ) {
 			self.mode = MODE_QUIT
@@ -187,29 +201,97 @@ func (self BasicRuntime) evaluate(expr *BasicASTLeaf) (*BasicValue, error) {
 	return lval, nil
 }
 
-func (self *BasicRuntime) interpret(expr *BasicASTLeaf) *BasicValue{
+func (self *BasicRuntime) interpret(expr *BasicASTLeaf) (*BasicValue, error) {
 	var value *BasicValue
 	var err error
 	value, err = self.evaluate(expr)
 	if ( err != nil ) {
 		fmt.Println(err)
-		self.mode = MODE_REPL
-		return nil
+		return nil, err
 	}
-	return value
+	return value, nil
+}
+
+func (self *BasicRuntime) interpretImmediate(expr *BasicASTLeaf) (*BasicValue, error) {
+	var value *BasicValue
+	var err error
+	value, err = self.evaluateSome(expr, LEAF_COMMAND_IMMEDIATE)
+	//fmt.Printf("after evaluateSome in mode %d\n", self.mode)
+	if ( err != nil ) {
+		fmt.Println(err)
+		return nil, err
+	}
+	return value, nil
+}
+
+
+func (self *BasicRuntime) processLineRunStream(readbuff *bufio.Scanner) {
+	var line string
+	if ( readbuff.Scan() ) {
+		line = readbuff.Text()
+		// All we're doing is getting the line #
+		// and storing the source line in this mode.
+		self.scanner.scanTokens(line)
+	} else {
+		self.mode = MODE_RUN
+	}
+}
+
+func (self *BasicRuntime) processLineRepl(readbuff *bufio.Scanner) {
+	var leaf *BasicASTLeaf = nil
+	var err error = nil
+	fmt.Println("READY")
+	if ( readbuff.Scan() ) {
+		self.scanner.scanTokens(readbuff.Text())
+		leaf, err = self.parser.parse()
+		if ( err != nil ) {
+			self.basicError(RUNTIME, err.Error())
+			return
+		}
+		_, _ = self.interpretImmediate(leaf)
+		//fmt.Printf("Leaving repl function in mode %d", self.mode)
+	}
+}
+
+func (self *BasicRuntime) processLineRun(readbuff *bufio.Scanner) {
+	var line string
+	var leaf *BasicASTLeaf = nil
+	var err error = nil
+	//fmt.Printf("RUN line %d\n", self.nextline)
+	if ( self.nextline >= MAX_SOURCE_LINES ) {
+		self.mode = self.run_finished_mode
+		return
+	}
+	line = self.source[self.nextline]
+	self.lineno = self.nextline
+	self.nextline += 1
+	if ( line == "" ) {
+		return
+	}
+	//fmt.Println(line)
+	self.scanner.scanTokens(line)
+	leaf, err = self.parser.parse()
+	if ( err != nil ) {
+		self.basicError(RUNTIME, err.Error())
+		self.mode = MODE_QUIT
+		return
+	}
+	_, _ = self.interpret(leaf)	
 }
 
 func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 	var readbuff = bufio.NewScanner(fileobj)
-	var leaf *BasicASTLeaf = nil
-	var err error = nil
-	var enable_repl = true
-	var line string
 
 	self.parser.init(self)
 	self.scanner.init(self, &self.parser)
 	self.mode = mode
+	if ( self.mode == MODE_REPL ) {
+		self.run_finished_mode = MODE_REPL
+	} else {
+		self.run_finished_mode = MODE_QUIT
+	}
 	for {
+		//fmt.Printf("Starting in mode %d\n", self.mode)
 		self.zero()
 		self.parser.zero()
 		self.scanner.zero()
@@ -217,51 +299,13 @@ func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 		case MODE_QUIT:
 			os.Exit(0)
 		case MODE_RUNSTREAM:
-			enable_repl = false
-			if ( readbuff.Scan() ) {
-				line = readbuff.Text()
-				// All we're doing is getting the line #
-				// and storing the source line.
-				self.scanner.scanTokens(line)
-			} else {
-				self.mode = MODE_RUN
-			}
+			self.processLineRunStream(readbuff)
 		case MODE_REPL:
-			if ( enable_repl == false ) {
-				self.mode = MODE_QUIT
-				break
-			}
-			fmt.Println("READY")
-			if ( readbuff.Scan() ) {
-				self.scanner.scanTokens(readbuff.Text())
-				leaf, err = self.parser.parse()
-				if ( err != nil ) {
-					self.basicError(RUNTIME, err.Error())
-				}
-			}
+			self.processLineRepl(readbuff)
 		case MODE_RUN:
-			if ( self.nextline >= MAX_SOURCE_LINES ) {
-				self.mode = MODE_QUIT
-				continue
-			}
-			line = self.source[self.nextline]
-			self.lineno = self.nextline
-			self.nextline += 1
-			if ( line == "" ) {
-				continue
-			}
-			fmt.Println(line)
-			self.scanner.scanTokens(line)
-			leaf, err = self.parser.parse()
-			if ( err != nil ) {
-				self.basicError(RUNTIME, err.Error())
-				self.mode = MODE_QUIT
-			} else {
-				_ = self.interpret(leaf)
-			}
-			if ( self.mode != MODE_RUN ) {
-				break
-			}
+			self.processLineRun(readbuff)
 		}
+		//fmt.Printf("Finishing in mode %d\n", self.mode)
+
 	}
 }
