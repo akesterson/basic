@@ -290,12 +290,12 @@ func (self *BasicParser) relation() (*BasicASTLeaf, error) {
 
 func (self *BasicParser) subtraction() (*BasicASTLeaf, error) {
 	var expr *BasicASTLeaf = nil
-	var addition *BasicASTLeaf = nil
+	var left *BasicASTLeaf = nil
 	var operator *BasicToken = nil
 	var right *BasicASTLeaf = nil
 	var err error = nil
 
-	addition, err = self.addition()
+	left, err = self.addition()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -308,29 +308,31 @@ func (self *BasicParser) subtraction() (*BasicASTLeaf, error) {
 		if ( err != nil ) {
 			return nil, err
 		}
+		if ( expr != nil ) {
+			left = expr
+		}
 		expr, err = self.newLeaf()
 		if ( err != nil ) {
 			return nil, err
 		}
-		expr.newBinary(addition, operator.tokentype, right)
+		expr.newBinary(left, operator.tokentype, right)
 		return expr, nil
 	}
-	return addition, nil
+	return left, nil
 }
 
 func (self *BasicParser) addition() (*BasicASTLeaf, error) {
 	var expr *BasicASTLeaf = nil
-	var multiplication *BasicASTLeaf = nil
+	var left *BasicASTLeaf = nil
 	var operator *BasicToken = nil
 	var right *BasicASTLeaf = nil
 	var err error = nil
 
-	multiplication, err = self.multiplication()
+	left, err = self.multiplication()
 	if ( err != nil ) {
 		return nil, err
 	}
 	for self.match(PLUS) {
-		fmt.Printf("Matched PLUS\n")
 		operator, err = self.previous()
 		if ( err != nil ) {
 			return nil, err
@@ -339,24 +341,29 @@ func (self *BasicParser) addition() (*BasicASTLeaf, error) {
 		if ( err != nil ) {
 			return nil, err
 		}
+		if ( expr != nil ) {
+			left = expr
+		}
 		expr, err = self.newLeaf()
 		if ( err != nil ) {
 			return nil, err
 		}
-		expr.newBinary(multiplication, operator.tokentype, right)
+		expr.newBinary(left, operator.tokentype, right)
+	}
+	if ( expr != nil ) {
 		return expr, nil
 	}
-	return multiplication, nil
+	return left, nil
 }
 
 func (self *BasicParser) multiplication() (*BasicASTLeaf, error) {
 	var expr *BasicASTLeaf = nil
-	var division *BasicASTLeaf = nil
+	var left *BasicASTLeaf = nil
 	var operator *BasicToken = nil
 	var right *BasicASTLeaf = nil
 	var err error = nil
 
-	division, err = self.division()
+	left, err = self.division()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -369,24 +376,29 @@ func (self *BasicParser) multiplication() (*BasicASTLeaf, error) {
 		if ( err != nil ) {
 			return nil, err
 		}
+		if ( expr != nil ) {
+			left = expr
+		}
 		expr, err = self.newLeaf()
 		if ( err != nil ) {
 			return nil, err
 		}
-		expr.newBinary(division, operator.tokentype, right)
+		expr.newBinary(left, operator.tokentype, right)
+	}
+	if ( expr != nil ) {
 		return expr, nil
 	}
-	return division, nil
+	return left, nil
 }
 
 func (self *BasicParser) division() (*BasicASTLeaf, error) {
 	var expr *BasicASTLeaf = nil
-	var unary *BasicASTLeaf = nil
+	var left *BasicASTLeaf = nil
 	var operator *BasicToken = nil
 	var right *BasicASTLeaf = nil
 	var err error = nil
 
-	unary, err = self.unary()
+	left, err = self.unary()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -399,14 +411,19 @@ func (self *BasicParser) division() (*BasicASTLeaf, error) {
 		if ( err != nil ) {
 			return nil, err
 		}
+		if ( expr != nil ) {
+			left = expr
+		}
 		expr, err = self.newLeaf()
 		if ( err != nil ) {
 			return nil, err
 		}
-		expr.newBinary(unary, operator.tokentype, right)
+		expr.newBinary(left, operator.tokentype, right)
+	}
+	if ( expr != nil ) {
 		return expr, nil
 	}
-	return unary, nil
+	return left, nil
 }
 
 func (self *BasicParser) unary() (*BasicASTLeaf, error) {
@@ -415,7 +432,7 @@ func (self *BasicParser) unary() (*BasicASTLeaf, error) {
 	var right *BasicASTLeaf = nil
 	var err error = nil
 
-	for self.match(MINUS) {
+	if self.match(MINUS) {
 		operator, err = self.previous()
 		if ( err != nil ) {
 			return nil, err
@@ -436,12 +453,12 @@ func (self *BasicParser) unary() (*BasicASTLeaf, error) {
 
 func (self *BasicParser) exponent() (*BasicASTLeaf, error) {
 	var expr *BasicASTLeaf = nil
-	var primary *BasicASTLeaf = nil
+	var left *BasicASTLeaf = nil
 	var operator *BasicToken = nil
 	var right *BasicASTLeaf = nil
 	var err error = nil
 
-	primary, err = self.primary()
+	left, err = self.primary()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -454,14 +471,20 @@ func (self *BasicParser) exponent() (*BasicASTLeaf, error) {
 		if ( err != nil ) {
 			return nil, err
 		}
+		if ( expr != nil ) {
+			left = expr
+		}
 		expr, err = self.newLeaf()
 		if ( err != nil ) {
 			return nil, err
 		}
-		expr.newBinary(primary, operator.tokentype, right)
+		expr.newBinary(left, operator.tokentype, right)
 		return expr, nil
 	}
-	return primary, nil
+	if ( expr != nil ) {
+		return expr, nil
+	}
+	return left, nil
 }
 
 func (self *BasicParser) primary() (*BasicASTLeaf, error) {
