@@ -1,4 +1,1 @@
-Lines with multiple operators of the same precedence within the parser aren't getting handled properly. For example `10 A# = 1 + 1 - 1 + 1` works (== 0), but `10 A# = 1 + 1 + 1` does not ( != 3). The issue is that operators of the same precedence are only processing the first item (the `return` at the bottom of the `for self.MATCH(....)` is working against me)
-
-Implement variables
-
+Implement IF statements
