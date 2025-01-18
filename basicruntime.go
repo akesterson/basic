@@ -28,7 +28,7 @@ type BasicRuntime struct {
 	run_finished_mode int
 	scanner BasicScanner
 	parser BasicParser
-	
+	environment BasicEnvironment
 }
 
 func (self *BasicRuntime) zero() {
@@ -38,10 +38,14 @@ func (self *BasicRuntime) zero() {
 	self.nextvalue = 0
 }
 
-
 func (self *BasicRuntime) init() {
 	self.lineno = 0
 	self.nextline = 0
+
+	self.parser.init(self)
+	self.scanner.init(self)
+	self.environment.init(self)
+	
 	self.zero()
 }
 
@@ -101,6 +105,14 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 	//fmt.Printf("Evaluating leaf type %d\n", expr.leaftype)
 	switch (expr.leaftype) {
 	case LEAF_GROUPING: return self.evaluate(expr.expr)
+	case LEAF_IDENTIFIER_INT: fallthrough
+	case LEAF_IDENTIFIER_FLOAT: fallthrough
+	case LEAF_IDENTIFIER_STRING:
+		lval = self.environment.get(expr.identifier)
+		if ( lval == nil ) {
+			return nil, fmt.Errorf("Identifier %s is undefined", expr.identifier)
+		}
+		return lval, nil
 	case LEAF_LITERAL_INT:
 		lval.valuetype = TYPE_INTEGER
 		lval.intval = expr.literal_int
@@ -144,7 +156,7 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		}
 		switch (expr.operator) {
 		case ASSIGNMENT:
-			return nil, errors.New("Assignment not implemented yet")
+			return self.environment.assign(expr.left, rval)
 		case MINUS:
 			return lval.mathMinus(rval)
 		case PLUS:
@@ -251,7 +263,7 @@ func (self *BasicRuntime) processLineRepl(readbuff *bufio.Scanner) {
 		self.scanner.scanTokens(readbuff.Text())
 		leaf, err = self.parser.parse()
 		if ( err != nil ) {
-			self.basicError(RUNTIME, err.Error())
+			self.basicError(PARSE, err.Error())
 			return
 		}
 		_, _ = self.interpretImmediate(leaf)
@@ -278,18 +290,16 @@ func (self *BasicRuntime) processLineRun(readbuff *bufio.Scanner) {
 	self.scanner.scanTokens(line)
 	leaf, err = self.parser.parse()
 	if ( err != nil ) {
-		self.basicError(RUNTIME, err.Error())
+		self.basicError(PARSE, err.Error())
 		self.mode = MODE_QUIT
 		return
 	}
-	_, _ = self.interpret(leaf)	
+	_, _ = self.interpret(leaf)
 }
 
 func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 	var readbuff = bufio.NewScanner(fileobj)
 
-	self.parser.init(self)
-	self.scanner.init(self, &self.parser)
 	self.mode = mode
 	if ( self.mode == MODE_REPL ) {
 		self.run_finished_mode = MODE_REPL

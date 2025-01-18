@@ -43,3 +43,10 @@ func (self *BasicRuntime) CommandQUIT(expr *BasicASTLeaf, lval *BasicValue, rval
 	self.mode = MODE_QUIT
 	return nil, nil
 }
+
+func (self *BasicRuntime) CommandLET(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	// LET is not expressly required in our basic implementation or in
+	// Commodore 128 BASIC 7.0. Assignments to variables are handled as
+	// part of expression evaluation, LET doesn't need to manage it.
+	return nil, nil
+}

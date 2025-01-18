@@ -51,7 +51,6 @@ const (
 	ASSIGNMENT // 34
 )
 
-
 type BasicScanner struct {
 	current int
 	c rune
@@ -72,14 +71,12 @@ func (self *BasicScanner) zero() {
 	self.hasError = false
 }
 
-func (self *BasicScanner) init(runtime *BasicRuntime, parser *BasicParser) error {
-	if ( runtime == nil || parser == nil ) {
+func (self *BasicScanner) init(runtime *BasicRuntime) error {
+	if ( runtime == nil ) {
 		return errors.New("nil pointer argument")
 	}
 	self.zero()
 	self.runtime = runtime
-	self.parser = parser
-	self.parser.zero()
 	if len(self.reservedwords) == 0 {
 		self.reservedwords = make(map[string]BasicTokenType)
 		self.reservedwords["REM"] = REM
@@ -254,12 +251,12 @@ func (self *BasicScanner) init(runtime *BasicRuntime, parser *BasicParser) error
 }
 
 func (self *BasicScanner) addToken(token BasicTokenType, lexeme string) {
-	self.parser.tokens[self.parser.nexttoken].tokentype = token
-	self.parser.tokens[self.parser.nexttoken].lineno = self.runtime.lineno
-	self.parser.tokens[self.parser.nexttoken].lexeme = lexeme
+	self.runtime.parser.tokens[self.runtime.parser.nexttoken].tokentype = token
+	self.runtime.parser.tokens[self.runtime.parser.nexttoken].lineno = self.runtime.lineno
+	self.runtime.parser.tokens[self.runtime.parser.nexttoken].lexeme = lexeme
 	
-	//fmt.Printf("%+v\n", self.parser.tokens[self.parser.nexttoken])
-	self.parser.nexttoken += 1
+	//fmt.Printf("%+v\n", self.runtime.parser.tokens[self.runtime.parser.nexttoken])
+	self.runtime.parser.nexttoken += 1
 }
 
 func (self *BasicScanner) getLexeme() string {
@@ -335,7 +332,7 @@ func (self *BasicScanner) matchString() {
 }
 
 func (self *BasicScanner) matchNumber() {
-	var linenumber bool = (self.parser.nexttoken == 0)
+	var linenumber bool = (self.runtime.parser.nexttoken == 0)
 	self.tokentype = LITERAL_INT
 	for !self.isAtEnd() {
 		// Discard the error, we're checking isAtEnd()
@@ -415,7 +412,7 @@ func (self *BasicScanner) scanTokens(line string) {
 
 	var c rune
 	self.line = line
-	self.parser.zero()
+	self.runtime.parser.zero()
 	self.current = 0
 	self.start = 0
 	self.hasError = false
@@ -431,7 +428,7 @@ func (self *BasicScanner) scanTokens(line string) {
 		case '/': self.tokentype = LEFT_SLASH
 		case '*': self.tokentype = STAR
 		case ',': self.tokentype = COMMA
-		case '=': self.tokentype = EQUAL
+		case '=': self.matchNextChar('=', EQUAL, ASSIGNMENT)
 		case ':': self.tokentype = COLON
 		case '<':
 			if ( ! self.matchNextChar('=', LESS_THAN_EQUAL, LESS_THAN) ) {

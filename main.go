@@ -20,12 +20,9 @@ const (
 
 func main() {
 	var runtime BasicRuntime;
-	var scanner BasicScanner;
-	var parser BasicParser;
 	runtime.init()
-	runtime.scanner = scanner
-	runtime.parser = parser
 	runtime.run(os.Stdin, MODE_REPL)
+	//runtime.run(strings.NewReader("10 A$ = \"Hello World\"\n20 PRINT A$\nRUN\nQUIT"), MODE_REPL)
 	//runtime.run(strings.NewReader("10 PRINT \"Hello World\"\nRUN\nQUIT"), MODE_RUNSTREAM)
 	//runtime.run(strings.NewReader("10 PRINT \"Hello World\"\nRUN\nQUIT"), MODE_REPL)
 	//runtime.source[10] = "10 PRINT \"Hello World\""

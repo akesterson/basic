@@ -10,8 +10,9 @@ import (
 type BasicToken struct {
 	tokentype BasicTokenType
 	lineno int
-literal string
+	literal string
 	lexeme string
+	
 }
 
 func (self *BasicToken) init() {
@@ -65,6 +66,9 @@ func (self *BasicParser) init(runtime *BasicRuntime) error {
 }
 
 func (self *BasicParser) zero() {
+	if ( self == nil ) {
+		panic("nil self reference!")
+	}
 	for i, _ := range self.leaves {
 		self.leaves[i].init(LEAF_UNDEFINED)
 	}
@@ -140,7 +144,9 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 		// isn't one. But fail if there is one and it fails to parse.
 		righttoken = self.peek()
 		if ( righttoken != nil && righttoken.tokentype != UNDEFINED ) {
-			right, err = self.expression()
+			// we call command here because you might have multiple
+			// commands on the same line. IF ... THEN for example
+			right, err = self.command()
 			if ( err != nil ) {
 				return nil, err
 			}
@@ -162,6 +168,7 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 }
 
 func (self *BasicParser) assignment() (*BasicASTLeaf, error) {
+	var identifier *BasicASTLeaf = nil
 	var expr *BasicASTLeaf = nil
 	var right *BasicASTLeaf = nil
 	var err error = nil
@@ -171,13 +178,13 @@ func (self *BasicParser) assignment() (*BasicASTLeaf, error) {
 		LEAF_IDENTIFIER_STRING,
 	}
 
-	expr, err = self.expression()
+	identifier, err = self.expression()
 	if ( err != nil ) {
 		return nil, err
-	} else if ( ! slices.Contains(identifier_leaf_types, expr.leaftype) ) {
-		return expr, err
+	} else if ( ! slices.Contains(identifier_leaf_types, identifier.leaftype) ) {
+		return identifier, err
 	}
-	for self.match(EQUAL) {
+	for self.match(ASSIGNMENT) {
 		right, err = self.expression()
 		if ( err != nil ) {
 			return nil, err
@@ -186,10 +193,10 @@ func (self *BasicParser) assignment() (*BasicASTLeaf, error) {
 		if ( err != nil ) {
 			return nil, err
 		}
-		expr.newBinary(expr, ASSIGNMENT, right)
+		expr.newBinary(identifier, ASSIGNMENT, right)
 		return expr, nil
 	}
-	return expr, err
+	return identifier, err
 }
 
 func (self *BasicParser) expression() (*BasicASTLeaf, error) {
@@ -323,6 +330,7 @@ func (self *BasicParser) addition() (*BasicASTLeaf, error) {
 		return nil, err
 	}
 	for self.match(PLUS) {
+		fmt.Printf("Matched PLUS\n")
 		operator, err = self.previous()
 		if ( err != nil ) {
 			return nil, err
