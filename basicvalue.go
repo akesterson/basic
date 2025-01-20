@@ -9,10 +9,10 @@ import (
 type BasicType int
 const (
 	TYPE_UNDEFINED    BasicType = iota
-	TYPE_INTEGER  
-	TYPE_FLOAT
-	TYPE_STRING
-	TYPE_BOOLEAN
+	TYPE_INTEGER      // 1
+	TYPE_FLOAT        // 2
+	TYPE_STRING       // 3
+	TYPE_BOOLEAN      // 4
 )
 
 type BasicValue struct {
@@ -23,6 +23,7 @@ type BasicValue struct {
 	floatval float64
 	boolvalue int64
 	runtime *BasicRuntime
+	mutable bool
 }
 
 func (self *BasicValue) init() {
@@ -31,11 +32,12 @@ func (self *BasicValue) init() {
 func (self *BasicValue) zero() {
 	self.valuetype = TYPE_UNDEFINED
 	self.stringval = ""
+	self.mutable = false
 	self.name = ""
 	self.intval = 0
 	self.floatval = 0.0
 	self.boolvalue = BASIC_FALSE
-}	
+}
 
 func (self *BasicValue) clone(dest *BasicValue) (*BasicValue, error) {
 	var err error
@@ -64,11 +66,20 @@ func (self *BasicValue) toString() string {
 	return fmt.Sprintf("(UNDEFINED STRING REPRESENTATION FOR %d)", self.valuetype)
 }
 
+
+func (self *BasicValue) cloneIfNotMutable() (*BasicValue, error) {
+	if ( !self.mutable ) {
+		return self.clone(nil)
+	}
+	return self, nil
+}
+
+
 func (self *BasicValue) invert() (*BasicValue, error) {
 	if ( self.valuetype == TYPE_STRING ) {
 		return nil, errors.New("Cannot invert a string")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -81,7 +92,7 @@ func (self *BasicValue) bitwiseNot() (*BasicValue, error) {
 	if ( self.valuetype != TYPE_INTEGER ) {
 		return nil, errors.New("Cannot only perform bitwise operations on integers")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}	
@@ -96,7 +107,7 @@ func (self *BasicValue) bitwiseAnd(rval *BasicValue) (*BasicValue, error) {
 	if ( self.valuetype != TYPE_INTEGER ) {
 		return nil, errors.New("Cannot perform bitwise operations on string or float")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -111,7 +122,7 @@ func (self *BasicValue) bitwiseOr(rval *BasicValue) (*BasicValue, error) {
 	if ( self.valuetype != TYPE_INTEGER ) {
 		return nil, errors.New("Cannot only perform bitwise operations on integers")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -125,7 +136,7 @@ func (self *BasicValue) mathPlus(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -140,6 +151,7 @@ func (self *BasicValue) mathPlus(rval *BasicValue) (*BasicValue, error) {
 	} else if ( self.valuetype == TYPE_STRING && rval.valuetype == TYPE_FLOAT ) {
 		dest.stringval = fmt.Sprintf("%s%f", self.stringval, rval.floatval)
 	} else {
+		fmt.Printf("%+v + %+v\n", self, rval)	
 		return nil, errors.New("Invalid arithmetic operation")
 	}
 	return dest, nil
@@ -150,7 +162,7 @@ func (self *BasicValue) mathMinus(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -169,7 +181,7 @@ func (self *BasicValue) mathDivide(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}	
@@ -188,7 +200,7 @@ func (self *BasicValue) mathMultiply(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -207,7 +219,7 @@ func (self *BasicValue) lessThan(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -226,7 +238,7 @@ func (self *BasicValue) lessThanEqual(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -246,7 +258,7 @@ func (self *BasicValue) greaterThan(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -266,7 +278,7 @@ func (self *BasicValue) greaterThanEqual(rval *BasicValue) (*BasicValue, error) 
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -286,7 +298,7 @@ func (self *BasicValue) isEqual(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -307,7 +319,7 @@ func (self *BasicValue) isNotEqual(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -320,6 +332,13 @@ func (self *BasicValue) isNotEqual(rval *BasicValue) (*BasicValue, error) {
 		dest.basicBoolValue(result != 0)
 	}
 	return dest, nil
+}
+
+func (self *BasicValue) isTrue() bool {
+	if ( self.valuetype != TYPE_BOOLEAN ) {
+		return false
+	}
+	return (self.boolvalue == BASIC_TRUE)
 }
 
 func (self *BasicValue) basicBoolValue(result bool) {

@@ -35,7 +35,8 @@ func (self *BasicEnvironment) get(varname string) *BasicValue {
 		intval: 0,
 		floatval: 0.0,
 		boolvalue: BASIC_FALSE,
-		runtime: self.runtime}
+		runtime: self.runtime,
+		mutable: true}
 	return self.variables[varname]
 }
 

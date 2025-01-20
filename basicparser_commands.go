@@ -41,9 +41,9 @@ func (self *BasicParser) ParseCommandFOR() (*BasicASTLeaf, error) {
 			return nil, err
 		}
 	} else {
-		// Use a default step of 1
+		// Let the runtime determine the correct default step
 		self.runtime.environment.forStepLeaf, err = self.newLeaf()
-		self.runtime.environment.forStepLeaf.newLiteralInt("1")
+		self.runtime.environment.forStepLeaf.newLiteralInt("0")
 	}
 	self.runtime.environment.loopFirstLine = (self.runtime.lineno + 1)
 	expr, err = self.newLeaf()

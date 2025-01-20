@@ -179,12 +179,14 @@ func (self *BasicRuntime) CommandFOR(expr *BasicASTLeaf, lval *BasicValue, rval 
 	// evaluate the STEP expression if there is one, and the TO
 	// leaf, and then return nil, nil.
 	var err error = nil
+	var assignvar *BasicValue = nil
 	var tmpvar *BasicValue = nil
+	var truth *BasicValue = nil
 		
 	if ( self.environment.forToLeaf == nil || expr.right == nil ) {
 		return nil, errors.New("Expected FOR ... TO [STEP ...]")
 	}
-	tmpvar, err = self.evaluate(expr.right)
+	assignvar, err = self.evaluate(expr.right)
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -198,14 +200,26 @@ func (self *BasicRuntime) CommandFOR(expr *BasicASTLeaf, lval *BasicValue, rval 
 		return nil, err
 	}
 	_, _ = tmpvar.clone(&self.environment.forStepValue)
+	if ( self.environment.forStepValue.intval == 0 && self.environment.forStepValue.floatval == 0 ) {
+		// Set a default step
+		truth, err = self.environment.forToValue.greaterThan(assignvar)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( truth.isTrue() ) {
+			self.environment.forStepValue.intval = 1
+		} else {
+			self.environment.forStepValue.intval = -1	
+		}
+	}
 	self.environment.forToLeaf = nil
 	self.environment.forStepLeaf = nil
 	return nil, nil
 }
 
 func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
-	var curValue float64 = 0.0
-	var maxValue float64 = 0.0
+	var truth *BasicValue = nil
+	var err error = nil
 
 	// if self.environment.forRelationLeaf is nil, parse error
 	if ( self.environment.forToValue.valuetype == TYPE_UNDEFINED ) {
@@ -222,31 +236,28 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 	self.environment.loopExitLine = self.lineno + 1
 	
 	rval = self.environment.get(expr.right.identifier)
-	
-	if ( self.environment.forToValue.valuetype == TYPE_FLOAT ) {
-		maxValue = self.environment.forToValue.floatval
-	} else {
-		maxValue = float64(self.environment.forToValue.intval)
-	}	
-	if ( self.environment.forStepValue.valuetype == TYPE_FLOAT ) {
-		curValue = rval.floatval
-	} else {
-		curValue = float64(rval.intval)
+	truth, err = self.environment.forStepValue.lessThan(&BasicValue{valuetype: TYPE_INTEGER, intval: 0})
+	if ( err != nil ) {
+		return nil, err
 	}
-
-	if ( curValue == maxValue ) {
+	if ( truth.isTrue() ) {
+		// Our step is negative
+		truth, err = self.environment.forToValue.greaterThanEqual(rval)
+	} else {
+		// Our step is positive
+		truth, err = self.environment.forToValue.lessThanEqual(rval)
+	}
+	if ( err != nil ) {
+		return nil, err
+	}
+	if ( truth.isTrue() ) {
 		self.environment.forStepValue.zero()
 		self.environment.forToValue.zero()
 		self.environment.loopFirstLine = 0
 		return nil, nil
 	}
-	if ( self.environment.forStepValue.valuetype == TYPE_FLOAT ) {
-		rval.floatval += self.environment.forStepValue.floatval
-	} else {
-		rval.intval += self.environment.forStepValue.intval
-	}
 	self.nextline = self.environment.loopFirstLine
-	return nil, nil
+	return rval.mathPlus(&self.environment.forStepValue)
 }
 
 func (self *BasicRuntime) CommandEXIT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
