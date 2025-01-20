@@ -42,18 +42,18 @@ type BasicParser struct {
    This hierarcy is as-per "Commodore 128 Programmer's Reference Guide" page 23
 
    program        -> line*
-   line           -> expression? ( statement expression )
-   statement      -> identifier expression*
+   line           -> (line_number ( command | expression )) (immediate_command expression)
+   command        -> command (expression)
    expression     -> logicalandor
    logicalandor   -> logicalnot ( "OR" "AND" ) logicalnot
    logicalnot     -> "NOT" relation
-   relation       -> subtraction [ < <= = <> >= > ] subtraction
-   subtraction    -> addition "-" addition
-   addition       -> multiplication "+" multiplication
-   multiplication -> division "*" division
-   division       -> unary "/" unary
-   unary          -> exponent "-" exponent
-   primary        -> LITERAL_INT | LITERAL_FLOAT | LITERAL_STRING | "(" expression ")"
+   relation       -> subtraction* [ < <= = <> >= > ] subtraction*
+   subtraction    -> addition* "-" addition*
+   addition       -> multiplication* "+" multiplication*
+   multiplication -> division* "*" division*
+   division       -> unary* "/" unary*
+   unary          -> "-" exponent
+   primary        -> IDENTIFIER | LITERAL_INT | LITERAL_FLOAT | LITERAL_STRING | "(" expression ")"
    
 */
 

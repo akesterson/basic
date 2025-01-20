@@ -6,48 +6,6 @@ import (
 	"errors"
 )
 
-/*
-   expression -> literal
-	       | unary
-	       | binary
-	       | grouping
-
-   literal     -> INT | FLOAT | STRING
-   identifier  -> IDENTIFIER NAME
-   grouping    -> "(" expression ")"
-   unary       -> ( "-" | "NOT" ) expression
-   binary      -> expression operator expression
-   operator    -> "=" | "<" | ">" | "<=" | ">=" | "<>"
-                | "+" | "-" | "*" | "/"
-
-
-   
-   The crafting interpreters book proposes this grammar ... I'm not sure it actually
-   improves beyond the simpler grammar we already have, for BASIC. The actual hierarchy of
-   expression operations for Commodore 128 BASIC 7.0 (see http://www.jbrain.com/pub/cbm/manuals/128/C128PRG.pdf
-   page 22-23) is slightly different. Let's use the lox grammar for now because it's close enough,
-   but I need to come back and refine it to match the real BASIC grammar once I understand what I'm
-   doing.
-   
-   expression -> equality
-              -> comparison
-              -> term
-              -> factor
-              -> unary
-              -> primary
-   
-   equality   -> BASIC does not have an explicit equality operator useful as a generic operator.
-                 We need to support = as an equality operator. But his grammar is:
-                 comparison ( ( "!=" | "==" ) comparison )* ...
-                 ... to make it easier to move to BASIC we use
-                 comparison ( ( "=" "<>" ) comparison )*
-   comparison -> term [ < <= > >= ] term
-   term       -> factor ( ( "-" | "+" ) factor )*
-   factor     -> unary ( ( "/" | "*" ) unary )*
-   unary      -> ( "NOT" | "-" ) primary
-   primary    -> INT | FLOAT | STRING | "(" expression ")"
-
-*/
 
 type BasicASTLeafType int
 const (
