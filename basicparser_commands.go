@@ -11,7 +11,7 @@ func (self *BasicParser) ParseCommandFOR() (*BasicASTLeaf, error) {
 	// Set up:
 	//    self.runtime.environment.forStepLeaf with the step expression
 	//    self.runtime.environment.forToLeaf with the TO expression
-	//    self.runtime.environment.forFirstLine with the first line of the FOR code
+	//    self.runtime.environment.loopFirstLine with the first line of the FOR code
 	// Return the FOR +assignment
 	
 	var assignment *BasicASTLeaf = nil
@@ -45,7 +45,7 @@ func (self *BasicParser) ParseCommandFOR() (*BasicASTLeaf, error) {
 		self.runtime.environment.forStepLeaf, err = self.newLeaf()
 		self.runtime.environment.forStepLeaf.newLiteralInt("1")
 	}
-	self.runtime.environment.forFirstLine = (self.runtime.lineno + 1)
+	self.runtime.environment.loopFirstLine = (self.runtime.lineno + 1)
 	expr, err = self.newLeaf()
 	if ( err != nil ) {
 		return nil, err

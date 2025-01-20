@@ -219,6 +219,8 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 		expr.right.leaftype != LEAF_IDENTIFIER_FLOAT ) {
 		return nil, errors.New("FOR ... NEXT only valid over INT and FLOAT types")
 	}
+	self.environment.loopExitLine = self.lineno + 1
+	
 	rval = self.environment.get(expr.right.identifier)
 	
 	if ( self.environment.forToValue.valuetype == TYPE_FLOAT ) {
@@ -235,7 +237,7 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 	if ( curValue == maxValue ) {
 		self.environment.forStepValue.zero()
 		self.environment.forToValue.zero()
-		self.environment.forFirstLine = 0
+		self.environment.loopFirstLine = 0
 		return nil, nil
 	}
 	if ( self.environment.forStepValue.valuetype == TYPE_FLOAT ) {
@@ -243,6 +245,20 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 	} else {
 		rval.intval += self.environment.forStepValue.intval
 	}
-	self.nextline = self.environment.forFirstLine
+	self.nextline = self.environment.loopFirstLine
+	return nil, nil
+}
+
+func (self *BasicRuntime) CommandEXIT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+
+	if ( self.environment.forToValue.valuetype == TYPE_UNDEFINED ) {
+		return nil, errors.New("EXIT outside the context of FOR")
+	}
+
+	self.environment.forStepValue.zero()
+	self.environment.forToValue.zero()
+	self.environment.loopFirstLine = 0
+	self.nextline = self.environment.loopExitLine
+	self.environment.loopExitLine = 0	
 	return nil, nil
 }
