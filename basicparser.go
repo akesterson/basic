@@ -189,6 +189,15 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 			if ( err != nil ) {
 				return nil, err
 			}
+			/*
+			   fmt.Printf("expr.right : %+v\n", right)
+			if ( right.left != nil ) {
+				fmt.Printf("expr.right.left : %+v\n", right.left)
+			}
+			if ( right.right != nil ) {
+				fmt.Printf("expr.right.right : %+v\n", right.right)
+			}
+			*/
 		}
 		
 		expr, err = self.newLeaf()

@@ -13,7 +13,8 @@ import (
 
 type BasicError int
 const (
-	IO           BasicError = iota
+	NOERROR    BasicError = iota
+	IO
 	PARSE
 	SYNTAX
 	RUNTIME
@@ -26,6 +27,7 @@ type BasicRuntime struct {
 	nextvalue int
 	nextline int
 	mode int
+	errno BasicError
 	run_finished_mode int
 	scanner BasicScanner
 	parser BasicParser
@@ -36,6 +38,7 @@ func (self *BasicRuntime) zero() {
 	for i, _ := range self.values {
 		self.values[i].init()
 	}
+	self.errno = 0
 	self.nextvalue = 0
 }
 
@@ -61,6 +64,7 @@ func (self *BasicRuntime) errorCodeToString(errno BasicError) string {
 }
 
 func (self *BasicRuntime) basicError(errno BasicError, message string) {
+	self.errno = errno
 	fmt.Printf("? %d : %s %s\n", self.lineno, self.errorCodeToString(errno), message)
 }
 
@@ -340,6 +344,9 @@ func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 			self.processLineRepl(readbuff)
 		case MODE_RUN:
 			self.processLineRun(readbuff)
+		}
+		if ( self.errno != 0 ) {
+			self.setMode(self.run_finished_mode)
 		}
 		//fmt.Printf("Finishing in mode %d\n", self.mode)
 

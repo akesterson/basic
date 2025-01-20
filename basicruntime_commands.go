@@ -63,19 +63,53 @@ func (self *BasicRuntime) CommandRETURN(expr *BasicASTLeaf, lval *BasicValue, rv
 func (self *BasicRuntime) CommandLIST(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
 	var startidx int64 = 0
+	var endidx int64 = MAX_SOURCE_LINES - 1
+	var i int64
+	var value string
 	if ( expr.right == nil ) {
 		self.nextline = 0
 	} else {
-		rval, err = self.evaluate(expr.right)
-		if ( err != nil ) {
-			return nil, err
+		if ( expr.right.leaftype == LEAF_LITERAL_INT ) {
+			rval, err = self.evaluate(expr.right)
+			if ( err != nil ) {
+				return nil, err
+			}
+			if ( rval.valuetype != TYPE_INTEGER ) {
+				return nil, errors.New("Expected integer")
+			}
+			startidx = rval.intval
+		} else if ( expr.right.leaftype == LEAF_BINARY &&
+			expr.right.operator == MINUS ) {
+			lval, err = self.evaluate(expr.right.left)
+			if ( err != nil ) {
+				return nil, err
+			}
+			if ( lval.valuetype != TYPE_INTEGER ) {
+				return nil, errors.New("Expected integer")
+			}			
+			rval, err = self.evaluate(expr.right.right)
+			if ( err != nil ) {
+				return nil, err
+			}
+			if ( rval.valuetype != TYPE_INTEGER ) {
+				return nil, errors.New("Expected integer")
+			}
+			startidx = lval.intval
+			endidx = rval.intval
+		} else if ( expr.right.leaftype == LEAF_UNARY &&
+			expr.right.operator == MINUS ) {
+			rval, err = self.evaluate(expr.right.right)
+			if ( err != nil ) {
+				return nil, err
+			}
+			if ( rval.valuetype != TYPE_INTEGER ) {
+				return nil, errors.New("Expected integer")
+			}
+			endidx = rval.intval
 		}
-		if ( rval.valuetype != TYPE_INTEGER ) {
-			return nil, errors.New("Expected integer")
-		}
-		startidx = rval.intval
 	}
-	for _, value := range(self.source[startidx:]) {
+	for i = startidx; i <= endidx; i++ {
+		value = self.source[i]
 		if ( len(value) > 0 ) {
 			fmt.Println(value)
 		}
