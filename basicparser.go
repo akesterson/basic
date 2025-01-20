@@ -5,6 +5,7 @@ import (
 	"errors"
 	"slices"
 	"strconv"
+	"reflect"
 )
 
 type BasicToken struct {
@@ -127,7 +128,7 @@ func (self *BasicParser) line() (*BasicASTLeaf, error) {
 	return nil, self.error(fmt.Sprintf("Expected line number or immediate mode command"))
 }
 
-func (self *BasicRuntime) commandByReflection(command string) (*BasicASTLeaf, error) {
+func (self *BasicParser) commandByReflection(command string) (*BasicASTLeaf, error) {
 	var methodiface interface{}
 	var reflector reflect.Value
 	var rmethod reflect.Value
@@ -152,9 +153,9 @@ func (self *BasicRuntime) commandByReflection(command string) (*BasicASTLeaf, er
 	}
 	methodiface = rmethod.Interface()
 	
-	methodfunc, ok := methodiface.(func() (*BasicValue, error))
+	methodfunc, ok := methodiface.(func() (*BasicASTLeaf, error))
 	if ( !ok ) {
-		return nil, fmt.Errorf("ParseCommand%s has an invalid function signature", expr.identifier)
+		return nil, fmt.Errorf("ParseCommand%s has an invalid function signature", command)
 	}
 	return methodfunc()
 }
@@ -171,21 +172,23 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 		operator, err = self.previous()
 		if ( err != nil ) {
 			return nil, err
+		}		
+		
+		expr, err = self.commandByReflection(operator.lexeme)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( expr != nil ) {
+			return expr, nil
 		}
 		
 		// some commands don't require an rval. Don't fail if there
 		// isn't one. But fail if there is one and it fails to parse.
 		righttoken = self.peek()
 		if ( righttoken != nil && righttoken.tokentype != UNDEFINED ) {
-			right, err = self.commandByReflection(operator.lexeme)
+			right, err = self.expression()
 			if ( err != nil ) {
 				return nil, err
-			}
-			if ( right == nil ) {
-				right, err = self.expression()
-				if ( err != nil ) {
-					return nil, err
-				}
 			}
 		}
 		

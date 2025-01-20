@@ -105,6 +105,21 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 	//fmt.Printf("Evaluating leaf type %d\n", expr.leaftype)
 	switch (expr.leaftype) {
 	case LEAF_GROUPING: return self.evaluate(expr.expr)
+	case LEAF_BRANCH:
+		rval, err = self.evaluate(expr.expr)
+		if ( err != nil ) {
+			self.basicError(RUNTIME, err.Error())
+			return nil, err
+			
+		}
+		if ( rval.boolvalue == BASIC_TRUE ) {
+			return self.evaluate(expr.left)
+		}
+		if ( expr.right != nil ) {
+			// For some branching operations, a false
+			// branch is optional.
+			return self.evaluate(expr.right)
+		}
 	case LEAF_IDENTIFIER_INT: fallthrough
 	case LEAF_IDENTIFIER_FLOAT: fallthrough
 	case LEAF_IDENTIFIER_STRING:

@@ -66,6 +66,6 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 		return nil, errors.New("Invalid assignment")		
 	}
 	variable.valuetype = rval.valuetype
-	fmt.Printf("Assigned variable %s\n", variable.name)
+	//fmt.Printf("Assigned variable %s\n", variable.name)
 	return variable, nil
 }

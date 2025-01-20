@@ -69,6 +69,7 @@ const (
 	LEAF_COMMAND // 15
 	LEAF_COMMAND_IMMEDIATE // 16
 	LEAF_FUNCTION // 17
+	LEAF_BRANCH // 18
 )
 
 type BasicASTLeaf struct {
@@ -168,6 +169,17 @@ func (self *BasicASTLeaf) newUnary(op BasicTokenType, right *BasicASTLeaf) error
 	self.init(LEAF_UNARY)
 	self.right = right
 	self.operator = op
+	return nil
+}
+
+func (self *BasicASTLeaf) newBranch(expr *BasicASTLeaf, trueleaf *BasicASTLeaf, falseleaf *BasicASTLeaf) error {
+	if ( expr == nil ) {
+		return errors.New("nil pointer arguments")
+	}
+	self.init(LEAF_BRANCH)
+	self.expr = expr
+	self.left = trueleaf
+	self.right = falseleaf
 	return nil
 }
 

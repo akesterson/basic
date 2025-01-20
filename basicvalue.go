@@ -290,7 +290,7 @@ func (self *BasicValue) isEqual(rval *BasicValue) (*BasicValue, error) {
 		result = strings.Compare(self.stringval, rval.stringval)
 		dest.basicBoolValue(result == 0)
 	}
-	fmt.Printf("isEqual %+v ? %+v\n : %+v", self, rval, dest)
+	//fmt.Printf("isEqual %+v ? %+v\n : %+v", self, rval, dest)
 	return dest, nil
 }
 
