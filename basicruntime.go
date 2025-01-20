@@ -153,12 +153,6 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 	case LEAF_COMMAND_IMMEDIATE: fallthrough
 	case LEAF_COMMAND:
 		//fmt.Printf("Processing command %s\n", expr.identifier)
-		if ( expr.right != nil ) {
-			rval, err = self.evaluate(expr.right)
-			if ( err != nil ) {
-				return nil, err
-			}
-		}
 		return self.commandByReflection(expr, lval, rval)
 	case LEAF_BINARY:
 		lval, err = self.evaluate(expr.left)

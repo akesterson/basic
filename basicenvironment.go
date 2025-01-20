@@ -1,13 +1,18 @@
 package main
 
 import (
-	"fmt"
 	"errors"
 	"strings"
 )
 
 type BasicEnvironment struct {
 	variables map[string]*BasicValue
+	forStepLeaf *BasicASTLeaf
+	forStepValue BasicValue
+	forToLeaf *BasicASTLeaf
+	forToValue BasicValue
+	forFirstLine int
+	gosubReturnLine int
 	runtime *BasicRuntime
 }
 
