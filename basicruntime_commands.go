@@ -235,7 +235,10 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 	}
 	self.environment.loopExitLine = self.lineno + 1
 	
-	rval = self.environment.get(expr.right.identifier)
+	rval, err = self.environment.get(expr.right.identifier).mathPlus(&self.environment.forStepValue)
+	if ( err != nil ) {
+		return nil, err
+	}
 	truth, err = self.environment.forStepValue.lessThan(&BasicValue{valuetype: TYPE_INTEGER, intval: 0})
 	if ( err != nil ) {
 		return nil, err
@@ -257,7 +260,7 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 		return nil, nil
 	}
 	self.nextline = self.environment.loopFirstLine
-	return rval.mathPlus(&self.environment.forStepValue)
+	return rval, nil
 }
 
 func (self *BasicRuntime) CommandEXIT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
