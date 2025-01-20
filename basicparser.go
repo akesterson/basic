@@ -127,6 +127,39 @@ func (self *BasicParser) line() (*BasicASTLeaf, error) {
 	return nil, self.error(fmt.Sprintf("Expected line number or immediate mode command"))
 }
 
+func (self *BasicRuntime) commandByReflection(command string) (*BasicASTLeaf, error) {
+	var methodiface interface{}
+	var reflector reflect.Value
+	var rmethod reflect.Value
+
+	// TODO : There is some possibility (I think, maybe) that the way I'm
+	// getting the method through reflection might break the receiver
+	// assignment on the previously bound methods. If `self.` starts
+	// behaving strangely on command methods, revisit this.
+	
+	reflector = reflect.ValueOf(self)
+	if ( reflector.IsNil() || reflector.Kind() != reflect.Ptr ) {
+		return nil, errors.New("Unable to reflect runtime structure to find command method")
+	}
+	rmethod = reflector.MethodByName(fmt.Sprintf("ParseCommand%s", command))
+	if ( !rmethod.IsValid() ) {
+		// It's not an error to have no parser function, this just means our rval
+		// gets parsed as an expression
+		return nil, nil
+	}
+	if ( !rmethod.CanInterface() ) {
+		return nil, fmt.Errorf("Unable to execute command %s", command)
+	}
+	methodiface = rmethod.Interface()
+	
+	methodfunc, ok := methodiface.(func() (*BasicValue, error))
+	if ( !ok ) {
+		return nil, fmt.Errorf("ParseCommand%s has an invalid function signature", expr.identifier)
+	}
+	return methodfunc()
+}
+
+
 func (self *BasicParser) command() (*BasicASTLeaf, error) {
 	var expr *BasicASTLeaf = nil
 	var operator *BasicToken = nil
@@ -134,7 +167,7 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 	var right *BasicASTLeaf = nil
 	var err error = nil
 
-	for self.match(COMMAND, COMMAND_IMMEDIATE) {
+	if self.match(COMMAND, COMMAND_IMMEDIATE) {
 		operator, err = self.previous()
 		if ( err != nil ) {
 			return nil, err
@@ -144,11 +177,15 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 		// isn't one. But fail if there is one and it fails to parse.
 		righttoken = self.peek()
 		if ( righttoken != nil && righttoken.tokentype != UNDEFINED ) {
-			// we call command here because you might have multiple
-			// commands on the same line. IF ... THEN for example
-			right, err = self.command()
+			right, err = self.commandByReflection(operator.lexeme)
 			if ( err != nil ) {
 				return nil, err
+			}
+			if ( right == nil ) {
+				right, err = self.expression()
+				if ( err != nil ) {
+					return nil, err
+				}
 			}
 		}
 		
@@ -269,7 +306,7 @@ func (self *BasicParser) relation() (*BasicASTLeaf, error) {
 	if ( err != nil ) {
 		return nil, err
 	}
-	for self.match(LESS_THAN, LESS_THAN_EQUAL, EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_THAN_EQUAL) {
+	if self.match(LESS_THAN, LESS_THAN_EQUAL, EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_THAN_EQUAL) {
 		operator, err = self.previous()
 		if ( err != nil ) {
 			return nil, err
