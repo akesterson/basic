@@ -50,13 +50,13 @@ func (self *BasicRuntime) CommandRUN(expr *BasicASTLeaf, lval *BasicValue, rval 
 		}
 		self.nextline = int(rval.intval)
 	}
-	self.mode = MODE_RUN
+	self.setMode(MODE_RUN)
 	//fmt.Printf("Set mode %d with nextline %d\n", self.mode, self.nextline)
 	return nil, nil
 }
 
 func (self *BasicRuntime) CommandQUIT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
-	self.mode = MODE_QUIT
+	self.setMode(MODE_QUIT)
 	return nil, nil
 }
 

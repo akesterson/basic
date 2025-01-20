@@ -260,14 +260,13 @@ func (self *BasicRuntime) processLineRunStream(readbuff *bufio.Scanner) {
 		// and storing the source line in this mode.
 		self.scanner.scanTokens(line)
 	} else {
-		self.mode = MODE_RUN
+		self.setMode(MODE_RUN)
 	}
 }
 
 func (self *BasicRuntime) processLineRepl(readbuff *bufio.Scanner) {
 	var leaf *BasicASTLeaf = nil
 	var err error = nil
-	fmt.Println("READY")
 	if ( readbuff.Scan() ) {
 		self.scanner.scanTokens(readbuff.Text())
 		leaf, err = self.parser.parse()
@@ -286,7 +285,7 @@ func (self *BasicRuntime) processLineRun(readbuff *bufio.Scanner) {
 	var err error = nil
 	//fmt.Printf("RUN line %d\n", self.nextline)
 	if ( self.nextline >= MAX_SOURCE_LINES ) {
-		self.mode = self.run_finished_mode
+		self.setMode(self.run_finished_mode)
 		return
 	}
 	line = self.source[self.nextline]
@@ -300,16 +299,23 @@ func (self *BasicRuntime) processLineRun(readbuff *bufio.Scanner) {
 	leaf, err = self.parser.parse()
 	if ( err != nil ) {
 		self.basicError(PARSE, err.Error())
-		self.mode = MODE_QUIT
+		self.setMode(MODE_QUIT)
 		return
 	}
 	_, _ = self.interpret(leaf)
 }
 
+func (self *BasicRuntime) setMode(mode int) {
+	self.mode = mode
+	if ( self.mode == MODE_REPL ) {
+		fmt.Println("READY")
+	}
+}
+
 func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 	var readbuff = bufio.NewScanner(fileobj)
 
-	self.mode = mode
+	self.setMode(mode)
 	if ( self.mode == MODE_REPL ) {
 		self.run_finished_mode = MODE_REPL
 	} else {
