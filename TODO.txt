@@ -1,5 +1,3 @@
-Implement GOSUB
-
 Coerce all numeric types to floating point behind the scenes, makes my life easier, and this is how Commodore BASIC 7.0 worked
 
 Implement AUTO

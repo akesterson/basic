@@ -108,7 +108,7 @@ func (self *BasicParser) line() (*BasicASTLeaf, error) {
 	var token *BasicToken = nil
 	var err error = nil
 
-	for self.match(LINE_NUMBER) {
+	if self.match(LINE_NUMBER) {
 		token, err = self.previous()
 		if ( err != nil ) {
 			return nil, err
@@ -119,8 +119,7 @@ func (self *BasicParser) line() (*BasicASTLeaf, error) {
 		}
 		return self.command()
 		
-	}
-	for self.check(COMMAND_IMMEDIATE) {
+	} else if ( self.check(COMMAND_IMMEDIATE) ){
 		//fmt.Println("Found immediate mode command token")
 		// Some commands can run immediately without a line number...
 		return self.command()

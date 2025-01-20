@@ -8,6 +8,7 @@ import (
 	"os"
 	"slices"
 	"reflect"
+	"unicode"
 )
 
 type BasicError int
@@ -267,14 +268,18 @@ func (self *BasicRuntime) processLineRunStream(readbuff *bufio.Scanner) {
 func (self *BasicRuntime) processLineRepl(readbuff *bufio.Scanner) {
 	var leaf *BasicASTLeaf = nil
 	var err error = nil
+	var line string
 	if ( readbuff.Scan() ) {
-		self.scanner.scanTokens(readbuff.Text())
+		line = readbuff.Text()
+		self.scanner.scanTokens(line)
 		leaf, err = self.parser.parse()
 		if ( err != nil ) {
 			self.basicError(PARSE, err.Error())
 			return
 		}
-		_, _ = self.interpretImmediate(leaf)
+		if ( !unicode.IsDigit(rune(line[0])) ) {
+			_, _ = self.interpretImmediate(leaf)
+		}
 		//fmt.Printf("Leaving repl function in mode %d", self.mode)
 	}
 }

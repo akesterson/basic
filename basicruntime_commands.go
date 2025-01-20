@@ -35,6 +35,31 @@ func (self *BasicRuntime) CommandGOTO(expr *BasicASTLeaf, lval *BasicValue, rval
 	return nil, nil
 }
 
+func (self *BasicRuntime) CommandGOSUB(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	if ( expr.right == nil ) {
+		return nil, errors.New("Expected expression")
+	}
+	rval, err = self.evaluate(expr.right)
+	if ( err != nil ) {
+		return nil, err
+	}
+	if ( rval.valuetype != TYPE_INTEGER ) {
+		return nil, errors.New("Expected integer")
+	}
+	self.environment.gosubReturnLine = self.lineno + 1
+	self.nextline = int(rval.intval)
+	return nil, nil
+}
+
+func (self *BasicRuntime) CommandRETURN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	if ( self.environment.gosubReturnLine == 0 ) {
+		return nil, errors.New("RETURN outside the context of GOSUB")
+	}
+	self.nextline = self.environment.gosubReturnLine
+	return nil, nil
+}
+
 func (self *BasicRuntime) CommandLIST(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
 	var startidx int64 = 0
