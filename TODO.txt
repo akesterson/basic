@@ -2,8 +2,4 @@ Implement GOSUB
 
 Coerce all numeric types to floating point behind the scenes, makes my life easier, and this is how Commodore BASIC 7.0 worked
 
-Stop typing "READY" after every single line of input, only when we're re-entering REPL mode
-
-Implement LIST
-
 Implement AUTO

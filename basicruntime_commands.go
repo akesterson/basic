@@ -35,6 +35,29 @@ func (self *BasicRuntime) CommandGOTO(expr *BasicASTLeaf, lval *BasicValue, rval
 	return nil, nil
 }
 
+func (self *BasicRuntime) CommandLIST(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var startidx int64 = 0
+	if ( expr.right == nil ) {
+		self.nextline = 0
+	} else {
+		rval, err = self.evaluate(expr.right)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( rval.valuetype != TYPE_INTEGER ) {
+			return nil, errors.New("Expected integer")
+		}
+		startidx = rval.intval
+	}
+	for _, value := range(self.source[startidx:]) {
+		if ( len(value) > 0 ) {
+			fmt.Println(value)
+		}
+	}
+	return nil, nil
+}
+
 func (self *BasicRuntime) CommandRUN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
 	//fmt.Println("Processing RUN")

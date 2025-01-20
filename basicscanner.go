@@ -150,7 +150,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 		self.commands["KEY"] =  COMMAND
 		self.commands["ABS"] =  COMMAND
 		self.commands["LET"] =  COMMAND
-		self.commands["LIST"] =  COMMAND
+		self.commands["LIST"] =  COMMAND_IMMEDIATE
 		self.commands["LOAD"] =  COMMAND
 		self.commands["LOCATE"] =  COMMAND
 		self.commands["LOOP"] =  COMMAND
