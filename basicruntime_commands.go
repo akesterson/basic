@@ -245,10 +245,10 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 	}
 	if ( truth.isTrue() ) {
 		// Our step is negative
-		truth, err = self.environment.forToValue.greaterThanEqual(rval)
+		truth, err = self.environment.forToValue.greaterThan(rval)
 	} else {
 		// Our step is positive
-		truth, err = self.environment.forToValue.lessThanEqual(rval)
+		truth, err = self.environment.forToValue.lessThan(rval)
 	}
 	if ( err != nil ) {
 		return nil, err
