@@ -81,7 +81,7 @@ func (self *BasicParser) zero() {
 
 func (self *BasicParser) newLeaf() (*BasicASTLeaf, error) {
 	var leaf *BasicASTLeaf
-	if ( self.nextleaf < 15 ) {
+	if ( self.nextleaf < MAX_LEAVES ) {
 		leaf = &self.leaves[self.nextleaf]
 		self.nextleaf += 1
 		return leaf, nil
@@ -139,7 +139,6 @@ func (self *BasicParser) commandByReflection(command string) (*BasicASTLeaf, err
 	return methodfunc()
 }
 
-
 func (self *BasicParser) command() (*BasicASTLeaf, error) {
 	var expr *BasicASTLeaf = nil
 	var operator *BasicToken = nil
@@ -169,15 +168,6 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 			if ( err != nil ) {
 				return nil, err
 			}
-			/*
-			   fmt.Printf("expr.right : %+v\n", right)
-			if ( right.left != nil ) {
-				fmt.Printf("expr.right.left : %+v\n", right.left)
-			}
-			if ( right.right != nil ) {
-				fmt.Printf("expr.right.right : %+v\n", right.right)
-			}
-			*/
 		}
 		
 		expr, err = self.newLeaf()
@@ -189,7 +179,6 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 		} else {
 			expr.newCommand(operator.lexeme, right)
 		}
-		//fmt.Printf("Returning %+v\n", expr)
 		return expr, nil
 	}
 	return self.assignment()
@@ -217,6 +206,7 @@ func (self *BasicParser) assignment() (*BasicASTLeaf, error) {
 		if ( err != nil ) {
 			return nil, err
 		}
+		//fmt.Printf("%+v\n", right)
 		expr, err = self.newLeaf()
 		if ( err != nil ) {
 			return nil, err
@@ -225,6 +215,38 @@ func (self *BasicParser) assignment() (*BasicASTLeaf, error) {
 		return expr, nil
 	}
 	return identifier, err
+}
+
+func (self *BasicParser) argumentList() (*BasicASTLeaf, error) {
+	var expr *BasicASTLeaf = nil
+	var first *BasicASTLeaf = nil
+	var err error = nil
+
+	// argument lists are just (.right) joined expressions continuing
+	// ad-infinitum.
+
+	if ( !self.match(LEFT_PAREN) ) {
+		//return nil, errors.New("Expected argument list (expression, ...)")
+		return nil, nil
+	}
+	expr, err = self.expression()
+	if ( err != nil ) {
+		return nil, err
+	}
+	first = expr
+	//fmt.Printf("Before loop: %+v\n", expr)
+	for ( expr != nil && self.match(COMMA) ) {
+		expr.right, err = self.expression()
+		if ( err != nil ) {
+			return nil, err
+		}
+		expr = expr.right
+		//fmt.Printf("Argument : %+v\n", expr)
+	}
+	if ( !self.match(RIGHT_PAREN) ) {
+		return nil, errors.New("Unbalanced parenthesis")
+	}
+	return first, nil
 }
 
 func (self *BasicParser) expression() (*BasicASTLeaf, error) {
@@ -486,7 +508,7 @@ func (self *BasicParser) exponent() (*BasicASTLeaf, error) {
 	var right *BasicASTLeaf = nil
 	var err error = nil
 
-	left, err = self.primary()
+	left, err = self.function()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -495,7 +517,7 @@ func (self *BasicParser) exponent() (*BasicASTLeaf, error) {
 		if ( err != nil ) {
 			return nil, err
 		}
-		right, err = self.primary()
+		right, err = self.function()
 		if ( err != nil ) {
 			return nil, err
 		}
@@ -513,6 +535,36 @@ func (self *BasicParser) exponent() (*BasicASTLeaf, error) {
 		return expr, nil
 	}
 	return left, nil
+}
+
+func (self *BasicParser) function() (*BasicASTLeaf, error) {
+	var expr *BasicASTLeaf = nil
+	var operator *BasicToken = nil
+	var right *BasicASTLeaf = nil
+	var err error = nil
+
+	if self.match(FUNCTION) {
+		operator, err = self.previous()
+		if ( err != nil ) {
+			return nil, err
+		}		
+		right, err = self.argumentList()
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( right == nil ) {
+			return nil, errors.New("Expected argument list")
+		}
+		//fmt.Printf("%+v\n", right)
+		expr, err = self.newLeaf()
+		if ( err != nil ) {
+			return nil, err
+		}
+		expr.newCommand(operator.lexeme, right)
+		//fmt.Printf("Returning %+v\n", expr)
+		return expr, nil
+	}
+	return self.primary()
 }
 
 func (self *BasicParser) primary() (*BasicASTLeaf, error) {
@@ -545,7 +597,7 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 		case IDENTIFIER_STRING:
 			expr.newIdentifier(LEAF_IDENTIFIER_STRING, previous.lexeme)
 		default:
-			return nil, errors.New("Invalid literal type")
+			return nil, errors.New("Invalid literal type, command or function name")
 		}
 		return expr, nil
 	}

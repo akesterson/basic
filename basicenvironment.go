@@ -7,6 +7,7 @@ import (
 
 type BasicEnvironment struct {
 	variables map[string]*BasicValue
+	
 	// IF variables
 	ifThenLine int64
 	ifElseLine int64
@@ -96,6 +97,6 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 		return nil, errors.New("Invalid assignment")		
 	}
 	variable.valuetype = rval.valuetype
-	//fmt.Printf("Assigned variable %s\n", variable.name)
+	//fmt.Printf("Assigned %+v\n", variable)
 	return variable, nil
 }

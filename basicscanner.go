@@ -218,9 +218,9 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 		// self.functions["INT"] =  FUNCTION
 		// self.functions["JOY"] =  FUNCTION
 		// self.functions["LEFT"] =  FUNCTION
-		// self.functions["LEN"] =  FUNCTION
+		self.functions["LEN"] =  FUNCTION
 		// self.functions["LOG"] =  FUNCTION
-		// self.functions["MID"] =  FUNCTION
+		self.functions["MID"] =  FUNCTION
 		// self.functions["PEEK"] =  FUNCTION
 		// self.functions["POINTER"] =  FUNCTION
 		// self.functions["POS"] =  FUNCTION
@@ -388,7 +388,7 @@ func (self *BasicScanner) matchIdentifier() {
 	// Look for reserved words in variable identifiers
 	reservedtype, resexists := self.reservedwords[identifier]
 	commandtype, cmdexists := self.commands[identifier]
-	functiontype, fexists := self.commands[identifier]
+	functiontype, fexists := self.functions[identifier]
 	if ( self.tokentype == IDENTIFIER ) {
 		if resexists {
 			self.tokentype = reservedtype
