@@ -7,18 +7,31 @@ import (
 
 type BasicEnvironment struct {
 	variables map[string]*BasicValue
+	// IF variables
+	ifThenLine int64
+	ifElseLine int64
+	ifCondition BasicASTLeaf
+	
+	
+	// FOR variables
 	forStepLeaf *BasicASTLeaf
 	forStepValue BasicValue
 	forToLeaf *BasicASTLeaf
 	forToValue BasicValue
+
+	// Loop variables
 	loopFirstLine int64
 	loopExitLine int64
+	
 	gosubReturnLine int64
+
+	parent *BasicEnvironment
 	runtime *BasicRuntime
 }
 
-func (self *BasicEnvironment) init(runtime *BasicRuntime) {
+func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironment) {
 	self.variables = make(map[string]*BasicValue)
+	self.parent = parent
 	self.runtime = runtime
 }
 
@@ -27,17 +40,27 @@ func (self *BasicEnvironment) get(varname string) *BasicValue {
 	var ok bool
 	if value, ok = self.variables[varname]; ok {
 		return value
+	} else if ( self.parent != nil ) {
+		value = self.parent.get(varname)
+		if ( value != nil ) {
+			return value
+		}
 	}
-	self.variables[varname] = &BasicValue{
-		name: strings.Clone(varname),
-		valuetype: TYPE_UNDEFINED,
-		stringval: "",
-		intval: 0,
-		floatval: 0.0,
-		boolvalue: BASIC_FALSE,
-		runtime: self.runtime,
-		mutable: true}
-	return self.variables[varname]
+	// Don't automatically create variables unless we are the currently
+	// active environment (parents don't create variables for their children)
+	if ( self.runtime.environment == self ) {
+		self.variables[varname] = &BasicValue{
+			name: strings.Clone(varname),
+			valuetype: TYPE_UNDEFINED,
+			stringval: "",
+			intval: 0,
+			floatval: 0.0,
+			boolvalue: BASIC_FALSE,
+			runtime: self.runtime,
+			mutable: true}
+		return self.variables[varname]
+	}
+	return nil
 }
 
 func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*BasicValue, error) {

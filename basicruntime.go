@@ -36,7 +36,7 @@ type BasicRuntime struct {
 	run_finished_mode int
 	scanner BasicScanner
 	parser BasicParser
-	environment BasicEnvironment
+	environment *BasicEnvironment
 	autoLineNumber int64
 }
 
@@ -49,6 +49,7 @@ func (self *BasicRuntime) zero() {
 }
 
 func (self *BasicRuntime) init() {
+	self.environment = nil
 	self.lineno = 0
 	self.nextline = 0
 	self.autoLineNumber = 0
@@ -56,9 +57,23 @@ func (self *BasicRuntime) init() {
 
 	self.parser.init(self)
 	self.scanner.init(self)
-	self.environment.init(self)
+	self.newEnvironment()
 	
 	self.zero()
+}
+
+func (self *BasicRuntime) newEnvironment() {
+	var env *BasicEnvironment = new(BasicEnvironment)
+	env.init(self, self.environment)
+	self.environment = env
+}
+
+func (self *BasicRuntime) prevEnvironment() {
+	if ( self.environment.parent == nil ) {
+		self.basicError(RUNTIME, "No previous environment to return to")
+		return
+	}
+	self.environment = self.environment.parent
 }
 
 func (self *BasicRuntime) errorCodeToString(errno BasicError) string {
