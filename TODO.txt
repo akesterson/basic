@@ -1,3 +1,9 @@
-Coerce all numeric types to floating point behind the scenes, makes my life easier, and this is how Commodore BASIC 7.0 worked
+Get  multiple statements on one line working (10 PRINT "HELLO":FOR A# = 1 TO 5:PRINT A#:NEXT A#)
 
-Implement AUTO
+Get BEGIN / BEND working (processing branches that cross multiple lines of input)
+
+Get file operations working
+
+Get user input working
+
+Coerce all numeric types to floating point behind the scenes, makes my life easier, and this is how Commodore BASIC 7.0 worked
