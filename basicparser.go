@@ -562,6 +562,7 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 		expr.newGrouping(groupexpr)
 		return expr, nil
 	}
+	//fmt.Printf("At curtoken %d\n", self.curtoken)
 	return nil, self.error("Expected expression")
 }
 
@@ -612,7 +613,17 @@ func (self *BasicParser) advance() (*BasicToken, error) {
 }
 
 func (self *BasicParser) isAtEnd() bool {
-	return (self.curtoken >= (MAX_TOKENS - 1))
+	if (self.curtoken >= (MAX_TOKENS - 1) || self.curtoken >= self.nexttoken ) {
+		return true
+	} else {
+		// If we are at the end of a statement (:), return true,
+		// but advance the current token
+		if ( self.tokens[self.curtoken].tokentype == COLON ) {
+			self.curtoken += 1
+			return true
+		}
+	}
+	return false
 }
 
 func (self *BasicParser) peek() *BasicToken {

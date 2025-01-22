@@ -190,7 +190,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 		// self.commands["SWAP"] =  COMMAND
 		// self.commands["SYS"] =  COMMAND
 		// self.commands["TEMPO"] =  COMMAND
-		// self.commands["THEN"] =  COMMAND
+		self.commands["THEN"] =  COMMAND
 		// self.commands["TI"] =  COMMAND
 		self.commands["TO"] =  COMMAND
 		// self.commands["TRAP"] =  COMMAND
@@ -351,7 +351,6 @@ func (self *BasicScanner) matchNumber() {
 		self.current += 1
 	}
 	if ( self.tokentype == LITERAL_INT && linenumber == true ) {
-		fmt.Println("Found line number")
 		lineno, err := strconv.Atoi(self.getLexeme())
 		if ( err != nil ) {
 			self.runtime.basicError(PARSE, fmt.Sprintf("INTEGER CONVERSION ON '%s'", self.getLexeme()))

@@ -1,5 +1,3 @@
-Get  multiple statements on one line working (10 PRINT "HELLO":FOR A# = 1 TO 5:PRINT A#:NEXT A#)
-
 Get BEGIN / BEND working (processing branches that cross multiple lines of input)
 
 Get file operations working

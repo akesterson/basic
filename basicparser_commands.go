@@ -73,25 +73,25 @@ func (self *BasicParser) ParseCommandIF() (*BasicASTLeaf, error) {
 	var err error = nil;
 
 	relation, err = self.relation()
-	if ( err != nil || !self.match(COMMAND) ) {
-		return nil, errors.New("Expected IF ... THEN")
+	if ( err != nil ) {
+		return nil, err
+	}
+	if (!self.match(COMMAND) ) {
+		return nil, errors.New("Incomplete IF statement")
 	}
 	operator, err = self.previous()
 	if ( err != nil || strings.Compare(operator.lexeme, "THEN") != 0 ) {
 		return nil, errors.New("Expected IF ... THEN")
 	}
 	then_command, err = self.command()
-	if ( err != nil || self.match(COLON) ) {
-		if ( ! self.match(COMMAND) ) {
-			return nil, errors.New("Expected IF ... THEN ... :ELSE ...")
-		}
+	if ( self.match(COMMAND) ) {
 		operator, err = self.previous()
 		if ( err != nil || strings.Compare(operator.lexeme, "ELSE") != 0 ) {
-			return nil, errors.New("Expected IF ... THEN ... :ELSE ...")
+			return nil, errors.New("Expected IF ... THEN ... ELSE ...")
 		}
 		else_command, err = self.command()
 		if ( err != nil ) {
-			return nil, errors.New("Expected IF ... THEN ... :ELSE ...")
+			return nil, errors.New("Expected IF ... THEN ... ELSE ...")
 		}
 	}
 	branch, err = self.newLeaf()

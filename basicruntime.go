@@ -301,20 +301,24 @@ func (self *BasicRuntime) processLineRepl(readbuff *bufio.Scanner) {
 		line = readbuff.Text()
 		self.lineno += self.autoLineNumber
 		line = self.scanner.scanTokens(line)
-		leaf, err = self.parser.parse()
-		if ( err != nil ) {
-			self.basicError(PARSE, err.Error())
-			return
-		}
-		value, err = self.interpretImmediate(leaf)
-		if ( value == nil ) {
-			// Only store the line and increment the line number if we didn't run an immediate command
-			self.source[self.lineno] = BasicSourceLine{
-				code:   line,
-				lineno: self.lineno}
-		} else if ( self.autoLineNumber > 0 ) {
-			self.lineno = self.findPreviousLineNumber()
-			//fmt.Printf("Reset line number to %d\n", self.lineno)
+		for ( !self.parser.isAtEnd() ) {
+			leaf, err = self.parser.parse()
+			if ( err != nil ) {
+				self.basicError(PARSE, err.Error())
+				return
+			}
+			//fmt.Printf("%+v\n", leaf)
+			//fmt.Printf("%+v\n", leaf.right)
+			value, err = self.interpretImmediate(leaf)
+			if ( value == nil ) {
+				// Only store the line and increment the line number if we didn't run an immediate command
+				self.source[self.lineno] = BasicSourceLine{
+					code:   line,
+					lineno: self.lineno}
+			} else if ( self.autoLineNumber > 0 ) {
+				self.lineno = self.findPreviousLineNumber()
+				//fmt.Printf("Reset line number to %d\n", self.lineno)
+			}
 		}
 		//fmt.Printf("Leaving repl function in mode %d", self.mode)
 	}
@@ -337,13 +341,15 @@ func (self *BasicRuntime) processLineRun(readbuff *bufio.Scanner) {
 	}
 	//fmt.Println(line)
 	self.scanner.scanTokens(line)
-	leaf, err = self.parser.parse()
-	if ( err != nil ) {
-		self.basicError(PARSE, err.Error())
-		self.setMode(MODE_QUIT)
-		return
+	for ( !self.parser.isAtEnd() ) {
+		leaf, err = self.parser.parse()
+		if ( err != nil ) {
+			self.basicError(PARSE, err.Error())
+			self.setMode(MODE_QUIT)
+			return
+		}
+		_, _ = self.interpret(leaf)
 	}
-	_, _ = self.interpret(leaf)
 }
 
 func (self *BasicRuntime) setMode(mode int) {
