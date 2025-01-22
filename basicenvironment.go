@@ -11,9 +11,9 @@ type BasicEnvironment struct {
 	forStepValue BasicValue
 	forToLeaf *BasicASTLeaf
 	forToValue BasicValue
-	loopFirstLine int
-	loopExitLine int
-	gosubReturnLine int
+	loopFirstLine int64
+	loopExitLine int64
+	gosubReturnLine int64
 	runtime *BasicRuntime
 }
 

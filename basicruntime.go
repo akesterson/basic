@@ -8,7 +8,6 @@ import (
 	"os"
 	"slices"
 	"reflect"
-	"unicode"
 )
 
 type BasicError int
@@ -22,21 +21,23 @@ const (
 
 type BasicSourceLine struct {
 	code string
-	lineno int
+	lineno int64
 }
 
 type BasicRuntime struct {
 	source [MAX_SOURCE_LINES]BasicSourceLine
-	lineno int
+	lineno int64
 	values [MAX_VALUES]BasicValue
+	staticTrueValue BasicValue
 	nextvalue int
-	nextline int
+	nextline int64
 	mode int
 	errno BasicError
 	run_finished_mode int
 	scanner BasicScanner
 	parser BasicParser
 	environment BasicEnvironment
+	autoLineNumber int64
 }
 
 func (self *BasicRuntime) zero() {
@@ -50,6 +51,8 @@ func (self *BasicRuntime) zero() {
 func (self *BasicRuntime) init() {
 	self.lineno = 0
 	self.nextline = 0
+	self.autoLineNumber = 0
+	self.staticTrueValue.basicBoolValue(true)
 
 	self.parser.init(self)
 	self.scanner.init(self)
@@ -261,6 +264,15 @@ func (self *BasicRuntime) interpretImmediate(expr *BasicASTLeaf) (*BasicValue, e
 	return value, nil
 }
 
+func (self *BasicRuntime) findPreviousLineNumber() int64 {
+	var i int64
+	for i = self.lineno - 1; i > 0 ; i-- {
+		if ( len(self.source[i].code) > 0 ) {
+			return i
+		}
+	}
+	return self.lineno
+}
 
 func (self *BasicRuntime) processLineRunStream(readbuff *bufio.Scanner) {
 	var line string
@@ -269,6 +281,9 @@ func (self *BasicRuntime) processLineRunStream(readbuff *bufio.Scanner) {
 		// All we're doing is getting the line #
 		// and storing the source line in this mode.
 		self.scanner.scanTokens(line)
+		self.source[self.lineno] = BasicSourceLine{
+			code:   line,
+			lineno: self.lineno}
 	} else {
 		self.setMode(MODE_RUN)
 	}
@@ -276,18 +291,30 @@ func (self *BasicRuntime) processLineRunStream(readbuff *bufio.Scanner) {
 
 func (self *BasicRuntime) processLineRepl(readbuff *bufio.Scanner) {
 	var leaf *BasicASTLeaf = nil
+	var value *BasicValue = nil
 	var err error = nil
 	var line string
+	if ( self.autoLineNumber > 0 ) {
+		fmt.Printf("%d ", (self.lineno + self.autoLineNumber))
+	}
 	if ( readbuff.Scan() ) {
 		line = readbuff.Text()
-		self.scanner.scanTokens(line)
+		self.lineno += self.autoLineNumber
+		line = self.scanner.scanTokens(line)
 		leaf, err = self.parser.parse()
 		if ( err != nil ) {
 			self.basicError(PARSE, err.Error())
 			return
 		}
-		if ( !unicode.IsDigit(rune(line[0])) ) {
-			_, _ = self.interpretImmediate(leaf)
+		value, err = self.interpretImmediate(leaf)
+		if ( value == nil ) {
+			// Only store the line and increment the line number if we didn't run an immediate command
+			self.source[self.lineno] = BasicSourceLine{
+				code:   line,
+				lineno: self.lineno}
+		} else if ( self.autoLineNumber > 0 ) {
+			self.lineno = self.findPreviousLineNumber()
+			//fmt.Printf("Reset line number to %d\n", self.lineno)
 		}
 		//fmt.Printf("Leaving repl function in mode %d", self.mode)
 	}

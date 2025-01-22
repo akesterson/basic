@@ -16,7 +16,7 @@ func (self *BasicRuntime) CommandPRINT(expr *BasicASTLeaf, lval *BasicValue, rva
 		return nil, err
 	}
 	fmt.Println(rval.toString())
-	return nil, nil	
+	return &self.staticTrueValue, nil
 }
 
 func (self *BasicRuntime) CommandGOTO(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
@@ -31,8 +31,8 @@ func (self *BasicRuntime) CommandGOTO(expr *BasicASTLeaf, lval *BasicValue, rval
 	if ( rval.valuetype != TYPE_INTEGER ) {
 		return nil, errors.New("Expected integer")
 	}
-	self.nextline = int(rval.intval)
-	return nil, nil
+	self.nextline = rval.intval
+	return &self.staticTrueValue, nil
 }
 
 func (self *BasicRuntime) CommandGOSUB(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
@@ -48,8 +48,8 @@ func (self *BasicRuntime) CommandGOSUB(expr *BasicASTLeaf, lval *BasicValue, rva
 		return nil, errors.New("Expected integer")
 	}
 	self.environment.gosubReturnLine = self.lineno + 1
-	self.nextline = int(rval.intval)
-	return nil, nil
+	self.nextline = rval.intval
+	return &self.staticTrueValue, nil
 }
 
 func (self *BasicRuntime) CommandRETURN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
@@ -57,7 +57,7 @@ func (self *BasicRuntime) CommandRETURN(expr *BasicASTLeaf, lval *BasicValue, rv
 		return nil, errors.New("RETURN outside the context of GOSUB")
 	}
 	self.nextline = self.environment.gosubReturnLine
-	return nil, nil
+	return &self.staticTrueValue, nil
 }
 
 func (self *BasicRuntime) CommandLIST(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
@@ -111,12 +111,13 @@ func (self *BasicRuntime) CommandLIST(expr *BasicASTLeaf, lval *BasicValue, rval
 			fmt.Printf("%d %s\n", self.source[i].lineno, self.source[i].code)
 		}
 	}
-	return nil, nil
+	return &self.staticTrueValue, nil
 }
 
 func (self *BasicRuntime) CommandRUN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
 	//fmt.Println("Processing RUN")
+	self.autoLineNumber = 0
 	if ( expr.right == nil ) {
 		self.nextline = 0
 	} else {
@@ -127,23 +128,42 @@ func (self *BasicRuntime) CommandRUN(expr *BasicASTLeaf, lval *BasicValue, rval 
 		if ( rval.valuetype != TYPE_INTEGER ) {
 			return nil, errors.New("Expected integer")
 		}
-		self.nextline = int(rval.intval)
+		self.nextline = rval.intval
 	}
 	self.setMode(MODE_RUN)
 	//fmt.Printf("Set mode %d with nextline %d\n", self.mode, self.nextline)
-	return nil, nil
+	return &self.staticTrueValue, nil
+}
+
+func (self *BasicRuntime) CommandAUTO(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	if ( expr.right == nil ) {
+		//fmt.Println("Turned AUTO off")
+		self.autoLineNumber = 0
+	} else {
+		rval, err = self.evaluate(expr.right)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( rval.valuetype != TYPE_INTEGER ) {
+			return nil, errors.New("Expected integer")
+		}
+		self.autoLineNumber = rval.intval
+		//fmt.Printf("Turned AUTO on: %d\n", self.autoLineNumber)
+	}
+	return &self.staticTrueValue, nil
 }
 
 func (self *BasicRuntime) CommandQUIT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	self.setMode(MODE_QUIT)
-	return nil, nil
+	return &self.staticTrueValue, nil
 }
 
 func (self *BasicRuntime) CommandLET(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	// LET is not expressly required in our basic implementation or in
 	// Commodore 128 BASIC 7.0. Assignments to variables are handled as
 	// part of expression evaluation, LET doesn't need to manage it.
-	return nil, nil
+	return &self.staticTrueValue, nil
 }
 
 func (self *BasicRuntime) CommandIF(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
@@ -155,7 +175,7 @@ func (self *BasicRuntime) CommandIF(expr *BasicASTLeaf, lval *BasicValue, rval *
 	rval, err = self.evaluate(expr.right)
 	if ( err != nil ) {
 		return nil, err
-	}	
+	}
 	if ( rval.boolvalue == BASIC_TRUE ) {
 		for ( expr.right != nil ) {
 			expr = expr.right
@@ -168,7 +188,7 @@ func (self *BasicRuntime) CommandIF(expr *BasicASTLeaf, lval *BasicValue, rval *
 		}
 		return self.evaluate(actionclause)
 	}
-	return nil, nil
+	return &self.staticTrueValue, nil
 }
 
 func (self *BasicRuntime) CommandFOR(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
@@ -211,7 +231,7 @@ func (self *BasicRuntime) CommandFOR(expr *BasicASTLeaf, lval *BasicValue, rval 
 	}
 	self.environment.forToLeaf = nil
 	self.environment.forStepLeaf = nil
-	return nil, nil
+	return &self.staticTrueValue, nil
 }
 
 func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
@@ -254,10 +274,10 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 		self.environment.forStepValue.zero()
 		self.environment.forToValue.zero()
 		self.environment.loopFirstLine = 0
-		return nil, nil
+		return &self.staticTrueValue, nil
 	}
 	self.nextline = self.environment.loopFirstLine
-	return rval, nil
+	return &self.staticTrueValue, nil
 }
 
 func (self *BasicRuntime) CommandEXIT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
@@ -271,5 +291,5 @@ func (self *BasicRuntime) CommandEXIT(expr *BasicASTLeaf, lval *BasicValue, rval
 	self.environment.loopFirstLine = 0
 	self.nextline = self.environment.loopExitLine
 	self.environment.loopExitLine = 0	
-	return nil, nil
+	return &self.staticTrueValue, nil
 }

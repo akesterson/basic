@@ -350,3 +350,4 @@ func (self *BasicValue) basicBoolValue(result bool) {
 	self.boolvalue = BASIC_FALSE
 }
 
+

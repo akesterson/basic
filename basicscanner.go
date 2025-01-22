@@ -88,7 +88,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 		self.commands = make(map[string]BasicTokenType)
 		// self.commands["APPEND"] =  COMMAND
 		// self.commands["ATN"] =  COMMAND
-		// self.commands["AUTO"] =  COMMAND_IMMEDIATE
+		self.commands["AUTO"] =  COMMAND_IMMEDIATE
 		// self.commands["BACKUP"] =  COMMAND
 		// self.commands["BANK"] =  COMMAND
 		// self.commands["BEGIN"] =  COMMAND
@@ -265,7 +265,7 @@ func (self *BasicScanner) getLexeme() string {
 			return string(self.line[self.start])
 		}
 		return self.line[self.start:self.current]
-	}		
+	}
 }
 
 func (self *BasicScanner) peek() (rune, error) {
@@ -351,19 +351,14 @@ func (self *BasicScanner) matchNumber() {
 		self.current += 1
 	}
 	if ( self.tokentype == LITERAL_INT && linenumber == true ) {
+		fmt.Println("Found line number")
 		lineno, err := strconv.Atoi(self.getLexeme())
 		if ( err != nil ) {
 			self.runtime.basicError(PARSE, fmt.Sprintf("INTEGER CONVERSION ON '%s'", self.getLexeme()))
 			self.hasError = true
 		}
-		self.runtime.lineno = lineno
-		// Store the source line (past the line number - we don't store that on the code line)
-		self.runtime.source[self.runtime.lineno] = BasicSourceLine{
-			code:   self.line[self.current:],
-			lineno: self.runtime.lineno}
-		// We don't keep the line number token, move along
-		self.tokentype = UNDEFINED
-		self.start = self.current
+		self.runtime.lineno = int64(lineno)
+		self.tokentype = LINE_NUMBER
 	}
 }
 
@@ -411,7 +406,7 @@ func (self *BasicScanner) matchIdentifier() {
 	}
 }
 
-func (self *BasicScanner) scanTokens(line string) {
+func (self *BasicScanner) scanTokens(line string) string {
 
 	var c rune
 	self.line = line
@@ -447,7 +442,7 @@ func (self *BasicScanner) scanTokens(line string) {
 		case '\t': fallthrough
 		case '\r': fallthrough
 		case '\n':
-			return
+			return self.line
 		default:
 			if ( unicode.IsDigit(c) ) {
 				self.matchNumber()
@@ -460,9 +455,15 @@ func (self *BasicScanner) scanTokens(line string) {
 			}
 		}
 		if ( self.tokentype != UNDEFINED && self.hasError == false ) {
-			if ( self.tokentype == REM ) {
-				return
-			} else {
+			switch ( self.tokentype ) {
+			case REM: return self.line
+			case LINE_NUMBER:
+				// We don't keep the line number token, move along
+				//fmt.Printf("Shortening line by %d characters\n", self.current)
+				self.line = strings.TrimLeft(self.line[self.current:], " ")
+				//fmt.Printf("New line : %s\n", self.line)
+				self.current = 0
+			default:
 				self.addToken(self.tokentype, self.getLexeme())
 				switch ( self.tokentype ) {
 				case LITERAL_STRING:
@@ -470,9 +471,10 @@ func (self *BasicScanner) scanTokens(line string) {
 					// move past it.
 					self.current += 1
 				}
-				self.tokentype = UNDEFINED
-				self.start = self.current
 			}
+			self.tokentype = UNDEFINED
+			self.start = self.current
 		}
 	}
+	return self.line
 }

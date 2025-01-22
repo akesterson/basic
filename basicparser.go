@@ -9,7 +9,7 @@ import (
 
 type BasicToken struct {
 	tokentype BasicTokenType
-	lineno int
+	lineno int64
 	literal string
 	lexeme string	
 }
@@ -93,7 +93,7 @@ func (self *BasicParser) newLeaf() (*BasicASTLeaf, error) {
 func (self *BasicParser) parse() (*BasicASTLeaf, error) {
 	var leaf *BasicASTLeaf = nil
 	var err error = nil
-	leaf, err = self.line()
+	leaf, err = self.statement()
 	if ( leaf != nil ) {
 		//fmt.Printf("%+v\n", leaf)
 	}
@@ -102,7 +102,7 @@ func (self *BasicParser) parse() (*BasicASTLeaf, error) {
 	// internally; for now just pass it straight out.
 }
 
-func (self *BasicParser) line() (*BasicASTLeaf, error) {
+func (self *BasicParser) statement() (*BasicASTLeaf, error) {
 	return self.command()
 	return nil, self.error(fmt.Sprintf("Expected command or expression"))
 }
