@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"errors"
 	"slices"
-	"strconv"
 	"reflect"
 )
 
@@ -12,8 +11,7 @@ type BasicToken struct {
 	tokentype BasicTokenType
 	lineno int
 	literal string
-	lexeme string
-	
+	lexeme string	
 }
 
 func (self *BasicToken) init() {
@@ -105,26 +103,8 @@ func (self *BasicParser) parse() (*BasicASTLeaf, error) {
 }
 
 func (self *BasicParser) line() (*BasicASTLeaf, error) {
-	var token *BasicToken = nil
-	var err error = nil
-
-	if self.match(LINE_NUMBER) {
-		token, err = self.previous()
-		if ( err != nil ) {
-			return nil, err
-		}
-		self.runtime.lineno, err = strconv.Atoi(token.lexeme)
-		if ( err != nil ) {
-			return nil, err
-		}
-		return self.command()
-		
-	} else if ( self.check(COMMAND_IMMEDIATE) ){
-		//fmt.Println("Found immediate mode command token")
-		// Some commands can run immediately without a line number...
-		return self.command()
-	}
-	return nil, self.error(fmt.Sprintf("Expected line number or immediate mode command"))
+	return self.command()
+	return nil, self.error(fmt.Sprintf("Expected command or expression"))
 }
 
 func (self *BasicParser) commandByReflection(command string) (*BasicASTLeaf, error) {

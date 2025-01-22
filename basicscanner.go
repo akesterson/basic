@@ -357,8 +357,13 @@ func (self *BasicScanner) matchNumber() {
 			self.hasError = true
 		}
 		self.runtime.lineno = lineno
-		self.runtime.source[self.runtime.lineno] = self.line
-		self.tokentype = LINE_NUMBER
+		// Store the source line (past the line number - we don't store that on the code line)
+		self.runtime.source[self.runtime.lineno] = BasicSourceLine{
+			code:   self.line[self.current:],
+			lineno: self.runtime.lineno}
+		// We don't keep the line number token, move along
+		self.tokentype = UNDEFINED
+		self.start = self.current
 	}
 }
 
@@ -459,7 +464,8 @@ func (self *BasicScanner) scanTokens(line string) {
 				return
 			} else {
 				self.addToken(self.tokentype, self.getLexeme())
-				if ( self.tokentype == LITERAL_STRING ) {
+				switch ( self.tokentype ) {
+				case LITERAL_STRING:
 					// String parsing stops on the final ",
 					// move past it.
 					self.current += 1

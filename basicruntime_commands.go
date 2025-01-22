@@ -65,10 +65,8 @@ func (self *BasicRuntime) CommandLIST(expr *BasicASTLeaf, lval *BasicValue, rval
 	var startidx int64 = 0
 	var endidx int64 = MAX_SOURCE_LINES - 1
 	var i int64
-	var value string
-	if ( expr.right == nil ) {
-		self.nextline = 0
-	} else {
+
+	if ( expr.right != nil ) {
 		if ( expr.right.leaftype == LEAF_LITERAL_INT ) {
 			rval, err = self.evaluate(expr.right)
 			if ( err != nil ) {
@@ -109,9 +107,8 @@ func (self *BasicRuntime) CommandLIST(expr *BasicASTLeaf, lval *BasicValue, rval
 		}
 	}
 	for i = startidx; i <= endidx; i++ {
-		value = self.source[i]
-		if ( len(value) > 0 ) {
-			fmt.Println(value)
+		if ( len(self.source[i].code) > 0 ) {
+			fmt.Printf("%d %s\n", self.source[i].lineno, self.source[i].code)
 		}
 	}
 	return nil, nil

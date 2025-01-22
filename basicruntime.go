@@ -20,8 +20,13 @@ const (
 	RUNTIME
 )
 
+type BasicSourceLine struct {
+	code string
+	lineno int
+}
+
 type BasicRuntime struct {
-	source [MAX_SOURCE_LINES]string
+	source [MAX_SOURCE_LINES]BasicSourceLine
 	lineno int
 	values [MAX_VALUES]BasicValue
 	nextvalue int
@@ -297,7 +302,7 @@ func (self *BasicRuntime) processLineRun(readbuff *bufio.Scanner) {
 		self.setMode(self.run_finished_mode)
 		return
 	}
-	line = self.source[self.nextline]
+	line = self.source[self.nextline].code
 	self.lineno = self.nextline
 	self.nextline += 1
 	if ( line == "" ) {
