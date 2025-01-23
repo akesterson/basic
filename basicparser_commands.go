@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-func (self *BasicParser) ParseCommandDEFN() (*BasicASTLeaf, error) {
-	// DEFN    NAME       (A, ...)        =           ....
+func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
+	// DEF    NAME       (A, ...)        =           ....
 	// COMMAND IDENTIFIER ARGUMENTLIST    ASSIGNMENT  EXPRESSION
 	var command *BasicASTLeaf = nil
 	var identifier *BasicASTLeaf = nil
@@ -33,7 +33,7 @@ func (self *BasicParser) ParseCommandDEFN() (*BasicASTLeaf, error) {
 		case LEAF_IDENTIFIER_FLOAT:
 			break
 		default:
-			return nil, errors.New("Only variable identifiers are valid arguments for DEFN")
+			return nil, errors.New("Only variable identifiers are valid arguments for DEF")
 		}
 	}
 	if self.match(ASSIGNMENT) {
@@ -48,7 +48,7 @@ func (self *BasicParser) ParseCommandDEFN() (*BasicASTLeaf, error) {
 	}
 	
 	self.runtime.scanner.functions[identifier.literal_string] = FUNCTION
-	command.newCommand("DEFN", identifier)
+	command.newCommand("DEF", identifier)
 	command.left = arglist
 	command.expr = expression
 	return command, nil
