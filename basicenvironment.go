@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"strings"
+	"fmt"
 )
 
 type BasicEnvironment struct {
@@ -36,6 +37,12 @@ func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironme
 	self.functions = make(map[string]*BasicFunctionDef)
 	self.parent = parent
 	self.runtime = runtime
+}
+
+func (self *BasicEnvironment) dumpVariables() {
+	for key, value := range self.variables {
+		fmt.Printf("variables[%s] = %s\n", key, value.toString())
+	}
 }
 
 func (self *BasicEnvironment) getFunction(fname string) *BasicFunctionDef {
@@ -76,6 +83,7 @@ func (self *BasicEnvironment) get(varname string) *BasicValue {
 }
 
 func (self *BasicEnvironment) set(lval *BasicASTLeaf, rval *BasicValue) {
+	//fmt.Printf("Setting variable in environment: [%s] = %s\n", lval.toString(), rval.toString())
 	self.variables[lval.identifier] = rval
 }
 

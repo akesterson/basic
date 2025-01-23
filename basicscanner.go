@@ -389,6 +389,7 @@ func (self *BasicScanner) matchIdentifier() {
 	reservedtype, resexists := self.reservedwords[identifier]
 	commandtype, cmdexists := self.commands[identifier]
 	functiontype, fexists := self.functions[identifier]
+	_, ufexists := self.runtime.environment.functions[identifier]
 	if ( self.tokentype == IDENTIFIER ) {
 		if resexists {
 			self.tokentype = reservedtype
@@ -396,6 +397,8 @@ func (self *BasicScanner) matchIdentifier() {
 			self.tokentype = commandtype
 		} else if fexists {
 			self.tokentype = functiontype
+		} else if ufexists {
+			self.tokentype = FUNCTION
 		}
 	} else if ( self.tokentype != IDENTIFIER ) {
 		if ( resexists || cmdexists || fexists ) {

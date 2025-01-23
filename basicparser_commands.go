@@ -49,8 +49,8 @@ func (self *BasicParser) ParseCommandDEFN() (*BasicASTLeaf, error) {
 	
 	self.runtime.scanner.functions[identifier.literal_string] = FUNCTION
 	command.newCommand("DEFN", identifier)
-	identifier.right = arglist
-	arglist.right = expression
+	command.left = arglist
+	command.expr = expression
 	return command, nil
 }
 

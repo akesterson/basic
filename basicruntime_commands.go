@@ -8,16 +8,21 @@ import (
 
 func (self *BasicRuntime) CommandDEFN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	if ( expr == nil ||
+		expr.left == nil ||
 		expr.right == nil ||
-		expr.right.right == nil ) {
+		expr.expr == nil) {
 		return nil, errors.New("Incomplete function definition")
 	}
-	self.environment.functions[expr.literal_string] = &BasicFunctionDef{
-		arglist: expr.right.clone(),
-		expression: expr.right.right.clone(),
+	//fmt.Printf("DEFN leaf : %s\n", expr.toString())
+	//fmt.Printf("DEFN Name leaf : %s\n", expr.right.toString())
+	//fmt.Printf("DEFN Arglist leaf : %s (%+v)\n", expr.left.toString(), expr.left)
+	//fmt.Printf("DEFN Expression leaf : %s\n", expr.expr.toString())
+	self.environment.functions[expr.right.identifier] = &BasicFunctionDef{
+		arglist: expr.left.clone(),
+		expression: expr.expr.clone(),
 		runtime: self,
-		name: expr.literal_string}
-	//fmt.Printf("%+v", self.environment.functions[expr.literal_string])
+		name: strings.Clone(expr.right.identifier)}
+	//fmt.Printf("Defined function %+v\n", self.environment.functions[expr.right.identifier])
 	return nil, nil
 }
 

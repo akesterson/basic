@@ -5,3 +5,7 @@ Get file operations working
 Get user input working
 
 Coerce all numeric types to floating point behind the scenes, makes my life easier, and this is how Commodore BASIC 7.0 worked
+
+Get argument lists with mutliple elements (e.g. (X#, Y#) vs (X#) ) working
+
+Get some unit tests up in here

@@ -240,24 +240,30 @@ func (self *BasicRuntime) userFunction(expr *BasicASTLeaf, lval *BasicValue, rva
 	var leafvalue *BasicValue = nil
 	var err error = nil
 	
-	fndef = self.environment.getFunction(expr.literal_string)
+	fndef = self.environment.getFunction(expr.identifier)
+	//fmt.Printf("Function : %+v\n", fndef)
 	if ( fndef == nil ) {
 		return nil, nil
 	} else {
 		fndef.environment.init(self, self.environment)
-		leafptr = expr
+		leafptr = expr.right
 		argptr = fndef.arglist
-		for ( leafptr != nil ) {
+		//fmt.Printf("Function arglist leaf: %s (%+v)\n", argptr.toString(), argptr)
+		//fmt.Printf("Calling user function %s(", fndef.name)
+		for ( leafptr != nil && argptr != nil) {
+			//fmt.Printf("%+v\n", leafptr)
 			leafvalue, err = self.evaluate(leafptr)
 			if ( err != nil ) {
 				return nil, err
 			}
-			fmt.Printf("%+v\n", leafvalue)
+			//fmt.Printf("%s = %s, \n", argptr.toString(), leafvalue.toString())
 			fndef.environment.set(argptr, leafvalue)
 			leafptr = leafptr.right
 			argptr = argptr.right
 		}
+		//fmt.Printf(")\n")
 		self.environment = &fndef.environment
+		//self.environment.dumpVariables()
 		leafvalue, err = self.evaluate(fndef.expression)
 		self.environment = fndef.environment.parent
 		return leafvalue, err
@@ -312,7 +318,7 @@ func (self *BasicRuntime) interpretImmediate(expr *BasicASTLeaf) (*BasicValue, e
 	value, err = self.evaluateSome(expr, LEAF_COMMAND_IMMEDIATE)
 	//fmt.Printf("after evaluateSome in mode %d\n", self.mode)
 	if ( err != nil ) {
-		fmt.Println(err)
+		//fmt.Println(err)
 		return nil, err
 	}
 	return value, nil

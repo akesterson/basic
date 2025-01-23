@@ -151,7 +151,7 @@ func (self *BasicValue) mathPlus(rval *BasicValue) (*BasicValue, error) {
 	} else if ( self.valuetype == TYPE_STRING && rval.valuetype == TYPE_FLOAT ) {
 		dest.stringval = fmt.Sprintf("%s%f", self.stringval, rval.floatval)
 	} else {
-		fmt.Printf("%+v + %+v\n", self, rval)	
+		//fmt.Printf("%+v + %+v\n", self, rval)	
 		return nil, errors.New("Invalid arithmetic operation")
 	}
 	return dest, nil

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"errors"
+	"strings"
 )
 
 
@@ -56,15 +57,28 @@ func (self *BasicASTLeaf) init(leaftype BasicASTLeafType) {
 }
 
 func (self *BasicASTLeaf) clone() *BasicASTLeaf {
+	var left *BasicASTLeaf = self.left
+	var expr *BasicASTLeaf = self.expr
+	var right *BasicASTLeaf = self.right
+	if left != nil {
+		left = left.clone()
+	}
+	if right != nil {
+		right = right.clone()
+	}
+	if expr != nil {
+		expr = expr.clone()
+	}
 	return &BasicASTLeaf{
 		leaftype: self.leaftype,
 		parent: self.parent,
-		left: self.left,
-		right: self.right,
-		expr: self.expr,
+		left: left,
+		right: right,
+		expr: expr,
+		identifier: strings.Clone(self.identifier),
 		literal_int: self.literal_int,
 		literal_float: self.literal_float,
-		literal_string: self.literal_string,
+		literal_string: strings.Clone(self.literal_string),
 		operator: self.operator}
 }
 
@@ -243,6 +257,8 @@ func (self *BasicASTLeaf) toString() string {
 		return fmt.Sprintf(
 			"(group %s)",
 			self.expr.toString())
+	default:
+		return fmt.Sprintf("%+v", self)
 	}
 	return ""
 }

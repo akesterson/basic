@@ -113,44 +113,6 @@ func (self *BasicParser) statement() (*BasicASTLeaf, error) {
 	return nil, self.error(fmt.Sprintf("Expected command or expression"))
 }
 
-func (self *BasicParser) userFunction(fname string) (*BasicASTLeaf, error) {
-	var arglist *BasicASTLeaf = nil
-	var leafptr *BasicASTLeaf = nil
-	var refarglen int = 0
-	var defarglen int = 0
-	var fndef *BasicFunctionDef = nil
-	var err error = nil
-	
-	fndef = self.runtime.environment.getFunction(fname)
-	if ( fndef != nil ) {
-		// All we can do here is collect the argument list and
-		// check the length
-		arglist, err = self.argumentList()
-		if ( err != nil ) {
-			return nil, err
-		}
-		leafptr = arglist
-		for ( leafptr != nil ) {
-			defarglen += 1
-			leafptr = leafptr.right
-		}
-		leafptr = fndef.arglist
-		for ( leafptr != nil ) {
-			refarglen += 1
-			leafptr = leafptr.right
-		}
-		if ( defarglen != refarglen ) {
-			return nil, fmt.Errorf("function %s takes %d arguments, received %d", fndef.name, defarglen, refarglen)
-		}
-	}
-	leafptr, err = self.newLeaf()
-	if ( err != nil ) {
-		return nil, err
-	}
-	leafptr.newCommand(fname, arglist)
-	return leafptr, nil
-}
-
 func (self *BasicParser) commandByReflection(command string) (*BasicASTLeaf, error) {
 	var methodiface interface{}
 	var reflector reflect.Value
@@ -195,7 +157,8 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 		if ( err != nil ) {
 			return nil, err
 		}
-		
+
+		// Is it a command that requires special parsing?
 		expr, err = self.commandByReflection(operator.lexeme)
 		if ( err != nil ) {
 			return nil, err
@@ -208,7 +171,7 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 		// isn't one. But fail if there is one and it fails to parse.
 		righttoken = self.peek()
 		if ( righttoken != nil && righttoken.tokentype != UNDEFINED ) {
-			right, err = self.expression()
+			right, err = self.function()
 			if ( err != nil ) {
 				return nil, err
 			}
@@ -222,6 +185,7 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 			expr.newImmediateCommand(operator.lexeme, right)
 		} else {
 			expr.newCommand(operator.lexeme, right)
+			//fmt.Printf("Command : %s->%s\n", expr.toString(), expr.right.toString())
 		}
 		return expr, nil
 	}
@@ -582,31 +546,50 @@ func (self *BasicParser) exponent() (*BasicASTLeaf, error) {
 }
 
 func (self *BasicParser) function() (*BasicASTLeaf, error) {
-	var expr *BasicASTLeaf = nil
+	var arglist *BasicASTLeaf = nil
+	var leafptr *BasicASTLeaf = nil
 	var operator *BasicToken = nil
-	var right *BasicASTLeaf = nil
+	var refarglen int = 0
+	var defarglen int = 0
+	var fndef *BasicFunctionDef = nil
 	var err error = nil
 
 	if self.match(FUNCTION) {
 		operator, err = self.previous()
 		if ( err != nil ) {
 			return nil, err
-		}		
-		right, err = self.argumentList()
-		if ( err != nil ) {
-			return nil, err
 		}
-		if ( right == nil ) {
-			return nil, errors.New("Expected argument list")
+		//fmt.Printf("Checking for existence of user function %s...\n", operator.lexeme)
+		fndef = self.runtime.environment.getFunction(operator.lexeme)
+		if ( fndef != nil ) {
+			// All we can do here is collect the argument list and
+			// check the length
+			arglist, err = self.argumentList()
+			if ( err != nil ) {
+				return nil, err
+			}
+			leafptr = arglist
+			for ( leafptr != nil ) {
+				defarglen += 1
+				leafptr = leafptr.right
+			}
+			leafptr = fndef.arglist
+			for ( leafptr != nil ) {
+				refarglen += 1
+				leafptr = leafptr.right
+			}
+			if ( defarglen != refarglen ) {
+				return nil, fmt.Errorf("function %s takes %d arguments, received %d", fndef.name, defarglen, refarglen)
+			}
+			leafptr, err = self.newLeaf()
+			if ( err != nil ) {
+				return nil, err
+			}
+			leafptr.newCommand(operator.lexeme, arglist)
+			//fmt.Printf("%s\n", leafptr.toString())
+			return leafptr, nil
 		}
-		//fmt.Printf("%+v\n", right)
-		expr, err = self.newLeaf()
-		if ( err != nil ) {
-			return nil, err
-		}
-		expr.newCommand(operator.lexeme, right)
-		//fmt.Printf("Returning %+v\n", expr)
-		return expr, nil
+		return nil, fmt.Errorf("No such function %s", operator.lexeme)
 	}
 	return self.primary()
 }
@@ -618,7 +601,7 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 	var err error = nil
 
 
-	if self.match(LITERAL_INT, LITERAL_FLOAT, LITERAL_STRING, IDENTIFIER, IDENTIFIER_STRING, IDENTIFIER_FLOAT, IDENTIFIER_INT) {
+	if self.match(LITERAL_INT, LITERAL_FLOAT, LITERAL_STRING, IDENTIFIER, IDENTIFIER_STRING, IDENTIFIER_FLOAT, IDENTIFIER_INT, FUNCTION) {
 		previous, err = self.previous()
 		if ( err != nil ) {
 			return nil, err
@@ -640,6 +623,7 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 			expr.newIdentifier(LEAF_IDENTIFIER_FLOAT, previous.lexeme)
 		case IDENTIFIER_STRING:
 			expr.newIdentifier(LEAF_IDENTIFIER_STRING, previous.lexeme)
+		case FUNCTION: fallthrough
 		case IDENTIFIER:
 			expr.newIdentifier(LEAF_IDENTIFIER, previous.lexeme)
 		default:
@@ -661,7 +645,7 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 		return expr, nil
 	}
 	//fmt.Printf("At curtoken %d\n", self.curtoken)
-	return nil, self.error("Expected expression")
+	return nil, self.error("Expected expression or literal")
 }
 
 func (self *BasicParser) error(message string) error {
