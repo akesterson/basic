@@ -6,6 +6,21 @@ import (
 	"strings"
 )
 
+func (self *BasicRuntime) CommandDEFN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	if ( expr == nil ||
+		expr.right == nil ||
+		expr.right.right == nil ) {
+		return nil, errors.New("Incomplete function definition")
+	}
+	self.environment.functions[expr.literal_string] = &BasicFunctionDef{
+		arglist: expr.right.clone(),
+		expression: expr.right.right.clone(),
+		runtime: self,
+		name: expr.literal_string}
+	//fmt.Printf("%+v", self.environment.functions[expr.literal_string])
+	return nil, nil
+}
+
 func (self *BasicRuntime) CommandLEN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
 	var strval *BasicValue = nil

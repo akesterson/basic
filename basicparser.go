@@ -64,6 +64,12 @@ func (self *BasicParser) init(runtime *BasicRuntime) error {
 	return nil
 }
 
+func (self *BasicParser) dump() {
+	for idx, value := range(self.tokens) {
+		fmt.Printf("token[%d] = %+v\n", idx, value)
+	}
+}
+
 func (self *BasicParser) zero() {
 	if ( self == nil ) {
 		panic("nil self reference!")
@@ -105,6 +111,44 @@ func (self *BasicParser) parse() (*BasicASTLeaf, error) {
 func (self *BasicParser) statement() (*BasicASTLeaf, error) {
 	return self.command()
 	return nil, self.error(fmt.Sprintf("Expected command or expression"))
+}
+
+func (self *BasicParser) userFunction(fname string) (*BasicASTLeaf, error) {
+	var arglist *BasicASTLeaf = nil
+	var leafptr *BasicASTLeaf = nil
+	var refarglen int = 0
+	var defarglen int = 0
+	var fndef *BasicFunctionDef = nil
+	var err error = nil
+	
+	fndef = self.runtime.environment.getFunction(fname)
+	if ( fndef != nil ) {
+		// All we can do here is collect the argument list and
+		// check the length
+		arglist, err = self.argumentList()
+		if ( err != nil ) {
+			return nil, err
+		}
+		leafptr = arglist
+		for ( leafptr != nil ) {
+			defarglen += 1
+			leafptr = leafptr.right
+		}
+		leafptr = fndef.arglist
+		for ( leafptr != nil ) {
+			refarglen += 1
+			leafptr = leafptr.right
+		}
+		if ( defarglen != refarglen ) {
+			return nil, fmt.Errorf("function %s takes %d arguments, received %d", fndef.name, defarglen, refarglen)
+		}
+	}
+	leafptr, err = self.newLeaf()
+	if ( err != nil ) {
+		return nil, err
+	}
+	leafptr.newCommand(fname, arglist)
+	return leafptr, nil
 }
 
 func (self *BasicParser) commandByReflection(command string) (*BasicASTLeaf, error) {
@@ -150,7 +194,7 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 		operator, err = self.previous()
 		if ( err != nil ) {
 			return nil, err
-		}		
+		}
 		
 		expr, err = self.commandByReflection(operator.lexeme)
 		if ( err != nil ) {
@@ -201,7 +245,7 @@ func (self *BasicParser) assignment() (*BasicASTLeaf, error) {
 	} else if ( ! slices.Contains(identifier_leaf_types, identifier.leaftype) ) {
 		return identifier, err
 	}
-	for self.match(ASSIGNMENT) {
+	if self.match(ASSIGNMENT) {
 		right, err = self.expression()
 		if ( err != nil ) {
 			return nil, err
@@ -596,6 +640,8 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 			expr.newIdentifier(LEAF_IDENTIFIER_FLOAT, previous.lexeme)
 		case IDENTIFIER_STRING:
 			expr.newIdentifier(LEAF_IDENTIFIER_STRING, previous.lexeme)
+		case IDENTIFIER:
+			expr.newIdentifier(LEAF_IDENTIFIER, previous.lexeme)
 		default:
 			return nil, errors.New("Invalid literal type, command or function name")
 		}

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"os"
-	//"strings"
+	//"os"
+	"strings"
 )
 
 const (
@@ -21,6 +21,6 @@ const (
 func main() {
 	var runtime BasicRuntime;
 	runtime.init()
-	runtime.run(os.Stdin, MODE_REPL)
-	//runtime.run(strings.NewReader("10 FOR A# = 1 TO 5\n20 PRINT A#\n30 NEXT A#\nRUN\nQUIT\n"), MODE_REPL)
+	//runtime.run(os.Stdin, MODE_REPL)
+	runtime.run(strings.NewReader("10 DEFN SQR(X#) = X# * X#\n20 PRINT SQR(3)\nRUN\nQUIT\n"), MODE_REPL)
 }

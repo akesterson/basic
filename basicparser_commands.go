@@ -5,6 +5,55 @@ import (
 	"strings"
 )
 
+func (self *BasicParser) ParseCommandDEFN() (*BasicASTLeaf, error) {
+	// DEFN    NAME       (A, ...)        =           ....
+	// COMMAND IDENTIFIER ARGUMENTLIST    ASSIGNMENT  EXPRESSION
+	var command *BasicASTLeaf = nil
+	var identifier *BasicASTLeaf = nil
+	var arglist *BasicASTLeaf = nil
+	var expression *BasicASTLeaf = nil
+	var err error = nil
+
+	identifier, err = self.primary()
+	if ( err != nil ) {
+		return nil, err
+	}
+	if ( identifier.leaftype != LEAF_IDENTIFIER ) {
+		return nil, errors.New("Expected identifier")
+	}
+	arglist, err = self.argumentList()
+	if ( err != nil ) {
+		return nil, errors.New("Expected argument list (identifier names)")
+	}
+	expression = arglist
+	for ( expression.right != nil ) {
+		switch (expression.right.leaftype) {
+		case LEAF_IDENTIFIER_STRING: fallthrough
+		case LEAF_IDENTIFIER_INT: fallthrough
+		case LEAF_IDENTIFIER_FLOAT:
+			break
+		default:
+			return nil, errors.New("Only variable identifiers are valid arguments for DEFN")
+		}
+	}
+	if self.match(ASSIGNMENT) {
+		expression, err = self.expression()
+		if ( err != nil ) {
+			return nil, err
+		}
+	}
+	command, err = self.newLeaf()
+	if ( err != nil ) {
+		return nil, err
+	}
+	
+	self.runtime.scanner.functions[identifier.literal_string] = FUNCTION
+	command.newCommand("DEFN", identifier)
+	identifier.right = arglist
+	arglist.right = expression
+	return command, nil
+}
+
 func (self *BasicParser) ParseCommandFOR() (*BasicASTLeaf, error) {
 	// FOR     ...        TO ....        [STEP    ...]
 	// COMMAND ASSIGNMENT    EXPRESSION  [COMMAND EXPRESSION]

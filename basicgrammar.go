@@ -55,6 +55,19 @@ func (self *BasicASTLeaf) init(leaftype BasicASTLeafType) {
 	self.operator = UNDEFINED
 }
 
+func (self *BasicASTLeaf) clone() *BasicASTLeaf {
+	return &BasicASTLeaf{
+		leaftype: self.leaftype,
+		parent: self.parent,
+		left: self.left,
+		right: self.right,
+		expr: self.expr,
+		literal_int: self.literal_int,
+		literal_float: self.literal_float,
+		literal_string: self.literal_string,
+		operator: self.operator}
+}
+
 func (self *BasicASTLeaf) newPrimary(group *BasicASTLeaf, literal_string *string, literal_int *int64, literal_float *float64) error {
 	self.init(LEAF_PRIMARY)
 	if ( group != nil ) {

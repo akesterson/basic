@@ -181,7 +181,14 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 	case LEAF_COMMAND_IMMEDIATE: fallthrough
 	case LEAF_COMMAND:
 		//fmt.Printf("Processing command %s\n", expr.identifier)
+		lval, err = self.userFunction(expr, lval, rval)
+		if ( err != nil ) {
+			return nil, err
+		} else if ( lval != nil ) {
+			return lval, nil
+		}
 		return self.commandByReflection(expr, lval, rval)
+		
 	case LEAF_BINARY:
 		lval, err = self.evaluate(expr.left)
 		if ( err != nil ) {
@@ -224,6 +231,38 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		}
 	}
 	return lval, nil
+}
+
+func (self *BasicRuntime) userFunction(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var fndef *BasicFunctionDef = nil
+	var leafptr *BasicASTLeaf = nil
+	var argptr *BasicASTLeaf = nil
+	var leafvalue *BasicValue = nil
+	var err error = nil
+	
+	fndef = self.environment.getFunction(expr.literal_string)
+	if ( fndef == nil ) {
+		return nil, nil
+	} else {
+		fndef.environment.init(self, self.environment)
+		leafptr = expr
+		argptr = fndef.arglist
+		for ( leafptr != nil ) {
+			leafvalue, err = self.evaluate(leafptr)
+			if ( err != nil ) {
+				return nil, err
+			}
+			fmt.Printf("%+v\n", leafvalue)
+			fndef.environment.set(argptr, leafvalue)
+			leafptr = leafptr.right
+			argptr = argptr.right
+		}
+		self.environment = &fndef.environment
+		leafvalue, err = self.evaluate(fndef.expression)
+		self.environment = fndef.environment.parent
+		return leafvalue, err
+		// return the result
+	}
 }
 
 func (self *BasicRuntime) commandByReflection(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {

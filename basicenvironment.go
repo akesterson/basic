@@ -7,6 +7,7 @@ import (
 
 type BasicEnvironment struct {
 	variables map[string]*BasicValue
+	functions map[string]*BasicFunctionDef
 	
 	// IF variables
 	ifThenLine int64
@@ -32,8 +33,18 @@ type BasicEnvironment struct {
 
 func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironment) {
 	self.variables = make(map[string]*BasicValue)
+	self.functions = make(map[string]*BasicFunctionDef)
 	self.parent = parent
 	self.runtime = runtime
+}
+
+func (self *BasicEnvironment) getFunction(fname string) *BasicFunctionDef {
+	if value, ok := self.functions[fname]; ok {
+		return value
+	} else if ( self.parent != nil ) {
+		return self.parent.getFunction(fname)
+	}
+	return nil
 }
 
 func (self *BasicEnvironment) get(varname string) *BasicValue {
@@ -62,6 +73,10 @@ func (self *BasicEnvironment) get(varname string) *BasicValue {
 		return self.variables[varname]
 	}
 	return nil
+}
+
+func (self *BasicEnvironment) set(lval *BasicASTLeaf, rval *BasicValue) {
+	self.variables[lval.identifier] = rval
 }
 
 func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*BasicValue, error) {
