@@ -21,6 +21,14 @@ const (
 func main() {
 	var runtime BasicRuntime;
 	runtime.init()
-	runtime.run(os.Stdin, MODE_REPL)
-	//runtime.run(strings.NewReader("10 FOR I# = 1 TO 999999\nPRINT I#\nNEXT I#\nRUN\nQUIT\n"), MODE_REPL)
+	if ( len(os.Args) > 1 ) {
+		f, err := os.Open(os.Args[1])
+		if ( err != nil ) {
+			panic(err.Error())
+		}
+		defer f.Close()
+		runtime.run(f, MODE_RUNSTREAM)
+	} else {
+		runtime.run(os.Stdin, MODE_REPL)
+	}
 }
