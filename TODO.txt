@@ -1,7 +1,3 @@
-Rip out support for multiple statements on a single line. It is really complicating some things. The only reason they were supported in Commodore 7.0 was due to the lack of memory on the system. We don't have that and it's really causing problems for flow control and looping code.
-
-Get BEGIN / BEND working (processing branches that cross multiple lines of input)
-
 Get file operations working
 
 Get user input working

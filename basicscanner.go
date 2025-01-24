@@ -430,7 +430,6 @@ func (self *BasicScanner) scanTokens(line string) string {
 		case '*': self.tokentype = STAR
 		case ',': self.tokentype = COMMA
 		case '=': self.matchNextChar('=', EQUAL, ASSIGNMENT)
-		case ':': self.tokentype = COLON
 		case '<':
 			if ( ! self.matchNextChar('=', LESS_THAN_EQUAL, LESS_THAN) ) {
 				self.matchNextChar('>', NOT_EQUAL, LESS_THAN)

@@ -702,13 +702,6 @@ func (self *BasicParser) advance() (*BasicToken, error) {
 func (self *BasicParser) isAtEnd() bool {
 	if (self.curtoken >= (MAX_TOKENS - 1) || self.curtoken >= self.nexttoken ) {
 		return true
-	} else {
-		// If we are at the end of a statement (:), return true,
-		// but advance the current token
-		if ( self.tokens[self.curtoken].tokentype == COLON ) {
-			self.curtoken += 1
-			return true
-		}
 	}
 	return false
 }
