@@ -8,6 +8,7 @@ import (
 	"os"
 	"slices"
 	"reflect"
+	"strings"
 )
 
 type BasicError int
@@ -100,16 +101,6 @@ func (self *BasicRuntime) newValue() (*BasicValue, error) {
 		return value, nil
 	}
 	return nil, errors.New("Maximum values per line reached")
-}
-
-func (self *BasicRuntime) isTrue(value *BasicValue) (bool, error) {
-	if ( value.valuetype == TYPE_STRING ) {
-		return false, errors.New("strings cannot evaluate to true (-1) or false (0)")
-	}
-	if ( value.intval == BASIC_TRUE || value.floatval == BASIC_TRUE ) {
-		return true, nil
-	}
-	return false, nil
 }
 
 func (self *BasicRuntime) evaluateSome(expr *BasicASTLeaf, leaftypes ...BasicASTLeafType) (*BasicValue, error) {
@@ -304,6 +295,13 @@ func (self *BasicRuntime) commandByReflection(expr *BasicASTLeaf, lval *BasicVal
 func (self *BasicRuntime) interpret(expr *BasicASTLeaf) (*BasicValue, error) {
 	var value *BasicValue
 	var err error
+	if ( len(self.environment.waitingForCommand) > 0 ) {
+		if ( expr.leaftype != LEAF_COMMAND || strings.Compare(expr.identifier, self.environment.waitingForCommand) != 0 ) {
+			//fmt.Printf("I am not waiting for %+v\n", expr)
+			return &self.staticTrueValue, nil
+		}
+	}
+	//fmt.Printf("Interpreting %+v\n", expr)
 	value, err = self.evaluate(expr)
 	if ( err != nil ) {
 		self.basicError(RUNTIME, err.Error())

@@ -235,6 +235,7 @@ func (self *BasicRuntime) CommandFOR(expr *BasicASTLeaf, lval *BasicValue, rval 
 	}
 	self.environment.forToLeaf = nil
 	self.environment.forStepLeaf = nil
+	self.environment.waitForCommand("NEXT")
 	return &self.staticTrueValue, nil
 }
 
@@ -256,29 +257,37 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 	}
 	self.environment.loopExitLine = self.lineno + 1
 	
-	rval, err = self.environment.get(expr.right.identifier).mathPlus(&self.environment.forStepValue)
-	if ( err != nil ) {
-		return nil, err
-	}
+	rval = self.environment.get(expr.right.identifier)
 	truth, err = self.environment.forStepValue.lessThan(&BasicValue{valuetype: TYPE_INTEGER, intval: 0})
 	if ( err != nil ) {
 		return nil, err
 	}
 	if ( truth.isTrue() ) {
 		// Our step is negative
-		truth, err = self.environment.forToValue.greaterThan(rval)
+		truth, err = self.environment.forToValue.greaterThanEqual(rval)
 	} else {
 		// Our step is positive
-		truth, err = self.environment.forToValue.lessThan(rval)
+		truth, err = self.environment.forToValue.lessThanEqual(rval)
 	}
 	if ( err != nil ) {
 		return nil, err
 	}
+
+	self.environment.stopWaiting("NEXT")
+	//fmt.Printf("%s ? %s : %s\n",
+	//self.environment.forToValue.toString(),
+	//rval.toString(),
+	//truth.toString())
+
 	if ( truth.isTrue() ) {
 		self.environment.forStepValue.zero()
 		self.environment.forToValue.zero()
 		self.environment.loopFirstLine = 0
 		return &self.staticTrueValue, nil
+	}
+	rval, err = rval.mathPlus(&self.environment.forStepValue)
+	if ( err != nil ) {
+		return nil, err
 	}
 	self.nextline = self.environment.loopFirstLine
 	return &self.staticTrueValue, nil

@@ -28,6 +28,14 @@ type BasicEnvironment struct {
 	
 	gosubReturnLine int64
 
+	// When this is set, no lines are executed until a COMMAND
+	// matching this string is found, then execution resumes.
+	// This prevents us from automatically executing things
+	// inside branches and loop structures which should be
+	// skipped, when the actual evaluation of conditions is
+	// performed at the bottom of those structures
+	waitingForCommand string
+	
 	parent *BasicEnvironment
 	runtime *BasicRuntime
 }
@@ -38,6 +46,20 @@ func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironme
 	self.parent = parent
 	self.runtime = runtime
 }
+
+func (self *BasicEnvironment) waitForCommand(command string) {
+	if ( len(self.waitingForCommand) != 0 ) {
+		panic("Can't wait on multiple commands in the same environment")
+	}
+	//fmt.Printf("Environment will wait for command %s\n", command)
+	self.waitingForCommand = command
+}
+
+func (self *BasicEnvironment) stopWaiting(command string) {
+	//fmt.Printf("Environment stopped waiting for command %s\n", command)
+	self.waitingForCommand = ""	
+}
+
 
 func (self *BasicEnvironment) dumpVariables() {
 	for key, value := range self.variables {

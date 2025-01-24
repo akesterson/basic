@@ -79,7 +79,7 @@ func (self *BasicValue) invert() (*BasicValue, error) {
 	if ( self.valuetype == TYPE_STRING ) {
 		return nil, errors.New("Cannot invert a string")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (self *BasicValue) bitwiseNot() (*BasicValue, error) {
 	if ( self.valuetype != TYPE_INTEGER ) {
 		return nil, errors.New("Cannot only perform bitwise operations on integers")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}	
@@ -107,7 +107,7 @@ func (self *BasicValue) bitwiseAnd(rval *BasicValue) (*BasicValue, error) {
 	if ( self.valuetype != TYPE_INTEGER ) {
 		return nil, errors.New("Cannot perform bitwise operations on string or float")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (self *BasicValue) bitwiseOr(rval *BasicValue) (*BasicValue, error) {
 	if ( self.valuetype != TYPE_INTEGER ) {
 		return nil, errors.New("Cannot only perform bitwise operations on integers")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (self *BasicValue) mathPlus(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (self *BasicValue) mathMinus(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (self *BasicValue) mathDivide(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}	
@@ -200,7 +200,7 @@ func (self *BasicValue) mathMultiply(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -219,7 +219,7 @@ func (self *BasicValue) lessThan(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -238,7 +238,7 @@ func (self *BasicValue) lessThanEqual(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -258,7 +258,7 @@ func (self *BasicValue) greaterThan(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -278,7 +278,7 @@ func (self *BasicValue) greaterThanEqual(rval *BasicValue) (*BasicValue, error) 
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -298,7 +298,7 @@ func (self *BasicValue) isEqual(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -319,7 +319,7 @@ func (self *BasicValue) isNotEqual(rval *BasicValue) (*BasicValue, error) {
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
+	dest, err := self.cloneIfNotMutable()
 	if ( err != nil ) {
 		return nil, err
 	}
