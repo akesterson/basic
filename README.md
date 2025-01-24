@@ -1,5 +1,15 @@
 This BASIC is styled after [Commodore BASIC 7.0](http://www.jbrain.com/pub/cbm/manuals/128/C128PRG.pdf). The scanner, parser and runtime were initially built with the instructions for the Java implementation of Lox in [https://craftinginterpreters.com](https://craftinginterpreters.com), but I got impatient and struck off on my own pretty much as soon as I got commands working.
 
+```
+make basic.exe
+
+# To use the interactive REPL
+./basic.exe
+
+# To run a basic file from the command line
+./basic ./scripts/functions.bas
+```
+
 # What Works?
 
 This implementation is significantly more complete than my last stab at a BASIC, in my [piquant bootloader project](https://github.com/akesterson/piquant). This one may actually get finished. If it does, I'll rewrite the piquant bootloader in Rust and move this interpreter in there. It will be a glorious abomination.
