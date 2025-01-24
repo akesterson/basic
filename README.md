@@ -41,7 +41,18 @@ The following commands/verbs are implemented:
 * `DEF FN(X, ...) = expression` : Define a function with arguments that performs a given expression
 * `IF (comparison) THEN (statement) [ELSE (statement)]` : Conditional branching
 * `EXIT`: Exit a loop before it would normally finish
-* `FOR (assignment) TO (expression) [STEP (expression)]: (statement) : NEXT (variable)`: Iterate over a range of values and perform (statement) or block each time.
+* `FOR` : Iterate over a range of values and perform (statement) or block each time.
+
+```
+10 FOR I# = 1 TO 5
+20 REM Do some stuff in here
+30 NEXT I#
+
+10 FOR I# = 1 TO 5 STEP 2
+20 REM Do some stuff here
+30 NEXT I#
+```
+
 * `GOTO n`: Go to line n in the program
 * `GOSUB n`: Go to line n in the program and return here when `RETURN` is found
 * `LIST [n-n]`: List all or a portion of the lines in the current program
