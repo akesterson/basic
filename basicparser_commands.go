@@ -6,12 +6,12 @@ import (
 )
 
 func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
-	// DEF    NAME       (A, ...)        =           ....
+	// DEF     NAME       (A, ...)        =           ....
 	// COMMAND IDENTIFIER ARGUMENTLIST    ASSIGNMENT  EXPRESSION
-	var command *BasicASTLeaf = nil
 	var identifier *BasicASTLeaf = nil
 	var arglist *BasicASTLeaf = nil
 	var expression *BasicASTLeaf = nil
+	var command *BasicASTLeaf = nil
 	var err error = nil
 
 	identifier, err = self.primary()
@@ -35,6 +35,7 @@ func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
 		default:
 			return nil, errors.New("Only variable identifiers are valid arguments for DEF")
 		}
+		expression = expression.right
 	}
 	if self.match(ASSIGNMENT) {
 		expression, err = self.expression()
@@ -46,11 +47,15 @@ func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
 	if ( err != nil ) {
 		return nil, err
 	}
-	
+	command.newCommand("DEF", nil)
+
+	// Inject the new function into the runtime and return
+	self.runtime.environment.functions[identifier.identifier] = &BasicFunctionDef{
+		arglist: arglist.clone(),
+		expression: expression.clone(),
+		runtime: self.runtime,
+		name: strings.Clone(identifier.identifier)}
 	self.runtime.scanner.functions[identifier.literal_string] = FUNCTION
-	command.newCommand("DEF", identifier)
-	command.left = arglist
-	command.expr = expression
 	return command, nil
 }
 

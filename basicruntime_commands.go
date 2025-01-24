@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+func (self *BasicRuntime) CommandDEF(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	return &self.staticTrueValue, nil
+}
+
 func (self *BasicRuntime) CommandPRINT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
 	if ( expr.right == nil ) {

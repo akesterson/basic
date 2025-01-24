@@ -2,28 +2,7 @@ package main
 
 import (
 	"errors"
-	"strings"
 )
-
-func (self *BasicRuntime) CommandDEF(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
-	if ( expr == nil ||
-		expr.left == nil ||
-		expr.right == nil ||
-		expr.expr == nil) {
-		return nil, errors.New("Incomplete function definition")
-	}
-	//fmt.Printf("DEF leaf : %s\n", expr.toString())
-	//fmt.Printf("DEF Name leaf : %s\n", expr.right.toString())
-	//fmt.Printf("DEF Arglist leaf : %s (%+v)\n", expr.left.toString(), expr.left)
-	//fmt.Printf("DEF Expression leaf : %s\n", expr.expr.toString())
-	self.environment.functions[expr.right.identifier] = &BasicFunctionDef{
-		arglist: expr.left.clone(),
-		expression: expr.expr.clone(),
-		runtime: self,
-		name: strings.Clone(expr.right.identifier)}
-	//fmt.Printf("Defined function %+v\n", self.environment.functions[expr.right.identifier])
-	return nil, nil
-}
 
 func (self *BasicRuntime) CommandLEN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil

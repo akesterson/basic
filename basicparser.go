@@ -171,7 +171,7 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 		// isn't one. But fail if there is one and it fails to parse.
 		righttoken = self.peek()
 		if ( righttoken != nil && righttoken.tokentype != UNDEFINED ) {
-			right, err = self.function()
+			right, err = self.expression()
 			if ( err != nil ) {
 				return nil, err
 			}
@@ -251,6 +251,7 @@ func (self *BasicParser) argumentList() (*BasicASTLeaf, error) {
 		expr = expr.right
 		//fmt.Printf("Argument : %+v\n", expr)
 	}
+	//fmt.Println("Done with loop")
 	if ( !self.match(RIGHT_PAREN) ) {
 		return nil, errors.New("Unbalanced parenthesis")
 	}
@@ -545,6 +546,7 @@ func (self *BasicParser) exponent() (*BasicASTLeaf, error) {
 	return left, nil
 }
 
+
 func (self *BasicParser) function() (*BasicASTLeaf, error) {
 	var arglist *BasicASTLeaf = nil
 	var leafptr *BasicASTLeaf = nil
@@ -554,13 +556,17 @@ func (self *BasicParser) function() (*BasicASTLeaf, error) {
 	var fndef *BasicFunctionDef = nil
 	var err error = nil
 
-	if self.match(FUNCTION) {
+	// This is ONLY called for function CALLS, not for function DEFs.
+	if ( self.match(FUNCTION) ) {
 		operator, err = self.previous()
 		if ( err != nil ) {
 			return nil, err
 		}
 		//fmt.Printf("Checking for existence of user function %s...\n", operator.lexeme)
 		fndef = self.runtime.environment.getFunction(operator.lexeme)
+		if ( fndef == nil ) {
+			return nil, fmt.Errorf("No such function %s", operator.lexeme)
+		}	
 		if ( fndef != nil ) {
 			// All we can do here is collect the argument list and
 			// check the length
@@ -589,7 +595,6 @@ func (self *BasicParser) function() (*BasicASTLeaf, error) {
 			//fmt.Printf("%s\n", leafptr.toString())
 			return leafptr, nil
 		}
-		return nil, fmt.Errorf("No such function %s", operator.lexeme)
 	}
 	return self.primary()
 }

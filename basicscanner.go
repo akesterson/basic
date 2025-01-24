@@ -385,7 +385,8 @@ func (self *BasicScanner) matchIdentifier() {
 		}
 	}
 	identifier = strings.ToUpper(self.getLexeme())
-	// Look for reserved words in variable identifiers
+
+	// Look for reserved words (command and function names) in variable identifiers
 	reservedtype, resexists := self.reservedwords[identifier]
 	commandtype, cmdexists := self.commands[identifier]
 	functiontype, fexists := self.functions[identifier]
