@@ -4,6 +4,6 @@ Get user input working
 
 Coerce all numeric types to floating point behind the scenes, makes my life easier, and this is how Commodore BASIC 7.0 worked
 
-Get some unit tests up in here
+Get some unit tests up in here or something so I can tell when changes break existing features. Even just more example scripts would be fine, but need to automate validation of their output/state.
 
 Make it possible to nest control structures (branches, loops, etc). Currently the way the interpreter processes these control structures that span multiple input lines requires keeping some state in the runtime environment, and it can't effectively handle nested control structures because the same environment is used at every scope. So if you nest (FOR A# = 1 TO 6: FOR B# = 2 TO 10 : PRINT "" + A# + " " + B#: NEXT B#: NEXT A#), it will stop processing at `NEXT B#` and render a parser error at `NEXT A#`, because it is incapable of tracking more than one loop at a time. You can get around this by using GOTO/GOSUB inside of your control flow structures, but that feels awkward, even though maybe it is the right answer.
