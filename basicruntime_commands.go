@@ -195,6 +195,35 @@ func (self *BasicRuntime) CommandIF(expr *BasicASTLeaf, lval *BasicValue, rval *
 	return &self.staticTrueValue, nil
 }
 
+func (self *BasicRuntime) evaluateForCondition(rval *BasicValue) (bool, error) {
+	var truth *BasicValue = nil
+	var err error = nil
+	if ( rval == nil ) {
+		return false, errors.New("NIL pointer for rval")
+	}
+	truth, err = self.environment.forStepValue.lessThan(&BasicValue{valuetype: TYPE_INTEGER, intval: 0})
+	if ( err != nil ) {
+		return false, err
+	}
+	if ( truth.isTrue() ) {
+		// Our step is negative
+		truth, err = self.environment.forToValue.greaterThanEqual(rval)
+	} else {
+		// Our step is positive
+		truth, err = self.environment.forToValue.lessThanEqual(rval)
+	}
+	if ( err != nil ) {
+		return false, err
+	}
+
+	//fmt.Printf("%s ? %s : %s\n",
+	//rval.toString(),
+	//self.environment.forToValue.toString(),
+	//truth.toString())
+
+	return truth.isTrue(), nil
+}
+
 func (self *BasicRuntime) CommandFOR(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	// At this point the assignment has already been evaluated. We need to
 	// evaluate the STEP expression if there is one, and the TO
@@ -203,6 +232,7 @@ func (self *BasicRuntime) CommandFOR(expr *BasicASTLeaf, lval *BasicValue, rval 
 	var assignvar *BasicValue = nil
 	var tmpvar *BasicValue = nil
 	var truth *BasicValue = nil
+	var forConditionMet bool = false
 		
 	if ( self.environment.forToLeaf == nil || expr.right == nil ) {
 		return nil, errors.New("Expected FOR ... TO [STEP ...]")
@@ -235,12 +265,15 @@ func (self *BasicRuntime) CommandFOR(expr *BasicASTLeaf, lval *BasicValue, rval 
 	}
 	self.environment.forToLeaf = nil
 	self.environment.forStepLeaf = nil
-	self.environment.waitForCommand("NEXT")
+	forConditionMet, err = self.evaluateForCondition(assignvar)
+	if ( forConditionMet == true ) {
+		self.environment.waitForCommand("NEXT")
+	}
 	return &self.staticTrueValue, nil
 }
 
 func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
-	var truth *BasicValue = nil
+	var forConditionMet = false
 	var err error = nil
 
 	// if self.environment.forRelationLeaf is nil, parse error
@@ -256,39 +289,25 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 		return nil, errors.New("FOR ... NEXT only valid over INT and FLOAT types")
 	}
 	self.environment.loopExitLine = self.lineno + 1
-	
+
 	rval = self.environment.get(expr.right.identifier)
-	truth, err = self.environment.forStepValue.lessThan(&BasicValue{valuetype: TYPE_INTEGER, intval: 0})
-	if ( err != nil ) {
-		return nil, err
-	}
-	if ( truth.isTrue() ) {
-		// Our step is negative
-		truth, err = self.environment.forToValue.greaterThanEqual(rval)
-	} else {
-		// Our step is positive
-		truth, err = self.environment.forToValue.lessThanEqual(rval)
-	}
-	if ( err != nil ) {
-		return nil, err
-	}
-
+	forConditionMet, err = self.evaluateForCondition(rval)
 	self.environment.stopWaiting("NEXT")
-	//fmt.Printf("%s ? %s : %s\n",
-	//self.environment.forToValue.toString(),
-	//rval.toString(),
-	//truth.toString())
-
-	if ( truth.isTrue() ) {
-		self.environment.forStepValue.zero()
-		self.environment.forToValue.zero()
-		self.environment.loopFirstLine = 0
+	if ( forConditionMet == true ) {
+		//fmt.Println("Exiting loop")
+		self.prevEnvironment()
 		return &self.staticTrueValue, nil
 	}
+	//fmt.Printf("Incrementing %s (%s) by %s\n", rval.name, rval.toString(), self.environment.forStepValue.toString())
 	rval, err = rval.mathPlus(&self.environment.forStepValue)
 	if ( err != nil ) {
 		return nil, err
 	}
+	rval, err = self.environment.update(rval)
+	if ( err != nil ) {
+		return nil, err
+	}
+	//fmt.Println("Continuing loop")
 	self.nextline = self.environment.loopFirstLine
 	return &self.staticTrueValue, nil
 }
@@ -299,10 +318,7 @@ func (self *BasicRuntime) CommandEXIT(expr *BasicASTLeaf, lval *BasicValue, rval
 		return nil, errors.New("EXIT outside the context of FOR")
 	}
 
-	self.environment.forStepValue.zero()
-	self.environment.forToValue.zero()
-	self.environment.loopFirstLine = 0
 	self.nextline = self.environment.loopExitLine
-	self.environment.loopExitLine = 0	
+	self.prevEnvironment()
 	return &self.staticTrueValue, nil
 }

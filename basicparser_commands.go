@@ -81,9 +81,10 @@ func (self *BasicParser) ParseCommandFOR() (*BasicASTLeaf, error) {
 	if ( err != nil || strings.Compare(operator.lexeme, "TO") != 0 ) {
 		goto _basicparser_parsecommandfor_error
 	}
+	self.runtime.newEnvironment()
 	self.runtime.environment.forToLeaf, err = self.expression()
 	if ( err != nil ) {
-		return nil, err
+		goto _basicparser_parsecommandfor_enverror
 	}
 	if ( self.match(COMMAND) ) {
 		operator, err = self.previous()
@@ -92,7 +93,7 @@ func (self *BasicParser) ParseCommandFOR() (*BasicASTLeaf, error) {
 		}
 		self.runtime.environment.forStepLeaf, err = self.expression()
 		if ( err != nil ) {
-			return nil, err
+			goto _basicparser_parsecommandfor_enverror
 		}
 	} else {
 		// Let the runtime determine the correct default step
@@ -102,13 +103,16 @@ func (self *BasicParser) ParseCommandFOR() (*BasicASTLeaf, error) {
 	self.runtime.environment.loopFirstLine = (self.runtime.lineno + 1)
 	expr, err = self.newLeaf()
 	if ( err != nil ) {
-		return nil, err
+		goto _basicparser_parsecommandfor_enverror
 	}
 	expr.newCommand("FOR", assignment)
 	return expr, nil
 	
 _basicparser_parsecommandfor_error:
 	return nil, errors.New("Expected FOR (assignment) TO (expression) [STEP (expression)]")	
+_basicparser_parsecommandfor_enverror:
+	self.runtime.prevEnvironment()
+	return nil, err
 }
 
 func (self *BasicParser) ParseCommandIF() (*BasicASTLeaf, error) {

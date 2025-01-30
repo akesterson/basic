@@ -109,6 +109,17 @@ func (self *BasicEnvironment) set(lval *BasicASTLeaf, rval *BasicValue) {
 	self.variables[lval.identifier] = rval
 }
 
+func (self *BasicEnvironment) update(rval *BasicValue) (*BasicValue, error){
+	var leaf BasicASTLeaf
+	switch (rval.valuetype) {
+	case TYPE_INTEGER: leaf.leaftype = LEAF_IDENTIFIER_INT
+	case TYPE_FLOAT: leaf.leaftype = LEAF_IDENTIFIER_FLOAT
+	case TYPE_STRING: leaf.leaftype = LEAF_IDENTIFIER_STRING
+	}
+	leaf.identifier = rval.name
+	return self.assign(&leaf, rval)
+}
+
 func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*BasicValue, error) {
 	var variable *BasicValue = nil
 	if ( lval == nil || rval == nil ) {

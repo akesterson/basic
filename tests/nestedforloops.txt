@@ -1,0 +1,29 @@
+OUTER : I# IS 1
+INNER : I# IS 1
+INNER : J# IS 2
+INNER : I# * J# IS 2
+INNER : I# IS 1
+INNER : J# IS 3
+INNER : I# * J# IS 3
+OUTER : I# IS 2
+INNER : I# IS 2
+INNER : J# IS 2
+INNER : I# * J# IS 4
+INNER : I# IS 2
+INNER : J# IS 3
+INNER : I# * J# IS 6
+OUTER : I# IS 3
+INNER : I# IS 3
+INNER : J# IS 2
+INNER : I# * J# IS 6
+INNER : I# IS 3
+INNER : J# IS 3
+INNER : I# * J# IS 9
+OUTER : I# IS 4
+INNER : I# IS 4
+INNER : J# IS 2
+INNER : I# * J# IS 8
+INNER : I# IS 4
+INNER : J# IS 3
+INNER : I# * J# IS 12
+DONE

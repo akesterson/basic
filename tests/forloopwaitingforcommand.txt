@@ -1,0 +1,2 @@
+waitingForCommand PASS if this is seen
+waitingForCommand PASS if this is seen

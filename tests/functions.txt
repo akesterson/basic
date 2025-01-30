@@ -1,0 +1,2 @@
+SQR PASS
+MUL PASS

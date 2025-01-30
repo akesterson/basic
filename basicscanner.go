@@ -438,10 +438,10 @@ func (self *BasicScanner) scanTokens(line string) string {
 		case '"':
 			self.start = self.current
 			self.matchString()
+		case '\t': fallthrough
 		case ' ':
 			self.start = self.current
 			break
-		case '\t': fallthrough
 		case '\r': fallthrough
 		case '\n':
 			return self.line

@@ -64,6 +64,7 @@ func (self *BasicRuntime) init() {
 }
 
 func (self *BasicRuntime) newEnvironment() {
+	//fmt.Println("Creating new environment")
 	var env *BasicEnvironment = new(BasicEnvironment)
 	env.init(self, self.environment)
 	self.environment = env
