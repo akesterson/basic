@@ -30,6 +30,7 @@ type BasicRuntime struct {
 	lineno int64
 	values [MAX_VALUES]BasicValue
 	staticTrueValue BasicValue
+	staticFalseValue BasicValue
 	nextvalue int
 	nextline int64
 	mode int
@@ -55,6 +56,7 @@ func (self *BasicRuntime) init() {
 	self.nextline = 0
 	self.autoLineNumber = 0
 	self.staticTrueValue.basicBoolValue(true)
+	self.staticFalseValue.basicBoolValue(false)
 
 	self.parser.init(self)
 	self.scanner.init(self)
@@ -67,6 +69,9 @@ func (self *BasicRuntime) newEnvironment() {
 	//fmt.Println("Creating new environment")
 	var env *BasicEnvironment = new(BasicEnvironment)
 	env.init(self, self.environment)
+	if ( env.parent != nil ) {
+		env.waitingForCommand = env.parent.waitingForCommand
+	}
 	self.environment = env
 }
 

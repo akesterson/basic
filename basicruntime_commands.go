@@ -231,7 +231,6 @@ func (self *BasicRuntime) CommandFOR(expr *BasicASTLeaf, lval *BasicValue, rval 
 	var err error = nil
 	var assignvar *BasicValue = nil
 	var tmpvar *BasicValue = nil
-	var truth *BasicValue = nil
 	var forConditionMet bool = false
 		
 	if ( self.environment.forToLeaf == nil || expr.right == nil ) {
@@ -251,24 +250,13 @@ func (self *BasicRuntime) CommandFOR(expr *BasicASTLeaf, lval *BasicValue, rval 
 		return nil, err
 	}
 	_, _ = tmpvar.clone(&self.environment.forStepValue)
-	if ( self.environment.forStepValue.intval == 0 && self.environment.forStepValue.floatval == 0 ) {
-		// Set a default step
-		truth, err = self.environment.forToValue.greaterThan(assignvar)
-		if ( err != nil ) {
-			return nil, err
-		}
-		if ( truth.isTrue() ) {
-			self.environment.forStepValue.intval = 1
-		} else {
-			self.environment.forStepValue.intval = -1	
-		}
-	}
 	self.environment.forToLeaf = nil
 	self.environment.forStepLeaf = nil
 	forConditionMet, err = self.evaluateForCondition(assignvar)
 	if ( forConditionMet == true ) {
 		self.environment.waitForCommand("NEXT")
 	}
+	self.environment.forNextVariable = assignvar
 	return &self.staticTrueValue, nil
 }
 
@@ -277,7 +265,7 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 	var err error = nil
 
 	// if self.environment.forRelationLeaf is nil, parse error
-	if ( self.environment.forToValue.valuetype == TYPE_UNDEFINED ) {
+	if ( self.environment.forNextVariable == nil ) {
 		return nil, errors.New("NEXT outside the context of FOR")
 	}
 
@@ -290,12 +278,19 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 	}
 	self.environment.loopExitLine = self.lineno + 1
 
+	//fmt.Println("Found NEXT %s, I'm waiting for NEXT %s\n", self.environment.forNextVariable.name, expr.right.identifier)
+	if ( strings.Compare(expr.right.identifier, self.environment.forNextVariable.name) != 0 ) {
+		self.prevEnvironment()
+		return &self.staticFalseValue, nil
+	}
 	rval = self.environment.get(expr.right.identifier)
 	forConditionMet, err = self.evaluateForCondition(rval)
 	self.environment.stopWaiting("NEXT")
 	if ( forConditionMet == true ) {
 		//fmt.Println("Exiting loop")
-		self.prevEnvironment()
+		if ( self.environment.parent != nil ) {
+			self.prevEnvironment()
+		}
 		return &self.staticTrueValue, nil
 	}
 	//fmt.Printf("Incrementing %s (%s) by %s\n", rval.name, rval.toString(), self.environment.forStepValue.toString())

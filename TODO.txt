@@ -5,5 +5,3 @@ Get user input working
 Coerce all numeric types to floating point behind the scenes, makes my life easier, and this is how Commodore BASIC 7.0 worked
 
 Get some unit tests up in here or something so I can tell when changes break existing features. Even just more example scripts would be fine, but need to automate validation of their output/state.
-
-Nested logical constructs still don't work right. See tests/nestedforloopwaitingforcommand.bas

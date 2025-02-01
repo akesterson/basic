@@ -82,6 +82,14 @@ func (self *BasicASTLeaf) clone() *BasicASTLeaf {
 		operator: self.operator}
 }
 
+func (self *BasicASTLeaf) isIdentifier() bool {
+	return ( self != nil &&
+		( self.leaftype == LEAF_IDENTIFIER ||
+			self.leaftype == LEAF_IDENTIFIER_INT ||
+			self.leaftype == LEAF_IDENTIFIER_FLOAT ||
+			self.leaftype == LEAF_IDENTIFIER_STRING ))
+}
+
 func (self *BasicASTLeaf) newPrimary(group *BasicASTLeaf, literal_string *string, literal_int *int64, literal_float *float64) error {
 	self.init(LEAF_PRIMARY)
 	if ( group != nil ) {

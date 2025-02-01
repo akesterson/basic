@@ -21,6 +21,7 @@ type BasicEnvironment struct {
 	forStepValue BasicValue
 	forToLeaf *BasicASTLeaf
 	forToValue BasicValue
+	forNextVariable *BasicValue
 
 	// Loop variables
 	loopFirstLine int64
@@ -45,6 +46,9 @@ func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironme
 	self.functions = make(map[string]*BasicFunctionDef)
 	self.parent = parent
 	self.runtime = runtime
+	self.forNextVariable = nil
+	self.forStepLeaf = nil
+	self.forToLeaf = nil
 }
 
 func (self *BasicEnvironment) waitForCommand(command string) {

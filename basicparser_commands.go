@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"strings"
+	//"fmt"
 )
 
 func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
@@ -82,6 +83,13 @@ func (self *BasicParser) ParseCommandFOR() (*BasicASTLeaf, error) {
 		goto _basicparser_parsecommandfor_error
 	}
 	self.runtime.newEnvironment()
+	if ( strings.Compare(self.runtime.environment.parent.waitingForCommand, "NEXT") == 0 ) {
+		self.runtime.environment.forNextVariable = self.runtime.environment.parent.forNextVariable
+	}
+	if ( !assignment.left.isIdentifier() ) {
+		goto _basicparser_parsecommandfor_error
+	}
+	//self.runtime.environment.forNextVariable = self.runtime.environment.get(assignment.left.identifier)
 	self.runtime.environment.forToLeaf, err = self.expression()
 	if ( err != nil ) {
 		goto _basicparser_parsecommandfor_enverror
@@ -96,9 +104,10 @@ func (self *BasicParser) ParseCommandFOR() (*BasicASTLeaf, error) {
 			goto _basicparser_parsecommandfor_enverror
 		}
 	} else {
-		// Let the runtime determine the correct default step
+		// According to Dartmouth BASIC, we should not try to detect negative steps,
+		// it is either explicitly set or assumed to be +1
 		self.runtime.environment.forStepLeaf, err = self.newLeaf()
-		self.runtime.environment.forStepLeaf.newLiteralInt("0")
+		self.runtime.environment.forStepLeaf.newLiteralInt("1")
 	}
 	self.runtime.environment.loopFirstLine = (self.runtime.lineno + 1)
 	expr, err = self.newLeaf()
@@ -106,9 +115,11 @@ func (self *BasicParser) ParseCommandFOR() (*BasicASTLeaf, error) {
 		goto _basicparser_parsecommandfor_enverror
 	}
 	expr.newCommand("FOR", assignment)
+	//fmt.Println(expr.toString())
 	return expr, nil
 	
 _basicparser_parsecommandfor_error:
+	self.runtime.prevEnvironment()
 	return nil, errors.New("Expected FOR (assignment) TO (expression) [STEP (expression)]")	
 _basicparser_parsecommandfor_enverror:
 	self.runtime.prevEnvironment()
