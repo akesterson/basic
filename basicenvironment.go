@@ -59,6 +59,14 @@ func (self *BasicEnvironment) waitForCommand(command string) {
 	self.waitingForCommand = command
 }
 
+func (self *BasicEnvironment) isWaitingForAnyCommand() bool {
+	return (len(self.waitingForCommand) != 0)
+}
+
+func (self *BasicEnvironment) isWaitingForCommand(command string) bool {
+	return (strings.Compare(self.waitingForCommand, command) == 0)
+}
+
 func (self *BasicEnvironment) stopWaiting(command string) {
 	//fmt.Printf("Environment stopped waiting for command %s\n", command)
 	self.waitingForCommand = ""	

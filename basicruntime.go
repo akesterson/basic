@@ -8,7 +8,6 @@ import (
 	"os"
 	"slices"
 	"reflect"
-	"strings"
 )
 
 type BasicError int
@@ -301,8 +300,8 @@ func (self *BasicRuntime) commandByReflection(expr *BasicASTLeaf, lval *BasicVal
 func (self *BasicRuntime) interpret(expr *BasicASTLeaf) (*BasicValue, error) {
 	var value *BasicValue
 	var err error
-	if ( len(self.environment.waitingForCommand) > 0 ) {
-		if ( expr.leaftype != LEAF_COMMAND || strings.Compare(expr.identifier, self.environment.waitingForCommand) != 0 ) {
+	if ( self.environment.isWaitingForAnyCommand() ) {
+		if ( expr.leaftype != LEAF_COMMAND || !self.environment.isWaitingForCommand(expr.identifier) ) {
 			//fmt.Printf("I am not waiting for %+v\n", expr)
 			return &self.staticTrueValue, nil
 		}
