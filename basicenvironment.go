@@ -60,16 +60,28 @@ func (self *BasicEnvironment) waitForCommand(command string) {
 }
 
 func (self *BasicEnvironment) isWaitingForAnyCommand() bool {
-	return (len(self.waitingForCommand) != 0)
+	if (len(self.waitingForCommand) != 0) {
+		return true
+	}
+	if ( self.parent != nil ) {
+		return self.parent.isWaitingForAnyCommand()
+	}
+	return false
 }
 
 func (self *BasicEnvironment) isWaitingForCommand(command string) bool {
-	return (strings.Compare(self.waitingForCommand, command) == 0)
+	if (strings.Compare(self.waitingForCommand, command) == 0) {
+		return true
+	}
+	if ( self.parent != nil ) {
+		return self.parent.isWaitingForCommand(command)
+	}
+	return false
 }
 
 func (self *BasicEnvironment) stopWaiting(command string) {
 	//fmt.Printf("Environment stopped waiting for command %s\n", command)
-	self.waitingForCommand = ""	
+	self.waitingForCommand = ""
 }
 
 
