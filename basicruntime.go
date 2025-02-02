@@ -68,9 +68,6 @@ func (self *BasicRuntime) newEnvironment() {
 	//fmt.Println("Creating new environment")
 	var env *BasicEnvironment = new(BasicEnvironment)
 	env.init(self, self.environment)
-	if ( env.parent != nil ) {
-		env.waitingForCommand = env.parent.waitingForCommand
-	}
 	self.environment = env
 }
 
