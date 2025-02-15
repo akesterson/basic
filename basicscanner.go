@@ -49,6 +49,8 @@ const (
 	COMMAND_IMMEDIATE // 32
 	FUNCTION // 33
 	ASSIGNMENT // 34
+	LEFT_SQUAREBRACKET // 35
+	RIGHT_SQUAREBRACKET // 36
 )
 
 type BasicScanner struct {
@@ -435,6 +437,8 @@ func (self *BasicScanner) scanTokens(line string) string {
 				self.matchNextChar('>', NOT_EQUAL, LESS_THAN)
 			}
 		case '>': self.matchNextChar('=', GREATER_THAN_EQUAL, GREATER_THAN)
+		case '[': self.tokentype = LEFT_SQUAREBRACKET
+		case ']': self.tokentype = RIGHT_SQUAREBRACKET
 		case '"':
 			self.start = self.current
 			self.matchString()

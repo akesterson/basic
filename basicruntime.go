@@ -28,9 +28,11 @@ type BasicRuntime struct {
 	source [MAX_SOURCE_LINES]BasicSourceLine
 	lineno int64
 	values [MAX_VALUES]BasicValue
+	variables [MAX_VARIABLES]BasicVariable
 	staticTrueValue BasicValue
 	staticFalseValue BasicValue
 	nextvalue int
+	nextvariable int
 	nextline int64
 	mode int
 	errno BasicError
@@ -107,6 +109,18 @@ func (self *BasicRuntime) basicError(errno BasicError, message string) {
 	self.errno = errno
 	fmt.Printf("? %d : %s %s\n", self.lineno, self.errorCodeToString(errno), message)
 }
+
+func (self *BasicRuntime) newVariable() (*BasicVariable, error) {
+	var variable *BasicVariable
+	if ( self.nextvariable < MAX_VARIABLES ) {
+		variable = &self.variables[self.nextvariable]
+		self.nextvariable += 1
+		value.runtime = self
+		return value, nil
+	}
+	return nil, errors.New("Maximum runtime variables reached")
+}
+
 
 func (self *BasicRuntime) newValue() (*BasicValue, error) {
 	var value *BasicValue
