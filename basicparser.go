@@ -605,7 +605,6 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 	var groupexpr *BasicASTLeaf = nil
 	var err error = nil
 
-
 	if self.match(LITERAL_INT, LITERAL_FLOAT, LITERAL_STRING, IDENTIFIER, IDENTIFIER_STRING, IDENTIFIER_FLOAT, IDENTIFIER_INT, FUNCTION) {
 		previous, err = self.previous()
 		if ( err != nil ) {
@@ -624,10 +623,22 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 			expr.newLiteralString(previous.lexeme)
 		case IDENTIFIER_INT:
 			expr.newIdentifier(LEAF_IDENTIFIER_INT, previous.lexeme)
+			expr.right, err = self.argumentList()
+			if ( err != nil ) {
+				return nil, err
+			}
 		case IDENTIFIER_FLOAT:
 			expr.newIdentifier(LEAF_IDENTIFIER_FLOAT, previous.lexeme)
+			expr.right, err = self.argumentList()
+			if ( err != nil ) {
+				return nil, err
+			}
 		case IDENTIFIER_STRING:
 			expr.newIdentifier(LEAF_IDENTIFIER_STRING, previous.lexeme)
+			expr.right, err = self.argumentList()
+			if ( err != nil ) {
+				return nil, err
+			}
 		case FUNCTION: fallthrough
 		case IDENTIFIER:
 			expr.newIdentifier(LEAF_IDENTIFIER, previous.lexeme)

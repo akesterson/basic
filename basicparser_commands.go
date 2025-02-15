@@ -6,6 +6,14 @@ import (
 	//"fmt"
 )
 
+func (self *BasicParser) ParseCommandLET() (*BasicASTLeaf, error) {
+	return self.assignment()
+}
+
+func (self *BasicParser) ParseCommandDIM() (*BasicASTLeaf, error) {
+	return self.primary()
+}
+
 func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
 	// DEF     NAME       (A, ...)        =           ....
 	// COMMAND IDENTIFIER ARGUMENTLIST    ASSIGNMENT  EXPRESSION
