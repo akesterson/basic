@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 
+if [[ "$(uname -o)" == "Msys" ]]; then
+	basic=./basic.exe
+else
+	basic=./basic
+fi
+
 failed=0
 for file in tests/*bas
 do
     printf "${file} ... "
     output=${file%.bas}.txt
-    ./basic.exe ${file} > tmpfile
+    ${basic} ${file} > tmpfile
     if [[ $(md5sum tmpfile ${output} | cut -d ' ' -f 1 | sort -u | wc -l) -gt 1 ]]; then
 	failed=$((failed + 1))
 	echo " FAIL"
