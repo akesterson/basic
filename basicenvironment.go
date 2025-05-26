@@ -145,6 +145,8 @@ func (self *BasicEnvironment) update(rval *BasicValue) (*BasicValue, error){
 }
 
 func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*BasicValue, error) {
+	// TODO : When the identifier has an argument list on .right, use it as
+	// a subscript, flatten it to a pointer, and set the value there
 	var variable *BasicValue = nil
 	if ( lval == nil || rval == nil ) {
 		return nil, errors.New("nil pointer")

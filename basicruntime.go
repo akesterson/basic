@@ -115,8 +115,8 @@ func (self *BasicRuntime) newVariable() (*BasicVariable, error) {
 	if ( self.nextvariable < MAX_VARIABLES ) {
 		variable = &self.variables[self.nextvariable]
 		self.nextvariable += 1
-		value.runtime = self
-		return value, nil
+		variable.runtime = self
+		return variable, nil
 	}
 	return nil, errors.New("Maximum runtime variables reached")
 }

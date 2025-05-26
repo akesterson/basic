@@ -113,7 +113,7 @@ func (self *BasicParser) statement() (*BasicASTLeaf, error) {
 	return nil, self.error(fmt.Sprintf("Expected command or expression"))
 }
 
-func (self *BasicParser) commandByReflection(command string) (*BasicASTLeaf, error) {
+func (self *BasicParser) commandByReflection(root string, command string) (*BasicASTLeaf, error) {
 	var methodiface interface{}
 	var reflector reflect.Value
 	var rmethod reflect.Value
@@ -127,7 +127,7 @@ func (self *BasicParser) commandByReflection(command string) (*BasicASTLeaf, err
 	if ( reflector.IsNil() || reflector.Kind() != reflect.Ptr ) {
 		return nil, errors.New("Unable to reflect runtime structure to find command method")
 	}
-	rmethod = reflector.MethodByName(fmt.Sprintf("ParseCommand%s", command))
+	rmethod = reflector.MethodByName(fmt.Sprintf("%s%s", root, command))
 	if ( !rmethod.IsValid() ) {
 		// It's not an error to have no parser function, this just means our rval
 		// gets parsed as an expression
@@ -159,7 +159,7 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 		}
 
 		// Is it a command that requires special parsing?
-		expr, err = self.commandByReflection(operator.lexeme)
+		expr, err = self.commandByReflection("ParseCommand", operator.lexeme)
 		if ( err != nil ) {
 			return nil, err
 		}
@@ -563,6 +563,7 @@ func (self *BasicParser) function() (*BasicASTLeaf, error) {
 			return nil, err
 		}
 		//fmt.Printf("Checking for existence of user function %s...\n", operator.lexeme)
+
 		fndef = self.runtime.environment.getFunction(operator.lexeme)
 		if ( fndef == nil ) {
 			return nil, fmt.Errorf("No such function %s", operator.lexeme)

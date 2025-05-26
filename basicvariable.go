@@ -84,9 +84,12 @@ func (self *BasicVariable) setSubscript(value *BasicValue, subscripts ...int64) 
 	var index int64
 	var err error = nil
 	if ( len(subscripts) != len(self.dimensions) ) {
-		return nil, fmt.Errorf("Variable %s has %d dimensions, only received %d", self.name, len(self.dimensions), len(subscripts))
+		return fmt.Errorf("Variable %s has %d dimensions, only received %d", self.name, len(self.dimensions), len(subscripts))
 	}
 	index, err = self.flattenIndexSubscripts(subscripts)
+	if ( err != nil ) {
+		return err
+	}
 	value.clone(&self.values[index])
 	return nil
 }
@@ -97,7 +100,7 @@ func (self *BasicVariable) flattenIndexSubscripts(subscripts []int64) (int64, er
 	var i int = 0
 
 	for i = len(subscripts) - 1; i >= 0 ; i-- {
-		if ( suscripts[i] < 0 || subscripts[i] >= self.dimensions[i] ) {
+		if ( subscripts[i] < 0 || subscripts[i] >= self.dimensions[i] ) {
 			return 0, fmt.Errorf("Variable index access out of bounds at dimension %d: %d (max %d)", i, subscripts[i], self.dimensions[i]-1)
 		}
 		flatIndex += subscripts[i] * multiplier
