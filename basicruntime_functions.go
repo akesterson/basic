@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-func (self *BasicRuntime) CommandLEN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+func (self *BasicRuntime) FunctionLEN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
 	var strval *BasicValue = nil
 	
@@ -28,7 +28,7 @@ func (self *BasicRuntime) CommandLEN(expr *BasicASTLeaf, lval *BasicValue, rval 
 	return rval, nil
 }
 
-func (self *BasicRuntime) CommandMID(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+func (self *BasicRuntime) FunctionMID(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
 	var strtarget *BasicValue = nil
 	var startpos *BasicValue = nil

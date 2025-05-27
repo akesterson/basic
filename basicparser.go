@@ -566,7 +566,7 @@ func (self *BasicParser) function() (*BasicASTLeaf, error) {
 		fndef = self.runtime.environment.getFunction(operator.lexeme)
 		if ( fndef == nil ) {
 			return nil, fmt.Errorf("No such function %s", operator.lexeme)
-		}	
+		}
 		if ( fndef != nil ) {
 			// All we can do here is collect the argument list and
 			// check the length
@@ -585,13 +585,13 @@ func (self *BasicParser) function() (*BasicASTLeaf, error) {
 				leafptr = leafptr.right
 			}
 			if ( defarglen != refarglen ) {
-				return nil, fmt.Errorf("function %s takes %d arguments, received %d", fndef.name, defarglen, refarglen)
+				return nil, fmt.Errorf("function %s takes %d arguments, received %d", fndef.name, refarglen, defarglen)
 			}
 			leafptr, err = self.newLeaf()
 			if ( err != nil ) {
 				return nil, err
 			}
-			leafptr.newCommand(operator.lexeme, arglist)
+			leafptr.newFunction(operator.lexeme, arglist)
 			//fmt.Printf("%s\n", leafptr.toString())
 			return leafptr, nil
 		}

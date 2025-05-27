@@ -138,6 +138,14 @@ func (self *BasicASTLeaf) newBinary(left *BasicASTLeaf, op BasicTokenType, right
 	return nil
 }
 
+func (self *BasicASTLeaf) newFunction(fname string, right *BasicASTLeaf) error {
+	self.init(LEAF_FUNCTION)
+	self.right = right
+	self.operator = COMMAND
+	self.identifier = fname
+	return nil
+}
+
 func (self *BasicASTLeaf) newCommand(cmdname string, right *BasicASTLeaf) error {
 	self.init(LEAF_COMMAND)
 	self.right = right

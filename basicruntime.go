@@ -60,7 +60,21 @@ func (self *BasicRuntime) init() {
 	self.parser.init(self)
 	self.scanner.init(self)
 	self.newEnvironment()
-	
+
+	self.environment.functions["LEN"] = &BasicFunctionDef{
+		arglist: &BasicASTLeaf{
+			leaftype: LEAF_IDENTIFIER_STRING,
+			left: nil,
+			parent: nil,
+			right: nil,
+			expr: nil,
+			identifier: "X$",
+		},
+		expression: nil,
+		runtime: self,
+		name: "LEN",
+	}
+
 	self.zero()
 }
 
@@ -171,16 +185,23 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		default:
 			return nil, errors.New(fmt.Sprintf("Don't know how to perform operation %d on unary type %d", expr.operator, rval.valuetype))
 		}
-	case LEAF_COMMAND_IMMEDIATE: fallthrough
-	case LEAF_COMMAND:
+	case LEAF_FUNCTION:
 		//fmt.Printf("Processing command %s\n", expr.identifier)
-		lval, err = self.userFunction(expr, lval, rval)
+		lval, err = self.commandByReflection("Function", expr, lval, rval)
 		if ( err != nil ) {
+			lval, err = self.userFunction(expr, lval, rval)
+			if ( err != nil ) {
+				return nil, err
+			} else if ( lval != nil ) {
+				return lval, nil
+			}
 			return nil, err
 		} else if ( lval != nil ) {
 			return lval, nil
 		}
-		return self.commandByReflection(expr, lval, rval)
+	case LEAF_COMMAND_IMMEDIATE: fallthrough
+	case LEAF_COMMAND:
+		return self.commandByReflection("Command", expr, lval, rval)
 		
 	case LEAF_BINARY:
 		lval, err = self.evaluate(expr.left)
@@ -264,7 +285,7 @@ func (self *BasicRuntime) userFunction(expr *BasicASTLeaf, lval *BasicValue, rva
 	}
 }
 
-func (self *BasicRuntime) commandByReflection(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+func (self *BasicRuntime) commandByReflection(rootKey string, expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var methodiface interface{}
 	var reflector reflect.Value
 	var rmethod reflect.Value
@@ -278,7 +299,7 @@ func (self *BasicRuntime) commandByReflection(expr *BasicASTLeaf, lval *BasicVal
 	if ( reflector.IsNil() || reflector.Kind() != reflect.Ptr ) {
 		return nil, errors.New("Unable to reflect runtime structure to find command method")
 	}
-	rmethod = reflector.MethodByName(fmt.Sprintf("Command%s", expr.identifier))
+	rmethod = reflector.MethodByName(fmt.Sprintf("%s%s", rootKey, expr.identifier))
 	if ( !rmethod.IsValid() ) {
 		return nil, fmt.Errorf("Unknown command %s", expr.identifier)
 	}
