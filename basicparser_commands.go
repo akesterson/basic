@@ -127,8 +127,8 @@ _basicparser_parsecommandfor_enverror:
 }
 
 func (self *BasicParser) ParseCommandIF() (*BasicASTLeaf, error) {
-	// IF      ...          THEN      ....                [ : ELSE    .... ]
-	// COMMAND RELATION     COMMAND   COMMAND EXPRESSION  [ : COMMAND EXPRESSION ]
+	// IF      ...          THEN      
+	// COMMAND RELATION     COMMAND
 	//  
 	// IF      1 == 1       THEN      PRINT "HELLO"         : ELSE PRINT "GOODBYE"
 	//
@@ -152,21 +152,8 @@ func (self *BasicParser) ParseCommandIF() (*BasicASTLeaf, error) {
 	if ( err != nil || strings.Compare(operator.lexeme, "THEN") != 0 ) {
 		return nil, errors.New("Expected IF ... THEN")
 	}
-	then_command, err = self.command()
-	if ( self.match(COMMAND) ) {
-		operator, err = self.previous()
-		if ( err != nil || strings.Compare(operator.lexeme, "ELSE") != 0 ) {
-			return nil, errors.New("Expected IF ... THEN ... ELSE ...")
-		}
-		else_command, err = self.command()
-		if ( err != nil ) {
-			return nil, errors.New("Expected IF ... THEN ... ELSE ...")
-		}
+	if ( !self.isAtEnd() ) {
+		return nil, errors.New("Unexpected expression after IF ... THEN")
 	}
-	branch, err = self.newLeaf()
-	if ( err != nil ) {
-		return nil, err
-	}
-	branch.newBranch(relation, then_command, else_command)
-	return branch, nil
+	return relation, nil
 }

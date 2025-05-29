@@ -9,12 +9,8 @@ import (
 type BasicEnvironment struct {
 	variables map[string]*BasicValue
 	functions map[string]*BasicFunctionDef
-	
-	// IF variables
-	ifThenLine int64
-	ifElseLine int64
-	ifCondition BasicASTLeaf
-	
+
+	ifContext *BasicASTLeaf
 	
 	// FOR variables
 	forStepLeaf *BasicASTLeaf
@@ -46,6 +42,7 @@ func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironme
 	self.functions = make(map[string]*BasicFunctionDef)
 	self.parent = parent
 	self.runtime = runtime
+	self.ifContext = nil
 	self.forNextVariable = nil
 	self.forStepLeaf = nil
 	self.forToLeaf = nil
@@ -79,7 +76,7 @@ func (self *BasicEnvironment) isWaitingForCommand(command string) bool {
 	return false
 }
 
-func (self *BasicEnvironment) stopWaiting(command string) {
+func (self *BasicEnvironment) stopWaiting() {
 	//fmt.Printf("Environment stopped waiting for command %s\n", command)
 	self.waitingForCommand = ""
 }

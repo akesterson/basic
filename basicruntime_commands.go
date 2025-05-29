@@ -172,7 +172,6 @@ func (self *BasicRuntime) CommandLET(expr *BasicASTLeaf, lval *BasicValue, rval 
 
 func (self *BasicRuntime) CommandIF(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
-	var actionclause *BasicASTLeaf = nil
 	if ( expr.right == nil ) {
 		return nil, errors.New("Expected IF ... THEN")
 	}
@@ -181,19 +180,38 @@ func (self *BasicRuntime) CommandIF(expr *BasicASTLeaf, lval *BasicValue, rval *
 		return nil, err
 	}
 	if ( rval.boolvalue == BASIC_TRUE ) {
-		for ( expr.right != nil ) {
-			expr = expr.right
-			if ( expr.leaftype == LEAF_COMMAND && strings.Compare(expr.identifier, "THEN") == 0 ) {
-				actionclause = expr.right
-			}
-		}
-		if ( expr == nil || expr.right == nil ) {
-			return nil, errors.New("Malformed IF statement")
-		}
-		return self.evaluate(actionclause)
+		self.environment.ifContext = &self.staticTrueValue
+	} else {
+		self.environment.waitForCommand("ELSE")
+		self.environment.ifContext = &self.staticFalseValue
 	}
+	return self.environment.ifContext, nil
+}
+
+func (self *BasicRuntime) CommandELSE(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	if ( self.environment.ifContext == nil ) {
+		return nil, errors.New("ELSE outside of IF ... THEN ... ENDIF")
+	}
+	if ( !self.environment.isWaitingForCommand("ELSE") ) {
+		// This means the enclosing IF ... evaluated to true.
+		// Don't process the ELSE.
+		self.environment.waitForCommand("ENDIF")
+	} else {
+		// Process the ELSE block.
+		self.environment.stopWaiting()
+	}
+	return &self.staticFalseValue, nil
+}
+
+func (self *BasicRuntime) CommandENDIF(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	if ( self.environment.ifContext == nil ) {
+		return nil, errors.New("ELSE outside of IF ... THEN ... ENDIF")
+	}
+	self.environment.ifContext = nil
+	self.environment.stopWaiting()
 	return &self.staticTrueValue, nil
 }
+
 
 func (self *BasicRuntime) evaluateForCondition(rval *BasicValue) (bool, error) {
 	var truth *BasicValue = nil
