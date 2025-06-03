@@ -7,7 +7,7 @@ import (
 )
 
 type BasicEnvironment struct {
-	variables map[string]*BasicValue
+	variables map[string]*BasicVariable
 	functions map[string]*BasicFunctionDef
 	
 	// IF variables
@@ -42,7 +42,7 @@ type BasicEnvironment struct {
 }
 
 func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironment) {
-	self.variables = make(map[string]*BasicValue)
+	self.variables = make(map[string]*BasicVariable)
 	self.functions = make(map[string]*BasicFunctionDef)
 	self.parent = parent
 	self.runtime = runtime
@@ -100,8 +100,8 @@ func (self *BasicEnvironment) getFunction(fname string) *BasicFunctionDef {
 	return nil
 }
 
-func (self *BasicEnvironment) get(varname string) *BasicValue {
-	var value *BasicValue
+func (self *BasicEnvironment) get(varname string) *BasicVariable {
+	var variable *BasicVariable
 	var ok bool
 	if value, ok = self.variables[varname]; ok {
 		return value
@@ -114,15 +114,23 @@ func (self *BasicEnvironment) get(varname string) *BasicValue {
 	// Don't automatically create variables unless we are the currently
 	// active environment (parents don't create variables for their children)
 	if ( self.runtime.environment == self ) {
-		self.variables[varname] = &BasicValue{
+		self.variables[varname] = &BasicVariable{
 			name: strings.Clone(varname),
 			valuetype: TYPE_UNDEFINED,
-			stringval: "",
-			intval: 0,
-			floatval: 0.0,
-			boolvalue: BASIC_FALSE,
+			values: [
+				&BasicValue{
+					valuetype: TYPE_UNDEFINED,
+					stringval: "",
+					intval: 0,
+					floatval: 0.0,
+					boolvalue: BASIC_FALSE,
+					runtime: self.runtime,
+					mutable: true}
+				],
 			runtime: self.runtime,
-			mutable: true}
+			mutable: true
+		}
+		self.variables[varname].init(self.runtime, 0)
 		return self.variables[varname]
 	}
 	return nil
@@ -130,7 +138,7 @@ func (self *BasicEnvironment) get(varname string) *BasicValue {
 
 func (self *BasicEnvironment) set(lval *BasicASTLeaf, rval *BasicValue) {
 	//fmt.Printf("Setting variable in environment: [%s] = %s\n", lval.toString(), rval.toString())
-	self.variables[lval.identifier] = rval
+	self.variables.get(lval.identifier).set(rval)
 }
 
 func (self *BasicEnvironment) update(rval *BasicValue) (*BasicValue, error){
@@ -145,14 +153,14 @@ func (self *BasicEnvironment) update(rval *BasicValue) (*BasicValue, error){
 }
 
 func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*BasicValue, error) {
-	var variable *BasicValue = nil
+	var variable *BasicVariable = nil
 	if ( lval == nil || rval == nil ) {
 		return nil, errors.New("nil pointer")
 	}
 	variable = self.get(lval.identifier)
 	switch(lval.leaftype) {
 	case LEAF_IDENTIFIER_INT:
-		if ( rval.valuetype == TYPE_INTEGER ) {
+		if ( rval.valuetype != TYPE_INTEGER ) {
 			variable.intval = rval.intval
 		} else if ( rval.valuetype == TYPE_FLOAT ) {
 			variable.intval = int64(rval.floatval)

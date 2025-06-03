@@ -38,6 +38,69 @@ func (self *BasicVariable) init(runtime *BasicRuntime, sizes []int64) error {
 	return nil
 }
 
+func (self *BasicVariable) set(value *BasicValue, subscripts ...int64) (error){
+	return self.setSubscript(value, subscripts)
+}
+
+func (self *BasicVariable) setInteger(value int64, subscripts ...int64) (error)
+{
+	return self.setSubscript(&BasicValue{
+		stringval: "",
+		intval: value,
+		floatval: 0.0,
+		boolvalue: BASIC_FALSE,
+		runtime: self.runtime,
+		mutable: false,
+		valuetype: TYPE_INTEGER},
+		subscripts)
+}
+
+func (self *BasicVariable) setFloat(value float64, subscripts ...int64) (error)
+{
+	return self.setSubscript(&BasicValue{
+		stringval: "",
+		intval: 0,
+		floatval: value,
+		boolvalue: BASIC_FALSE,
+		runtime: self.runtime,
+		mutable: false,
+		valuetype: TYPE_FLOAT},
+		subscripts)
+}
+
+func (self *BasicVariable) setString(value string, subscripts ...int64) (error)
+{
+	return self.setSubscript(&BasicValue{
+		stringval: value,
+		intval: 0,
+		floatval: 0.0,
+		boolvalue: BASIC_FALSE,
+		runtime: self.runtime,
+		mutable: false,
+		valuetype: TYPE_STRING},
+		subscripts)
+}
+
+func (self *BasicVariable) setBoolean(value bool, subscripts ...int64) (error)
+{
+	var boolvalue int64
+	if ( value == true ) {
+		boolvalue = BASIC_TRUE
+	} else {
+		boolvalue = BASIC_FALSE
+	}
+			
+	return self.setSubscript(&BasicValue{
+		stringval: "",
+		intval: 0,
+		floatval: 0.0,
+		boolvalue: boolvalue,
+		runtime: self.runtime,
+		mutable: false,
+		valuetype: TYPE_STRING},
+		subscripts)
+}
+
 func (self *BasicVariable) zero() {
 	self.valuetype = TYPE_UNDEFINED
 	self.mutable = true
@@ -105,4 +168,12 @@ func (self *BasicVariable) flattenIndexSubscripts(subscripts []int64) (int64, er
 	}
 
 	return flatIndex, nil
+}
+
+func (self *BasicVariable) toString() (string) {
+	if ( len(self.values) == 0 ) {
+		return self.value.toString()
+	} else {
+		return "toString() not implemented for arrays"
+	}
 }
