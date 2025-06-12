@@ -103,22 +103,18 @@ func (self *BasicEnvironment) getFunction(fname string) *BasicFunctionDef {
 func (self *BasicEnvironment) get(varname string) *BasicVariable {
 	var variable *BasicVariable
 	var ok bool
-	if value, ok = self.variables[varname]; ok {
-		return value
+	if variable, ok = self.variables[varname]; ok {
+		return variable
 	} else if ( self.parent != nil ) {
-		value = self.parent.get(varname)
-		if ( value != nil ) {
-			return value
+		variable = self.parent.get(varname)
+		if ( variable != nil ) {
+			return variable
 		}
 	}
 	// Don't automatically create variables unless we are the currently
 	// active environment (parents don't create variables for their children)
 	if ( self.runtime.environment == self ) {
-		self.variables[varname] = &BasicVariable{
-			name: strings.Clone(varname),
-			valuetype: TYPE_UNDEFINED,
-			values: [
-				&BasicValue{
+		var emptyvalue *BasicValue = &BasicValue{
 					valuetype: TYPE_UNDEFINED,
 					stringval: "",
 					intval: 0,
@@ -126,9 +122,11 @@ func (self *BasicEnvironment) get(varname string) *BasicVariable {
 					boolvalue: BASIC_FALSE,
 					runtime: self.runtime,
 					mutable: true}
-				],
+		self.variables[varname] = &BasicVariable{
+			name: strings.Clone(varname),
+			valuetype: TYPE_UNDEFINED,
 			runtime: self.runtime,
-			mutable: true
+			mutable: true,
 		}
 		self.variables[varname].init(self.runtime, 0)
 		return self.variables[varname]
@@ -138,7 +136,7 @@ func (self *BasicEnvironment) get(varname string) *BasicVariable {
 
 func (self *BasicEnvironment) set(lval *BasicASTLeaf, rval *BasicValue) {
 	//fmt.Printf("Setting variable in environment: [%s] = %s\n", lval.toString(), rval.toString())
-	self.variables.get(lval.identifier).set(rval)
+	self.variables.get(lval.identifier).set(rval, 0)
 }
 
 func (self *BasicEnvironment) update(rval *BasicValue) (*BasicValue, error){
