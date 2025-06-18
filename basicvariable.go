@@ -16,30 +16,46 @@ type BasicVariable struct {
 
 func (self *BasicVariable) init(runtime *BasicRuntime, sizes []int64) error {
 	var totalSize int64 = 1
-	fmt.Printf("Initializing %s\n", self.name)
+	var runes = []rune(self.name)
+	//fmt.Printf("Initializing %s\n", self.name)
 	if ( runtime == nil ) {
 		return errors.New("NIL runtime provided to BasicVariable.init")
 	}
+	if len(runes) > 0 {
+		lastRune := runes[len(runes)-1]
+		switch(lastRune) {
+			case '$':
+			self.valuetype = TYPE_STRING
+			case '#':
+			self.valuetype = TYPE_INTEGER
+			case '%':
+			self.valuetype = TYPE_FLOAT
+		}
+	} else {
+		return errors.New("Invalid variable name")
+	}
+	//fmt.Printf("Setting type to %d from name\n", self.valuetype)
 	//if ( len(sizes) == 0 ) {
 	//	sizes = make([]int64, 1)
 	//	sizes[0] = 10
 	//}
-	fmt.Printf("Setting variable dimensions\n")
+	//fmt.Printf("Setting variable dimensions\n")
 	self.runtime = runtime
 	self.dimensions = make([]int64, len(sizes))
 	copy(self.dimensions, sizes)
-	for i, size := range sizes {
-		fmt.Printf("Dimension %d is %d\n", i, size)
+	for _, size := range sizes {
+		//fmt.Printf("Dimension %d is %d\n", i, size)
 		if ( size <= 0 )  {
 			return errors.New("Array dimensions must be positive integers")
 		}
 		totalSize *= size
 	}
-	fmt.Printf("%s has %d dimensions with %d total objects\n", self.name, len(sizes), totalSize)
+	//fmt.Printf("%s has %d dimensions with %d total objects\n", self.name, len(sizes), totalSize)
 	self.values = make([]BasicValue, totalSize)
 	for _, value := range self.values {
 		value.init()
 		value.zero()
+		value.valuetype = self.valuetype
 	}
 	return nil
 }

@@ -21,7 +21,7 @@ type BasicEnvironment struct {
 	forStepValue BasicValue
 	forToLeaf *BasicASTLeaf
 	forToValue BasicValue
-	forNextVariable *BasicValue
+	forNextValue *BasicValue
 
 	// Loop variables
 	loopFirstLine int64
@@ -151,7 +151,7 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 	variable = self.get(lval.identifier)
 	switch(lval.leaftype) {
 	case LEAF_IDENTIFIER_INT:
-		if ( rval.valuetype != TYPE_INTEGER ) {
+		if ( rval.valuetype == TYPE_INTEGER ) {
 			variable.setInteger(rval.intval, 0)
 		} else if ( rval.valuetype == TYPE_FLOAT ) {
 			variable.setInteger(int64(rval.floatval), 0)
