@@ -283,7 +283,10 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 		self.prevEnvironment()
 		return &self.staticFalseValue, nil
 	}
-	rval = self.environment.get(expr.right.identifier)
+	rval, err = self.environment.get(expr.right.identifier).getSubscript(0)
+	if ( err != nil ) {
+		return nil, err
+	}
 	forConditionMet, err = self.evaluateForCondition(rval)
 	self.environment.stopWaiting("NEXT")
 	if ( forConditionMet == true ) {

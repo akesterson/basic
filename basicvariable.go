@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 	"errors"
 )
 
@@ -16,24 +15,27 @@ type BasicVariable struct {
 }
 
 func (self *BasicVariable) init(runtime *BasicRuntime, sizes []int64) error {
-	var totalSize int64
+	var totalSize int64 = 1
+	fmt.Printf("Initializing %s\n", self.name)
 	if ( runtime == nil ) {
 		return errors.New("NIL runtime provided to BasicVariable.init")
 	}
-	if ( len(sizes) == 0 ) {
-		sizes = make([]int64, 1)
-		sizes[0] = 10
-	}
-	
+	//if ( len(sizes) == 0 ) {
+	//	sizes = make([]int64, 1)
+	//	sizes[0] = 10
+	//}
+	fmt.Printf("Setting variable dimensions\n")
 	self.runtime = runtime
 	self.dimensions = make([]int64, len(sizes))
-	copy(sizes, self.dimensions)
-	for _, size := range sizes {
+	copy(self.dimensions, sizes)
+	for i, size := range sizes {
+		fmt.Printf("Dimension %d is %d\n", i, size)
 		if ( size <= 0 )  {
 			return errors.New("Array dimensions must be positive integers")
 		}
 		totalSize *= size
 	}
+	fmt.Printf("%s has %d dimensions with %d total objects\n", self.name, len(sizes), totalSize)
 	self.values = make([]BasicValue, totalSize)
 	for _, value := range self.values {
 		value.init()

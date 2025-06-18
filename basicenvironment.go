@@ -103,6 +103,7 @@ func (self *BasicEnvironment) getFunction(fname string) *BasicFunctionDef {
 func (self *BasicEnvironment) get(varname string) *BasicVariable {
 	var variable *BasicVariable
 	var ok bool
+ 	sizes := []int64{10}
 	if variable, ok = self.variables[varname]; ok {
 		return variable
 	} else if ( self.parent != nil ) {
@@ -114,21 +115,13 @@ func (self *BasicEnvironment) get(varname string) *BasicVariable {
 	// Don't automatically create variables unless we are the currently
 	// active environment (parents don't create variables for their children)
 	if ( self.runtime.environment == self ) {
-		var emptyvalue *BasicValue = &BasicValue{
-					valuetype: TYPE_UNDEFINED,
-					stringval: "",
-					intval: 0,
-					floatval: 0.0,
-					boolvalue: BASIC_FALSE,
-					runtime: self.runtime,
-					mutable: true}
 		self.variables[varname] = &BasicVariable{
 			name: strings.Clone(varname),
 			valuetype: TYPE_UNDEFINED,
 			runtime: self.runtime,
 			mutable: true,
 		}
-		self.variables[varname].init(self.runtime, 0)
+		self.variables[varname].init(self.runtime, sizes)
 		return self.variables[varname]
 	}
 	return nil
@@ -136,7 +129,7 @@ func (self *BasicEnvironment) get(varname string) *BasicVariable {
 
 func (self *BasicEnvironment) set(lval *BasicASTLeaf, rval *BasicValue) {
 	//fmt.Printf("Setting variable in environment: [%s] = %s\n", lval.toString(), rval.toString())
-	self.variables.get(lval.identifier).set(rval, 0)
+	self.get(lval.identifier).set(rval, 0)
 }
 
 func (self *BasicEnvironment) update(rval *BasicValue) (*BasicValue, error){
@@ -159,23 +152,23 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 	switch(lval.leaftype) {
 	case LEAF_IDENTIFIER_INT:
 		if ( rval.valuetype != TYPE_INTEGER ) {
-			variable.intval = rval.intval
+			variable.setInteger(rval.intval, 0)
 		} else if ( rval.valuetype == TYPE_FLOAT ) {
-			variable.intval = int64(rval.floatval)
+			variable.setInteger(int64(rval.floatval), 0)
 		} else {
 			return nil, errors.New("Incompatible types in variable assignment")
 		}
 	case LEAF_IDENTIFIER_FLOAT:
 		if ( rval.valuetype == TYPE_INTEGER ) {
-			variable.floatval = float64(rval.intval)
+			variable.setFloat(float64(rval.intval), 0)
 		} else if ( rval.valuetype == TYPE_FLOAT ) {
-			variable.floatval = rval.floatval
+			variable.setFloat(rval.floatval, 0)
 		} else {
 			return nil, errors.New("Incompatible types in variable assignment")
 		}
 	case LEAF_IDENTIFIER_STRING:
 		if ( rval.valuetype == TYPE_STRING ) {
-			variable.stringval = strings.Clone(rval.stringval)
+			variable.setString(strings.Clone(rval.stringval), 0)
 		} else {
 			return nil, errors.New("Incompatible types in variable assignment")
 		}
@@ -184,5 +177,5 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 	}
 	variable.valuetype = rval.valuetype
 	//fmt.Printf("Assigned %+v\n", variable)
-	return variable, nil
+	return variable.getSubscript(0)
 }
