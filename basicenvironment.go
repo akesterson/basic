@@ -22,6 +22,7 @@ type BasicEnvironment struct {
 	forToLeaf *BasicASTLeaf
 	forToValue BasicValue
 	forNextValue *BasicValue
+	forNextVariable *BasicVariable
 
 	// Loop variables
 	loopFirstLine int64

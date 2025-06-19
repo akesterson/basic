@@ -134,12 +134,18 @@ func (self *BasicValue) bitwiseOr(rval *BasicValue) (*BasicValue, error) {
 // TODO: Implement - (remove) * (duplicate) and / (split) on string types, that would be cool
 
 func (self *BasicValue) mathPlus(rval *BasicValue) (*BasicValue, error) {
+	var dest *BasicValue
+	var err error
 	if ( rval == nil ) {
 		return nil, errors.New("nil rval")
 	}
-	dest, err := self.clone(nil)
-	if ( err != nil ) {
-		return nil, err
+	if ( self.mutable == false ) {
+		dest, err = self.clone(nil)
+		if ( err != nil ) {
+			return nil, err
+		}
+	} else {
+		dest = self
 	}
 	if ( self.valuetype == TYPE_INTEGER ) {
 		dest.intval = self.intval + (rval.intval + int64(rval.floatval))

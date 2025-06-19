@@ -16,7 +16,9 @@ type BasicVariable struct {
 
 func (self *BasicVariable) init(runtime *BasicRuntime, sizes []int64) error {
 	var totalSize int64 = 1
+	var i int64 = 0
 	var runes = []rune(self.name)
+	var value *BasicValue = nil
 	//fmt.Printf("Initializing %s\n", self.name)
 	if ( runtime == nil ) {
 		return errors.New("NIL runtime provided to BasicVariable.init")
@@ -52,10 +54,12 @@ func (self *BasicVariable) init(runtime *BasicRuntime, sizes []int64) error {
 	}
 	//fmt.Printf("%s has %d dimensions with %d total objects\n", self.name, len(sizes), totalSize)
 	self.values = make([]BasicValue, totalSize)
-	for _, value := range self.values {
+	for i = 0; i < totalSize ; i++ {
+		value = &self.values[i]
 		value.init()
 		value.zero()
 		value.valuetype = self.valuetype
+		value.mutable = true
 	}
 	return nil
 }
@@ -152,7 +156,7 @@ func (self *BasicVariable) getSubscript(subscripts ...int64) (*BasicValue, error
 	var index int64
 	var err error = nil
 	if ( len(subscripts) != len(self.dimensions) ) {
-		return nil, fmt.Errorf("Variable %s has %d dimensions, only received %d", self.name, len(self.dimensions), len(subscripts))
+		return nil, fmt.Errorf("Variable %s has %d dimensions, received %d", self.name, len(self.dimensions), len(subscripts))
 	}
 	index, err = self.flattenIndexSubscripts(subscripts)
 	if ( err != nil ) {
@@ -165,7 +169,7 @@ func (self *BasicVariable) setSubscript(value *BasicValue, subscripts ...int64) 
 	var index int64
 	var err error = nil
 	if ( len(subscripts) != len(self.dimensions) ) {
-		return fmt.Errorf("Variable %s has %d dimensions, only received %d", self.name, len(self.dimensions), len(subscripts))
+		return fmt.Errorf("Variable %s has %d dimensions, received %d", self.name, len(self.dimensions), len(subscripts))
 	}
 	index, err = self.flattenIndexSubscripts(subscripts)
 	if ( err != nil ) {
@@ -187,7 +191,6 @@ func (self *BasicVariable) flattenIndexSubscripts(subscripts []int64) (int64, er
 		flatIndex += subscripts[i] * multiplier
 		multiplier *= self.dimensions[i]
 	}
-
 	return flatIndex, nil
 }
 
