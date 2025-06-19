@@ -10,6 +10,47 @@ func (self *BasicRuntime) CommandDEF(expr *BasicASTLeaf, lval *BasicValue, rval 
 	return &self.staticTrueValue, nil
 }
 
+func (self *BasicRuntime) CommandDIM(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var varref *BasicVariable
+	var sizes []int64
+	var err error = nil
+	// DIM IDENTIFIER(LENGTH)
+	// expr.right should be an identifier
+	// expr.right->right should be an arglist
+	if ( expr == nil ||
+		expr.right == nil ||
+		expr.right.right == nil ||
+		( expr.right.leaftype != LEAF_IDENTIFIER_INT &&
+			expr.right.leaftype != LEAF_IDENTIFIER_FLOAT &&
+			expr.right.leaftype != LEAF_IDENTIFIER_STRING) ) {
+		return nil, errors.New("Expected DIM IDENTIFIER(DIMENSIONS, ...)")
+	}
+	// Get the variable reference
+	varref = self.environment.get(expr.right.identifier)
+	if ( varref == nil ) {
+		return nil, fmt.Errorf("Unable to get variable for identifier %s", expr.right.identifier)
+	}
+	// Evaluate the argument list and construct a list of sizes
+	expr = expr.right.right
+	for ( expr != nil ) {
+		lval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( lval.valuetype != TYPE_INTEGER ) {
+			return nil, errors.New("Array dimensions must evaluate to integer")
+		}
+		sizes = append(sizes, lval.intval)
+		expr = expr.right
+	}
+	err = varref.init(self, sizes)
+	if ( err != nil ) {
+		return nil, err
+	}
+	varref.zero()
+	return &self.staticTrueValue, nil
+}
+
 func (self *BasicRuntime) CommandPRINT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
 	if ( expr.right == nil ) {

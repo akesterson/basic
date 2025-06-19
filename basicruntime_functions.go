@@ -7,24 +7,32 @@ import (
 func (self *BasicRuntime) FunctionLEN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
 	var strval *BasicValue = nil
+	var varref *BasicVariable = nil
 	
 	if ( expr.right == nil ||
 		( expr.right.leaftype != LEAF_IDENTIFIER_STRING &&
+			expr.right.leaftype != LEAF_IDENTIFIER_INT &&
+			expr.right.leaftype != LEAF_IDENTIFIER_FLOAT &&
 			expr.right.leaftype != LEAF_LITERAL_STRING )) {
 		//fmt.Printf("%+v\n", expr);
 		//fmt.Printf("%+v\n", expr.right);
 		return nil, errors.New("Expected identifier or string literal")
 	}
-	strval, err = self.evaluate(expr.right)
-	if ( err != nil ) {
-		return nil, err
-	}
 	rval, err = self.newValue()
 	if ( err != nil ) {
 		return nil, err
-	}
-	rval.intval = int64(len(strval.stringval))
+	}	
 	rval.valuetype = TYPE_INTEGER
+	if ( expr.right.leaftype == LEAF_LITERAL_STRING ) {
+		strval, err = self.evaluate(expr.right)
+		if ( err != nil ) {
+			return nil, err
+		}
+		rval.intval = int64(len(strval.stringval))
+	} else {
+		varref = self.environment.get(expr.right.identifier)
+		rval.intval = int64(len(varref.values))
+	}
 	return rval, nil
 }
 

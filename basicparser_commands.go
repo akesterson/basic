@@ -12,6 +12,29 @@ func (self *BasicParser) ParseCommandLET() (*BasicASTLeaf, error) {
 
 func (self *BasicParser) ParseCommandDIM() (*BasicASTLeaf, error) {
 	return self.primary()
+	var identifier *BasicASTLeaf = nil
+	var arglist *BasicASTLeaf = nil
+	var command *BasicASTLeaf = nil
+	var err error = nil
+	identifier, err = self.primary()
+	if ( err != nil ) {
+		return nil, err
+	}
+	if ( identifier.leaftype != LEAF_IDENTIFIER ) {
+		return nil, errors.New("Expected identifier")
+	}
+	command, err = self.newLeaf()
+	if ( err != nil ) {
+		return nil, err
+	}
+	arglist, err = self.argumentList()
+	if ( err != nil ) {
+		return nil, errors.New("Expected dimensions (n, ...)")
+	}
+	identifier.right = arglist
+
+	command.newCommand("DIM", identifier)
+	return command, nil
 }
 
 func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {

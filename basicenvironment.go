@@ -104,7 +104,7 @@ func (self *BasicEnvironment) getFunction(fname string) *BasicFunctionDef {
 func (self *BasicEnvironment) get(varname string) *BasicVariable {
 	var variable *BasicVariable
 	var ok bool
- 	sizes := []int64{10}
+ 	sizes := []int64{1}
 	if variable, ok = self.variables[varname]; ok {
 		return variable
 	} else if ( self.parent != nil ) {
