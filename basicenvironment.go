@@ -7,7 +7,7 @@ import (
 )
 
 type BasicEnvironment struct {
-	variables map[string]*BasicValue
+	variables map[string]*BasicVariable
 	functions map[string]*BasicFunctionDef
 	
 	// IF variables
@@ -21,7 +21,8 @@ type BasicEnvironment struct {
 	forStepValue BasicValue
 	forToLeaf *BasicASTLeaf
 	forToValue BasicValue
-	forNextVariable *BasicValue
+	forNextValue *BasicValue
+	forNextVariable *BasicVariable
 
 	// Loop variables
 	loopFirstLine int64
@@ -42,7 +43,7 @@ type BasicEnvironment struct {
 }
 
 func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironment) {
-	self.variables = make(map[string]*BasicValue)
+	self.variables = make(map[string]*BasicVariable)
 	self.functions = make(map[string]*BasicFunctionDef)
 	self.parent = parent
 	self.runtime = runtime
@@ -100,29 +101,28 @@ func (self *BasicEnvironment) getFunction(fname string) *BasicFunctionDef {
 	return nil
 }
 
-func (self *BasicEnvironment) get(varname string) *BasicValue {
-	var value *BasicValue
+func (self *BasicEnvironment) get(varname string) *BasicVariable {
+	var variable *BasicVariable
 	var ok bool
-	if value, ok = self.variables[varname]; ok {
-		return value
+ 	sizes := []int64{10}
+	if variable, ok = self.variables[varname]; ok {
+		return variable
 	} else if ( self.parent != nil ) {
-		value = self.parent.get(varname)
-		if ( value != nil ) {
-			return value
+		variable = self.parent.get(varname)
+		if ( variable != nil ) {
+			return variable
 		}
 	}
 	// Don't automatically create variables unless we are the currently
 	// active environment (parents don't create variables for their children)
 	if ( self.runtime.environment == self ) {
-		self.variables[varname] = &BasicValue{
+		self.variables[varname] = &BasicVariable{
 			name: strings.Clone(varname),
 			valuetype: TYPE_UNDEFINED,
-			stringval: "",
-			intval: 0,
-			floatval: 0.0,
-			boolvalue: BASIC_FALSE,
 			runtime: self.runtime,
-			mutable: true}
+			mutable: true,
+		}
+		self.variables[varname].init(self.runtime, sizes)
 		return self.variables[varname]
 	}
 	return nil
@@ -130,7 +130,7 @@ func (self *BasicEnvironment) get(varname string) *BasicValue {
 
 func (self *BasicEnvironment) set(lval *BasicASTLeaf, rval *BasicValue) {
 	//fmt.Printf("Setting variable in environment: [%s] = %s\n", lval.toString(), rval.toString())
-	self.variables[lval.identifier] = rval
+	self.get(lval.identifier).set(rval, 0)
 }
 
 func (self *BasicEnvironment) update(rval *BasicValue) (*BasicValue, error){
@@ -147,7 +147,7 @@ func (self *BasicEnvironment) update(rval *BasicValue) (*BasicValue, error){
 func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*BasicValue, error) {
 	// TODO : When the identifier has an argument list on .right, use it as
 	// a subscript, flatten it to a pointer, and set the value there
-	var variable *BasicValue = nil
+	var variable *BasicVariable = nil
 	if ( lval == nil || rval == nil ) {
 		return nil, errors.New("nil pointer")
 	}
@@ -155,23 +155,23 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 	switch(lval.leaftype) {
 	case LEAF_IDENTIFIER_INT:
 		if ( rval.valuetype == TYPE_INTEGER ) {
-			variable.intval = rval.intval
+			variable.setInteger(rval.intval, 0)
 		} else if ( rval.valuetype == TYPE_FLOAT ) {
-			variable.intval = int64(rval.floatval)
+			variable.setInteger(int64(rval.floatval), 0)
 		} else {
 			return nil, errors.New("Incompatible types in variable assignment")
 		}
 	case LEAF_IDENTIFIER_FLOAT:
 		if ( rval.valuetype == TYPE_INTEGER ) {
-			variable.floatval = float64(rval.intval)
+			variable.setFloat(float64(rval.intval), 0)
 		} else if ( rval.valuetype == TYPE_FLOAT ) {
-			variable.floatval = rval.floatval
+			variable.setFloat(rval.floatval, 0)
 		} else {
 			return nil, errors.New("Incompatible types in variable assignment")
 		}
 	case LEAF_IDENTIFIER_STRING:
 		if ( rval.valuetype == TYPE_STRING ) {
-			variable.stringval = strings.Clone(rval.stringval)
+			variable.setString(strings.Clone(rval.stringval), 0)
 		} else {
 			return nil, errors.New("Incompatible types in variable assignment")
 		}
@@ -180,5 +180,5 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 	}
 	variable.valuetype = rval.valuetype
 	//fmt.Printf("Assigned %+v\n", variable)
-	return variable, nil
+	return variable.getSubscript(0)
 }

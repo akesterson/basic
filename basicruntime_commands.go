@@ -229,17 +229,27 @@ func (self *BasicRuntime) CommandFOR(expr *BasicASTLeaf, lval *BasicValue, rval 
 	// evaluate the STEP expression if there is one, and the TO
 	// leaf, and then return nil, nil.
 	var err error = nil
-	var assignvar *BasicValue = nil
+	var assignval *BasicValue = nil
 	var tmpvar *BasicValue = nil
 	var forConditionMet bool = false
 		
 	if ( self.environment.forToLeaf == nil || expr.right == nil ) {
 		return nil, errors.New("Expected FOR ... TO [STEP ...]")
 	}
-	assignvar, err = self.evaluate(expr.right)
+	if ( expr.right.left == nil || (
+		expr.right.left.leaftype != LEAF_IDENTIFIER_INT &&
+			expr.right.left.leaftype != LEAF_IDENTIFIER_FLOAT &&
+			expr.right.left.leaftype != LEAF_IDENTIFIER_STRING) ) {
+		return nil, errors.New("Expected variable in FOR loop")
+	}
+	assignval, err = self.evaluate(expr.right)
 	if ( err != nil ) {
 		return nil, err
 	}
+	self.environment.forNextVariable = self.environment.get(expr.right.left.identifier)
+	self.environment.forNextVariable.set(assignval, 0)
+
+
 	tmpvar, err = self.evaluate(self.environment.forToLeaf)
 	if ( err != nil ) {
 		return nil, err
@@ -252,17 +262,21 @@ func (self *BasicRuntime) CommandFOR(expr *BasicASTLeaf, lval *BasicValue, rval 
 	_, _ = tmpvar.clone(&self.environment.forStepValue)
 	self.environment.forToLeaf = nil
 	self.environment.forStepLeaf = nil
-	forConditionMet, err = self.evaluateForCondition(assignvar)
+	tmpvar, err = self.environment.forNextVariable.getSubscript(0)
+	if (err != nil ) {
+		return nil, err
+	}
+	forConditionMet, err = self.evaluateForCondition(tmpvar)
 	if ( forConditionMet == true ) {
 		self.environment.waitForCommand("NEXT")
 	}
-	self.environment.forNextVariable = assignvar
 	return &self.staticTrueValue, nil
 }
 
 func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var forConditionMet = false
 	var err error = nil
+	var nextvar *BasicVariable
 
 	// if self.environment.forRelationLeaf is nil, parse error
 	if ( self.environment.forNextVariable == nil ) {
@@ -283,7 +297,11 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 		self.prevEnvironment()
 		return &self.staticFalseValue, nil
 	}
-	rval = self.environment.get(expr.right.identifier)
+	nextvar = self.environment.get(expr.right.identifier)
+	rval, err = nextvar.getSubscript(0)
+	if ( err != nil ) {
+		return nil, err
+	}
 	forConditionMet, err = self.evaluateForCondition(rval)
 	self.environment.stopWaiting("NEXT")
 	if ( forConditionMet == true ) {
@@ -295,10 +313,6 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 	}
 	//fmt.Printf("Incrementing %s (%s) by %s\n", rval.name, rval.toString(), self.environment.forStepValue.toString())
 	rval, err = rval.mathPlus(&self.environment.forStepValue)
-	if ( err != nil ) {
-		return nil, err
-	}
-	rval, err = self.environment.update(rval)
 	if ( err != nil ) {
 		return nil, err
 	}

@@ -172,7 +172,10 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 	case LEAF_IDENTIFIER_INT: fallthrough
 	case LEAF_IDENTIFIER_FLOAT: fallthrough
 	case LEAF_IDENTIFIER_STRING:
-		lval = self.environment.get(expr.identifier)
+		lval, err = self.environment.get(expr.identifier).getSubscript(0)
+		if ( err != nil ) {
+			return nil, err
+		}
 		if ( lval == nil ) {
 			return nil, fmt.Errorf("Identifier %s is undefined", expr.identifier)
 		}
