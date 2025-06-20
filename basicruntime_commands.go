@@ -15,8 +15,8 @@ func (self *BasicRuntime) CommandDIM(expr *BasicASTLeaf, lval *BasicValue, rval 
 	var sizes []int64
 	var err error = nil
 	// DIM IDENTIFIER(LENGTH)
-	// expr.right should be an identifier
-	// expr.right->right should be an arglist
+	// expr should be an identifier
+	// expr.right should be an arglist
 	if ( expr == nil ||
 		expr.right == nil ||
 		expr.right.right == nil ||
@@ -43,6 +43,7 @@ func (self *BasicRuntime) CommandDIM(expr *BasicASTLeaf, lval *BasicValue, rval 
 		sizes = append(sizes, lval.intval)
 		expr = expr.right
 	}
+	//fmt.Printf("Initializing variable %s to sizes %s\n", varref.name, sizes)
 	err = varref.init(self, sizes)
 	if ( err != nil ) {
 		return nil, err

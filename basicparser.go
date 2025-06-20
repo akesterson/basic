@@ -235,6 +235,7 @@ func (self *BasicParser) argumentList() (*BasicASTLeaf, error) {
 
 	if ( !self.match(LEFT_PAREN) ) {
 		//return nil, errors.New("Expected argument list (expression, ...)")
+		//fmt.Printf("No left paren\n")
 		return nil, nil
 	}
 	expr, err = self.expression()

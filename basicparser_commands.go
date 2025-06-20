@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"strings"
-	//"fmt"
+	"fmt"
 )
 
 func (self *BasicParser) ParseCommandLET() (*BasicASTLeaf, error) {
@@ -11,28 +11,29 @@ func (self *BasicParser) ParseCommandLET() (*BasicASTLeaf, error) {
 }
 
 func (self *BasicParser) ParseCommandDIM() (*BasicASTLeaf, error) {
-	return self.primary()
 	var identifier *BasicASTLeaf = nil
-	var arglist *BasicASTLeaf = nil
 	var command *BasicASTLeaf = nil
 	var err error = nil
+	
 	identifier, err = self.primary()
 	if ( err != nil ) {
 		return nil, err
 	}
-	if ( identifier.leaftype != LEAF_IDENTIFIER ) {
-		return nil, errors.New("Expected identifier")
+	if ( identifier.leaftype != LEAF_IDENTIFIER &&
+		identifier.leaftype != LEAF_IDENTIFIER_INT &&
+		identifier.leaftype != LEAF_IDENTIFIER_FLOAT &&
+		identifier.leaftype != LEAF_IDENTIFIER_STRING ) {
+		return nil, fmt.Errorf("DIM Expected identifier")
 	}
+	if ( identifier.right == nil) {
+		return nil, errors.New("Expected dimensions DIM(n, ...)")
+	}
+	//fmt.Printf("HERE : %+v\n", identifier)
+	//fmt.Printf("AND HERE : %+v\n", identifier.right)
 	command, err = self.newLeaf()
 	if ( err != nil ) {
 		return nil, err
 	}
-	arglist, err = self.argumentList()
-	if ( err != nil ) {
-		return nil, errors.New("Expected dimensions (n, ...)")
-	}
-	identifier.right = arglist
-
 	command.newCommand("DIM", identifier)
 	return command, nil
 }

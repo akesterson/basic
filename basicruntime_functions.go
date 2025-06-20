@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	//"fmt"
 )
 
 func (self *BasicRuntime) FunctionLEN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
@@ -31,6 +32,7 @@ func (self *BasicRuntime) FunctionLEN(expr *BasicASTLeaf, lval *BasicValue, rval
 		rval.intval = int64(len(strval.stringval))
 	} else {
 		varref = self.environment.get(expr.right.identifier)
+		//fmt.Printf("Length of non-string variable is %d\n", len(varref.values))
 		rval.intval = int64(len(varref.values))
 	}
 	return rval, nil
