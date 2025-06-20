@@ -143,6 +143,9 @@ func (self *BasicRuntime) evaluateSome(expr *BasicASTLeaf, leaftypes ...BasicAST
 func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeafType) (*BasicValue, error) {
 	var lval *BasicValue
 	var rval *BasicValue
+	var subscript *BasicASTLeaf = nil
+	var sval *BasicValue = nil
+	var subscript_values []int64
 	var err error = nil
 
 	lval, err = self.newValue()
@@ -172,7 +175,22 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 	case LEAF_IDENTIFIER_INT: fallthrough
 	case LEAF_IDENTIFIER_FLOAT: fallthrough
 	case LEAF_IDENTIFIER_STRING:
-		lval, err = self.environment.get(expr.identifier).getSubscript(0)
+		subscript = expr.right
+		for ( subscript != nil ) {
+			sval, err = self.evaluate(subscript)
+			if ( err != nil ) {
+				return nil, err
+			}
+			if ( sval.valuetype != TYPE_INTEGER ) {
+				return nil, errors.New("Array subscripts must be integer")
+			}
+			subscript_values = append(subscript_values, sval.intval)
+			subscript = subscript.right
+		}
+		if ( len(subscript_values) == 0 ) {
+			subscript_values = append(subscript_values, 0)
+		}
+		lval, err = self.environment.get(expr.identifier).getSubscript(subscript_values...)
 		if ( err != nil ) {
 			return nil, err
 		}

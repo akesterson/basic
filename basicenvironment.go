@@ -148,30 +148,49 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 	// TODO : When the identifier has an argument list on .right, use it as
 	// a subscript, flatten it to a pointer, and set the value there
 	var variable *BasicVariable = nil
+	var subscript *BasicASTLeaf = nil
+	var sval *BasicValue = nil
+	var subscript_values []int64
+	var err error
 	if ( lval == nil || rval == nil ) {
 		return nil, errors.New("nil pointer")
+	}
+	subscript = lval.right
+	for ( subscript != nil ) {
+		sval, err = self.runtime.evaluate(subscript)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( sval.valuetype != TYPE_INTEGER ) {
+			return nil, errors.New("Array subscripts must be integer")
+		}
+		subscript_values = append(subscript_values, sval.intval)
+		subscript = subscript.right
+	}
+	if ( len(subscript_values) == 0 ) {
+		subscript_values = append(subscript_values, 0)
 	}
 	variable = self.get(lval.identifier)
 	switch(lval.leaftype) {
 	case LEAF_IDENTIFIER_INT:
 		if ( rval.valuetype == TYPE_INTEGER ) {
-			variable.setInteger(rval.intval, 0)
+			variable.setInteger(rval.intval, subscript_values...)
 		} else if ( rval.valuetype == TYPE_FLOAT ) {
-			variable.setInteger(int64(rval.floatval), 0)
+			variable.setInteger(int64(rval.floatval), subscript_values...)
 		} else {
 			return nil, errors.New("Incompatible types in variable assignment")
 		}
 	case LEAF_IDENTIFIER_FLOAT:
 		if ( rval.valuetype == TYPE_INTEGER ) {
-			variable.setFloat(float64(rval.intval), 0)
+			variable.setFloat(float64(rval.intval), subscript_values...)
 		} else if ( rval.valuetype == TYPE_FLOAT ) {
-			variable.setFloat(rval.floatval, 0)
+			variable.setFloat(rval.floatval, subscript_values...)
 		} else {
 			return nil, errors.New("Incompatible types in variable assignment")
 		}
 	case LEAF_IDENTIFIER_STRING:
 		if ( rval.valuetype == TYPE_STRING ) {
-			variable.setString(strings.Clone(rval.stringval), 0)
+			variable.setString(strings.Clone(rval.stringval), subscript_values...)
 		} else {
 			return nil, errors.New("Incompatible types in variable assignment")
 		}
@@ -180,5 +199,5 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 	}
 	variable.valuetype = rval.valuetype
 	//fmt.Printf("Assigned %+v\n", variable)
-	return variable.getSubscript(0)
+	return variable.getSubscript(subscript_values...)
 }
