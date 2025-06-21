@@ -92,6 +92,7 @@ func (self *BasicRuntime) CommandGOSUB(expr *BasicASTLeaf, lval *BasicValue, rva
 	if ( rval.valuetype != TYPE_INTEGER ) {
 		return nil, errors.New("Expected integer")
 	}
+	self.newEnvironment()
 	self.environment.gosubReturnLine = self.lineno + 1
 	self.nextline = rval.intval
 	return &self.staticTrueValue, nil
@@ -102,6 +103,7 @@ func (self *BasicRuntime) CommandRETURN(expr *BasicASTLeaf, lval *BasicValue, rv
 		return nil, errors.New("RETURN outside the context of GOSUB")
 	}
 	self.nextline = self.environment.gosubReturnLine
+	self.environment = self.environment.parent
 	return &self.staticTrueValue, nil
 }
 
