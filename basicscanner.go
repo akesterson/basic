@@ -51,6 +51,9 @@ const (
 	ASSIGNMENT // 34
 	LEFT_SQUAREBRACKET // 35
 	RIGHT_SQUAREBRACKET // 36
+	ARRAY_SUBSCRIPT // 37
+	FUNCTION_ARGUMENT // 38
+	
 )
 
 type BasicScanner struct {
