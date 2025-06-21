@@ -20,6 +20,14 @@ This implementation is significantly more complete than my last stab at a BASIC,
 * `A%` Float variables
 * `A$` String variables. Strings support addition operations with other types.
 * `LET` is supported but optional
+* Variables are strongly typed
+
+## Arrays
+
+* `DIM(IDENTIFIER, DIMENSION[, ...])` allows for provisioning of multiple dimensional arrays
+* `DIM A$(3)` results in a single dimensional array of strings with 3 elements
+* `PRINT A$(2)` accesses the last element in an array and returns it to the verb
+* Arrays are strongly typed
 
 ## Expressions
 
@@ -36,7 +44,7 @@ Expressions can be grouped with `()` arbitrarily deeply. Currently the interpret
 
 The following commands/verbs are implemented:
 
-* `AUTO n` : Turn automatic line numbering on/off
+* `AUTO n` : Turn automatic line numbering on/off at increments of `n`
 * `REM` : everything after this is a comment
 * `DEF FN(X, ...) = expression` : Define a function with arguments that performs a given expression
 * `IF (comparison) THEN (statement) [ELSE (statement)]` : Conditional branching
@@ -65,5 +73,5 @@ The following commands/verbs are implemented:
 
 The following functions are implemented
 
-* `LEN(var$)`: Return the length of the string `var$`
+* `LEN(var$)`: Return the length of the object `var$` (either a string or an array)
 * `MID(var$, start, length)` : Return a substring from `var$`
