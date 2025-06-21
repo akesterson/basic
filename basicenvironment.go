@@ -177,6 +177,15 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 	if ( len(subscripts) == 0 ) {
 		subscripts = append(subscripts, 0)
 	}
+	// FIXME : If we move this down below the switch() statement and return variable.getSusbcript(subscripts...) directly,
+	// we get an arrat out of bounds error because somehow `subscripts` has been changed to an
+	// array with a single entry [0] at this point. Getting a reference to the value here
+	// prevents that.
+	tval, err = variable.getSubscript(subscripts...)
+	if ( err != nil ) {
+		return nil, err
+	}
+	
 	switch(lval.leaftype) {
 	case LEAF_IDENTIFIER_INT:
 		if ( rval.valuetype == TYPE_INTEGER ) {
@@ -205,5 +214,5 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 	}
 	variable.valuetype = rval.valuetype
 	//fmt.Printf("Assigned %+v\n", variable)
-	return variable.getSubscript(0)
+	return tval, nil
 }

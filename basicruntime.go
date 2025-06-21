@@ -208,7 +208,8 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 			return self.evaluate(expr.right)
 		}
 	case LEAF_IDENTIFIER_INT: fallthrough
-	case LEAF_IDENTIFIER_FLOAT:
+	case LEAF_IDENTIFIER_FLOAT: fallthrough
+	case LEAF_IDENTIFIER_STRING:
 		// FIXME : How do I know if expr.right is an array subscript that I should follow,
 		// or some other right-joined expression (like an argument list) which I should
 		// *NOT* follow?
@@ -229,8 +230,6 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 				texpr = texpr.right
 			}
 		}
-		fallthrough
-	case LEAF_IDENTIFIER_STRING:
 		if ( len(subscripts) == 0 ) {
 			subscripts = append(subscripts, 0)
 		}
