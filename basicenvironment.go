@@ -148,30 +148,51 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 	// TODO : When the identifier has an argument list on .right, use it as
 	// a subscript, flatten it to a pointer, and set the value there
 	var variable *BasicVariable = nil
+	var subscripts []int64
+	var expr *BasicASTLeaf
+	var tval *BasicValue
+	var err error
 	if ( lval == nil || rval == nil ) {
 		return nil, errors.New("nil pointer")
 	}
 	variable = self.get(lval.identifier)
+	// FIXME : Processing the sizes argumentlist before we validate the type of the
+	// identifier leaf may lead to problems later.
+	expr = lval.right
+	for ( expr != nil ) {
+		tval, err = self.runtime.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( tval.valuetype != TYPE_INTEGER ) {
+			return nil, errors.New("Array dimensions must evaluate to integer")
+		}
+		subscripts = append(subscripts, tval.intval)
+		expr = expr.right
+	}
+	if ( len(subscripts) == 0 ) {
+		subscripts = append(subscripts, 0)
+	}
 	switch(lval.leaftype) {
 	case LEAF_IDENTIFIER_INT:
 		if ( rval.valuetype == TYPE_INTEGER ) {
-			variable.setInteger(rval.intval, 0)
+			variable.setInteger(rval.intval, subscripts...)
 		} else if ( rval.valuetype == TYPE_FLOAT ) {
-			variable.setInteger(int64(rval.floatval), 0)
+			variable.setInteger(int64(rval.floatval), subscripts...)
 		} else {
 			return nil, errors.New("Incompatible types in variable assignment")
 		}
 	case LEAF_IDENTIFIER_FLOAT:
 		if ( rval.valuetype == TYPE_INTEGER ) {
-			variable.setFloat(float64(rval.intval), 0)
+			variable.setFloat(float64(rval.intval), subscripts...)
 		} else if ( rval.valuetype == TYPE_FLOAT ) {
-			variable.setFloat(rval.floatval, 0)
+			variable.setFloat(rval.floatval, subscripts...)
 		} else {
 			return nil, errors.New("Incompatible types in variable assignment")
 		}
 	case LEAF_IDENTIFIER_STRING:
 		if ( rval.valuetype == TYPE_STRING ) {
-			variable.setString(strings.Clone(rval.stringval), 0)
+			variable.setString(strings.Clone(rval.stringval), subscripts...)
 		} else {
 			return nil, errors.New("Incompatible types in variable assignment")
 		}

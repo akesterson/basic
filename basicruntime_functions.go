@@ -23,7 +23,8 @@ func (self *BasicRuntime) FunctionLEN(expr *BasicASTLeaf, lval *BasicValue, rval
 		return nil, err
 	}	
 	rval.valuetype = TYPE_INTEGER
-	if ( expr.right.leaftype == LEAF_LITERAL_STRING ) {
+	if ( expr.right.leaftype == LEAF_LITERAL_STRING ||
+		expr.right.leaftype == LEAF_IDENTIFIER_STRING ) {
 		strval, err = self.evaluate(expr.right)
 		if ( err != nil ) {
 			return nil, err

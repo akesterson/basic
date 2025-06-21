@@ -143,7 +143,10 @@ func (self *BasicRuntime) evaluateSome(expr *BasicASTLeaf, leaftypes ...BasicAST
 func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeafType) (*BasicValue, error) {
 	var lval *BasicValue
 	var rval *BasicValue
+	var texpr *BasicASTLeaf
+	var tval *BasicValue
 	var err error = nil
+	var subscripts []int64
 
 	lval, err = self.newValue()
 	if ( err != nil ) {
@@ -170,9 +173,25 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 			return self.evaluate(expr.right)
 		}
 	case LEAF_IDENTIFIER_INT: fallthrough
-	case LEAF_IDENTIFIER_FLOAT: fallthrough
+	case LEAF_IDENTIFIER_FLOAT:
+		texpr = expr.right
+		for ( texpr != nil ) {
+			tval, err = self.evaluate(texpr)
+			if ( err != nil ) {
+				return nil, err
+			}
+			if ( tval.valuetype != TYPE_INTEGER ) {
+				return nil, errors.New("Array dimensions must evaluate to integer")
+			}
+			subscripts = append(subscripts, tval.intval)
+			texpr = texpr.right
+		}
+		fallthrough
 	case LEAF_IDENTIFIER_STRING:
-		lval, err = self.environment.get(expr.identifier).getSubscript(0)
+		if ( len(subscripts) == 0 ) {
+			subscripts = append(subscripts, 0)
+		}
+		lval, err = self.environment.get(expr.identifier).getSubscript(subscripts...)
 		if ( err != nil ) {
 			return nil, err
 		}
