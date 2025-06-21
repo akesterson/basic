@@ -117,7 +117,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 		// self.commands["DCLOSE"] =  COMMAND
 		self.commands["DEF"] =  COMMAND
 		// self.commands["DELETE"] =  COMMAND
-		// self.commands["DIM"] =  COMMAND
+		self.commands["DIM"] =  COMMAND
 		// self.commands["DIRECTORY"] =  COMMAND
 		// self.commands["DLOAD"] =  COMMAND
 		// self.commands["DO"] =  COMMAND

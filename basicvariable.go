@@ -41,10 +41,10 @@ func (self *BasicVariable) init(runtime *BasicRuntime, sizes []int64) error {
 	//	sizes = make([]int64, 1)
 	//	sizes[0] = 10
 	//}
-	//fmt.Printf("Setting variable dimensions\n")
 	self.runtime = runtime
 	self.dimensions = make([]int64, len(sizes))
 	copy(self.dimensions, sizes)
+	//fmt.Printf("Setting variable dimensions (%+v)\n", self.dimensions)
 	for _, size := range sizes {
 		//fmt.Printf("Dimension %d is %d\n", i, size)
 		if ( size <= 0 )  {
