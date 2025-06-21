@@ -18,10 +18,7 @@ func (self *BasicParser) ParseCommandDIM() (*BasicASTLeaf, error) {
 	if ( err != nil ) {
 		return nil, err
 	}
-	if ( identifier.leaftype != LEAF_IDENTIFIER &&
-		identifier.leaftype != LEAF_IDENTIFIER_INT &&
-		identifier.leaftype != LEAF_IDENTIFIER_FLOAT &&
-		identifier.leaftype != LEAF_IDENTIFIER_STRING ) {
+	if ( identifier.isIdentifier() == false ) {
 		return nil, errors.New("Expected identifier")
 	}
 	command, err = self.newLeaf()
@@ -49,7 +46,7 @@ func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
 	if ( identifier.leaftype != LEAF_IDENTIFIER ) {
 		return nil, errors.New("Expected identifier")
 	}
-	arglist, err = self.argumentList()
+	arglist, err = self.argumentList(FUNCTION_ARGUMENT)
 	if ( err != nil ) {
 		return nil, errors.New("Expected argument list (identifier names)")
 	}

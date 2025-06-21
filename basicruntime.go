@@ -65,12 +65,47 @@ func (self *BasicRuntime) init() {
 
 	self.environment.functions["LEN"] = &BasicFunctionDef{
 		arglist: &BasicASTLeaf{
-			leaftype: LEAF_IDENTIFIER_STRING,
+			leaftype: LEAF_ARGUMENTLIST,
 			left: nil,
 			parent: nil,
-			right: nil,
 			expr: nil,
-			identifier: "X$",
+			identifier: "",
+			operator: FUNCTION_ARGUMENT,
+			right: &BasicASTLeaf{
+				leaftype: LEAF_IDENTIFIER,
+				left: nil,
+				parent: nil,
+				expr: nil,
+				identifier: "X$",
+			},
+		},
+		expression: nil,
+		runtime: self,
+		name: "LEN",
+	}
+	self.environment.functions["MID"] = &BasicFunctionDef{
+		arglist: &BasicASTLeaf{
+			leaftype: LEAF_ARGUMENTLIST,
+			left: nil,
+			parent: nil,
+			expr: nil,
+			identifier: "",
+			operator: FUNCTION_ARGUMENT,
+			right: &BasicASTLeaf{
+				leaftype: LEAF_IDENTIFIER,
+				left: nil,
+				parent: nil,
+				expr: nil,
+				identifier: "STR$",
+				right: &BasicASTLeaf{
+					leaftype: LEAF_IDENTIFIER_INT,
+					identifier: "START#",
+					right: &BasicASTLeaf{
+						leaftype: LEAF_IDENTIFIER_INT,
+						identifier: "LENGTH#",
+					},
+				},
+			},
 		},
 		expression: nil,
 		runtime: self,
@@ -174,17 +209,25 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		}
 	case LEAF_IDENTIFIER_INT: fallthrough
 	case LEAF_IDENTIFIER_FLOAT:
+		// FIXME : How do I know if expr.right is an array subscript that I should follow,
+		// or some other right-joined expression (like an argument list) which I should
+		// *NOT* follow?
 		texpr = expr.right
-		for ( texpr != nil ) {
-			tval, err = self.evaluate(texpr)
-			if ( err != nil ) {
-				return nil, err
-			}
-			if ( tval.valuetype != TYPE_INTEGER ) {
-				return nil, errors.New("Array dimensions must evaluate to integer")
-			}
-			subscripts = append(subscripts, tval.intval)
+		if ( texpr != nil &&
+			texpr.leaftype == LEAF_ARGUMENTLIST &&
+			texpr.operator == ARRAY_SUBSCRIPT ) {
 			texpr = texpr.right
+			for ( texpr != nil ) {
+				tval, err = self.evaluate(texpr)
+				if ( err != nil ) {
+					return nil, err
+				}
+				if ( tval.valuetype != TYPE_INTEGER ) {
+					return nil, errors.New("Array dimensions must evaluate to integer (C)")
+				}
+				subscripts = append(subscripts, tval.intval)
+				texpr = texpr.right
+			}
 		}
 		fallthrough
 	case LEAF_IDENTIFIER_STRING:

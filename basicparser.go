@@ -225,9 +225,9 @@ func (self *BasicParser) assignment() (*BasicASTLeaf, error) {
 	return identifier, err
 }
 
-func (self *BasicParser) argumentList() (*BasicASTLeaf, error) {
+func (self *BasicParser) argumentList(argListType BasicTokenType) (*BasicASTLeaf, error) {
 	var expr *BasicASTLeaf = nil
-	var first *BasicASTLeaf = nil
+	var arglist *BasicASTLeaf = nil
 	var err error = nil
 
 	// argument lists are just (.right) joined expressions continuing
@@ -237,11 +237,21 @@ func (self *BasicParser) argumentList() (*BasicASTLeaf, error) {
 		//return nil, errors.New("Expected argument list (expression, ...)")
 		return nil, nil
 	}
-	expr, err = self.expression()
+	if ( argListType != ARRAY_SUBSCRIPT && argListType != FUNCTION_ARGUMENT ) {
+		return nil, errors.New("argumentList expects argListType [ARRAY_SUBSCRIPT || FUNCTION_ARGUMENT]")
+	}
+	
+	arglist, err = self.newLeaf()
 	if ( err != nil ) {
 		return nil, err
 	}
-	first = expr
+	arglist.leaftype = LEAF_ARGUMENTLIST
+	arglist.operator = argListType
+	arglist.right, err = self.expression()
+	if ( err != nil ) {
+		return nil, err
+	}
+	expr = arglist.right
 	//fmt.Printf("Before loop: %+v\n", expr)
 	for ( expr != nil && self.match(COMMA) ) {
 		expr.right, err = self.expression()
@@ -255,7 +265,7 @@ func (self *BasicParser) argumentList() (*BasicASTLeaf, error) {
 	if ( !self.match(RIGHT_PAREN) ) {
 		return nil, errors.New("Unbalanced parenthesis")
 	}
-	return first, nil
+	return arglist, nil
 }
 
 func (self *BasicParser) expression() (*BasicASTLeaf, error) {
@@ -571,16 +581,16 @@ func (self *BasicParser) function() (*BasicASTLeaf, error) {
 		if ( fndef != nil ) {
 			// All we can do here is collect the argument list and
 			// check the length
-			arglist, err = self.argumentList()
+			arglist, err = self.argumentList(FUNCTION_ARGUMENT)
 			if ( err != nil ) {
 				return nil, err
 			}
-			leafptr = arglist
+			leafptr = arglist.right
 			for ( leafptr != nil ) {
 				defarglen += 1
 				leafptr = leafptr.right
 			}
-			leafptr = fndef.arglist
+			leafptr = fndef.arglist.right
 			for ( leafptr != nil ) {
 				refarglen += 1
 				leafptr = leafptr.right
@@ -624,19 +634,19 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 			expr.newLiteralString(previous.lexeme)
 		case IDENTIFIER_INT:
 			expr.newIdentifier(LEAF_IDENTIFIER_INT, previous.lexeme)
-			expr.right, err = self.argumentList()
+			expr.right, err = self.argumentList(ARRAY_SUBSCRIPT)
 			if ( err != nil ) {
 				return nil, err
 			}
 		case IDENTIFIER_FLOAT:
 			expr.newIdentifier(LEAF_IDENTIFIER_FLOAT, previous.lexeme)
-			expr.right, err = self.argumentList()
+			expr.right, err = self.argumentList(ARRAY_SUBSCRIPT)
 			if ( err != nil ) {
 				return nil, err
 			}
 		case IDENTIFIER_STRING:
 			expr.newIdentifier(LEAF_IDENTIFIER_STRING, previous.lexeme)
-			expr.right, err = self.argumentList()
+			expr.right, err = self.argumentList(ARRAY_SUBSCRIPT)
 			if ( err != nil ) {
 				return nil, err
 			}

@@ -158,17 +158,21 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 	variable = self.get(lval.identifier)
 	// FIXME : Processing the sizes argumentlist before we validate the type of the
 	// identifier leaf may lead to problems later.
-	expr = lval.right
-	for ( expr != nil ) {
-		tval, err = self.runtime.evaluate(expr)
-		if ( err != nil ) {
-			return nil, err
+	if ( lval.right != nil &&
+		lval.right.leaftype == LEAF_ARGUMENTLIST &&
+		lval.right.operator == ARRAY_SUBSCRIPT ) {
+		expr = lval.right.right
+		for ( expr != nil ) {
+			tval, err = self.runtime.evaluate(expr)
+			if ( err != nil ) {
+				return nil, err
+			}
+			if ( tval.valuetype != TYPE_INTEGER ) {
+				return nil, errors.New("Array dimensions must evaluate to integer (B)")
+			}
+			subscripts = append(subscripts, tval.intval)
+			expr = expr.right
 		}
-		if ( tval.valuetype != TYPE_INTEGER ) {
-			return nil, errors.New("Array dimensions must evaluate to integer")
-		}
-		subscripts = append(subscripts, tval.intval)
-		expr = expr.right
 	}
 	if ( len(subscripts) == 0 ) {
 		subscripts = append(subscripts, 0)

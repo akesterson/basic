@@ -29,6 +29,7 @@ const (
 	LEAF_COMMAND_IMMEDIATE // 16
 	LEAF_FUNCTION // 17
 	LEAF_BRANCH // 18
+	LEAF_ARGUMENTLIST // 19
 )
 
 type BasicASTLeaf struct {
@@ -80,6 +81,24 @@ func (self *BasicASTLeaf) clone() *BasicASTLeaf {
 		literal_float: self.literal_float,
 		literal_string: strings.Clone(self.literal_string),
 		operator: self.operator}
+}
+
+func (self *BasicASTLeaf) firstArgument() *BasicASTLeaf {
+	if ( self.right == nil ||
+		self.right.leaftype != LEAF_ARGUMENTLIST ||
+		self.right.operator != FUNCTION_ARGUMENT ) {
+		return nil
+	}
+	return self.right.right
+}
+
+func (self *BasicASTLeaf) firstSubscript() *BasicASTLeaf {
+	if ( self.right == nil ||
+		self.right.leaftype != LEAF_ARGUMENTLIST ||
+		self.right.operator != ARRAY_SUBSCRIPT ) {
+		return nil
+	}
+	return self.right.right
 }
 
 func (self *BasicASTLeaf) isIdentifier() bool {

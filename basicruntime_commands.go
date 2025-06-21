@@ -20,9 +20,9 @@ func (self *BasicRuntime) CommandDIM(expr *BasicASTLeaf, lval *BasicValue, rval 
 	if ( expr == nil ||
 		expr.right == nil ||
 		expr.right.right == nil ||
-		( expr.right.leaftype != LEAF_IDENTIFIER_INT &&
-			expr.right.leaftype != LEAF_IDENTIFIER_FLOAT &&
-			expr.right.leaftype != LEAF_IDENTIFIER_STRING) ) {
+		expr.right.right.leaftype != LEAF_ARGUMENTLIST ||
+		expr.right.right.operator != ARRAY_SUBSCRIPT ||
+		expr.right.isIdentifier() == false ) {
 		return nil, errors.New("Expected DIM IDENTIFIER(DIMENSIONS, ...)")
 	}
 	// Get the variable reference
@@ -31,7 +31,7 @@ func (self *BasicRuntime) CommandDIM(expr *BasicASTLeaf, lval *BasicValue, rval 
 		return nil, fmt.Errorf("Unable to get variable for identifier %s", expr.right.identifier)
 	}
 	// Evaluate the argument list and construct a list of sizes
-	expr = expr.right.right
+	expr = expr.right.right.right
 	for ( expr != nil ) {
 		lval, err = self.evaluate(expr)
 		if ( err != nil ) {
