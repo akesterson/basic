@@ -1,23 +1,27 @@
 10 DIM A#(5)
+15 ITERATIONS# = 0 
 20 A#(0) = 5
 21 A#(1) = 2
 22 A#(2) = 4
 23 A#(3) = 1
 24 A#(4) = 3
+25 PRINT "BEFORE SORTING: "
+26 FOR I# = 0 TO 4
+27     PRINT A#(I#)
+28 NEXT I#
 30 CHANGED# = 0
+32 ITERATIONS# = ITERATIONS# + 1
 35 FOR I# = 0 TO 3
-36     PRINT I#
 45     J# = I#+1
-46     PRINT "CHECKING A#(" + I# + ")[" + A#(I#) + "] <= A#(" + J# + ")[" + A#(J#) + "]"  
 50     IF A#(I#) <= A#(J#) THEN GOTO 100
-55     PRINT "TRANSPOSING A#(" + I# + ")[" + A#(I#) + "] <- A#(" + J# + ")[" + A#(J#) + "]"
-60     T# = A#(I#)
-70     A#(I#) = A#(H#)
-80     A#(H#) = T#
+60     TMP# = A#(I#)
+70     A#(I#) = A#(J#)
+80     A#(J#) = TMP#
 85     CHANGED# = CHANGED# + 1
 100 NEXT I#
-105 PRINT "CHANGED " + CHANGED# + " ELEMENTS"
 110 IF CHANGED# <> 0 THEN GOTO 30
+115 PRINT "AFTER SORTING:"
 120 FOR I# = 0 TO 4
 130   PRINT A#(I#)
 140 NEXT I#
+145 PRINT "SORTED IN " + ITERATIONS# + " ITERATIONS"

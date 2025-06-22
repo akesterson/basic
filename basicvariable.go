@@ -58,6 +58,7 @@ func (self *BasicVariable) init(runtime *BasicRuntime, sizes []int64) error {
 		value = &self.values[i]
 		value.init()
 		value.zero()
+		value.runtime = runtime
 		value.valuetype = self.valuetype
 		value.mutable = true
 	}

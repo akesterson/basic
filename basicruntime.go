@@ -240,7 +240,7 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		if ( lval == nil ) {
 			return nil, fmt.Errorf("Identifier %s is undefined", expr.identifier)
 		}
-		return lval, nil
+		return lval.clone(nil)
 	case LEAF_LITERAL_INT:
 		lval.valuetype = TYPE_INTEGER
 		lval.intval = expr.literal_int
