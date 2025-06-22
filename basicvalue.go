@@ -211,8 +211,11 @@ func (self *BasicValue) mathMultiply(rval *BasicValue) (*BasicValue, error) {
 	if ( err != nil ) {
 		return nil, err
 	}
-	if ( self.valuetype == TYPE_STRING || rval.valuetype == TYPE_STRING ) {
-		return nil, errors.New("Cannot perform multiplication on strings")
+	if ( self.valuetype == TYPE_STRING ) {
+		if ( rval.valuetype == TYPE_STRING ) {
+			return nil, errors.New("String multiplication requires an integer multiple")
+		}
+		dest.stringval = strings.Repeat(dest.stringval, int(rval.intval))
 	}
 	if ( self.valuetype == TYPE_INTEGER ) {
 		dest.intval = self.intval * (rval.intval + int64(rval.floatval))

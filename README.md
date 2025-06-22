@@ -34,7 +34,7 @@ This implementation is significantly more complete than my last stab at a BASIC,
 * `+`
 * `-`
 * `^`
-* `*`
+* `*` (also works on strings)
 * `/`
 * `< <= <> == >= >` less than, less than equal, not equal, equal, greater equal, greater than
 
