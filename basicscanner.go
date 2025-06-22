@@ -267,6 +267,9 @@ func (self *BasicScanner) getLexeme() string {
 		return self.line[self.start:]
 	} else {
 		if ( self.start == self.current ) {
+			if ( self.tokentype == LITERAL_STRING ) {
+				return ""
+			}
 			return string(self.line[self.start])
 		}
 		return self.line[self.start:self.current]

@@ -7,7 +7,7 @@ else
 fi
 
 failed=0
-for file in tests/*bas
+for file in $(find tests/ -iname *bas)
 do
     printf "${file} ... "
     output=${file%.bas}.txt
