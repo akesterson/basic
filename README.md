@@ -76,7 +76,7 @@ The following functions are implemented
 * `ABS(x#|x%)`: Return the absolute value of the float or integer argument
 * `ATN(x#|x%)`: Return the arctangent of the float or integer argument. Input and output are in radians.
 * `CHR(x#)`: Return the character value of the UTF-8 unicode codepoint in x#. Returns as a string.
-* `COS(x#|x%)`: Return the osine of the float or integer argument. Input and output are in radians.
+* `COS(x#|x%)`: Return the cosine of the float or integer argument. Input and output are in radians.
 * `HEX(x#)`: Return the string representation of the integer number in x#
 * `INSTR(X$, Y$)`: Return the index of `Y$` within `X$` (-1 if not present)
 * `LEN(var$)`: Return the length of the object `var$` (either a string or an array)
@@ -85,3 +85,4 @@ The following functions are implemented
 * `MID(var$, start, length)` : Return a substring from `var$`
 * `RIGHT(X$, Y#)`: Return the rightmost Y# characters of the string in X$. Y# is clamped to LEN(X$).
 * `SGN(X#)`: Returns the sign of X# (-1 for negative, 1 for positive, 0 if 0).
+* `SIN(X#|X%)`: Returns the sine of the float or integer argument. Input and output are radians.

@@ -22,7 +22,8 @@ func (self *BasicRuntime) initFunctions() {
 100 DEF MID(A$, S$, L#) = A$
 110 DEF RIGHT(X$, A#) = X$
 120 DEF RAD(X#) = X#
-130 DEF SGN(X#) = X#`
+130 DEF SGN(X#) = X#
+140 DEF SIN(X#) = X#`
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
@@ -499,4 +500,34 @@ func (self *BasicRuntime) FunctionSGN(expr *BasicASTLeaf, lval *BasicValue, rval
 		return tval, nil
 	}
 	return nil, errors.New("ABS expected integer or float")
+}
+
+func (self *BasicRuntime) FunctionSIN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var tval *BasicValue = nil
+	
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		tval, err = self.newValue()
+		if ( tval == nil ) {
+			return nil, err
+		}
+		tval.valuetype = TYPE_FLOAT
+		if ( rval.valuetype == TYPE_INTEGER ) {
+			tval.floatval = math.Sin(float64(rval.intval))
+		} else if ( rval.valuetype == TYPE_FLOAT ) {
+			tval.floatval = math.Sin(rval.floatval)
+		} else {
+			return nil, errors.New("SIN expected INTEGER or FLOAT")
+		}
+		return tval, nil
+	}
+	return nil, errors.New("SIN expected integer or float")
 }
