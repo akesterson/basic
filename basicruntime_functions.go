@@ -14,7 +14,9 @@ func (self *BasicRuntime) initFunctions() {
 2 DEF LEN(X$) = X$
 3 DEF MID(A$, S$, L#) = A$
 4 DEF ATN(X#) = X#
-5 DEF CHR(X#) = X#`
+5 DEF CHR(X#) = X#
+6 DEF COS(X#) = X#
+7 DEF RAD(X#) = X#`
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
@@ -115,6 +117,36 @@ func (self *BasicRuntime) FunctionCHR(expr *BasicASTLeaf, lval *BasicValue, rval
 	return nil, errors.New("CHR expected INTEGER")
 }
 
+func (self *BasicRuntime) FunctionCOS(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var tval *BasicValue = nil
+	
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		tval, err = self.newValue()
+		if ( tval == nil ) {
+			return nil, err
+		}
+		tval.valuetype = TYPE_FLOAT
+		if ( rval.valuetype == TYPE_INTEGER ) {
+			tval.floatval = math.Cos(float64(rval.intval))
+		} else if ( rval.valuetype == TYPE_FLOAT ) {
+			tval.floatval = math.Cos(rval.floatval)
+		} else {
+			return nil, errors.New("COS expected INTEGER or FLOAT")
+		}
+		return tval, nil
+	}
+	return nil, errors.New("COS expected integer or float")
+}
+
 func (self *BasicRuntime) FunctionLEN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
 	var strval *BasicValue = nil
@@ -211,4 +243,34 @@ func (self *BasicRuntime) FunctionMID(expr *BasicASTLeaf, lval *BasicValue, rval
 	rval.stringval = strtarget.stringval[startpos.intval:(startpos.intval+length.intval)]
 	rval.valuetype = TYPE_STRING
 	return rval, nil
+}
+
+func (self *BasicRuntime) FunctionRAD(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var tval *BasicValue = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		tval, err = self.newValue()
+		if ( tval == nil ) {
+			return nil, err
+		}
+		tval.valuetype = TYPE_FLOAT
+		if ( rval.valuetype == TYPE_INTEGER ) {
+			tval.floatval = float64(rval.intval) * (math.Pi / 180)
+		} else if ( rval.valuetype == TYPE_FLOAT ) {
+			tval.floatval = rval.floatval * (math.Pi / 180)
+		} else {
+			return nil, errors.New("RAD expected INTEGER or FLOAT")
+		}
+		return tval, nil
+	}
+	return nil, errors.New("RAD expected integer or float")
 }
