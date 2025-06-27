@@ -222,10 +222,10 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 		// self.functions["INSTR"] =  FUNCTION
 		// self.functions["INT"] =  FUNCTION
 		// self.functions["JOY"] =  FUNCTION
-		self.commands["LEN"] =  FUNCTION
+		// self.commands["LEN"] =  FUNCTION
 		// self.functions["LEFT"] =  FUNCTION
 		// self.functions["LOG"] =  FUNCTION
-		self.commands["MID"] =  FUNCTION
+		// self.commands["MID"] =  FUNCTION
 		// self.functions["PEEK"] =  FUNCTION
 		// self.functions["POINTER"] =  FUNCTION
 		// self.functions["POS"] =  FUNCTION

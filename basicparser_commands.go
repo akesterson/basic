@@ -80,7 +80,7 @@ func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
 		expression: expression.clone(),
 		runtime: self.runtime,
 		name: strings.Clone(identifier.identifier)}
-	self.runtime.scanner.functions[identifier.literal_string] = FUNCTION
+	self.runtime.scanner.functions[identifier.identifier] = FUNCTION
 	return command, nil
 }
 

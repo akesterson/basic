@@ -5,7 +5,7 @@ import (
 	"errors"
 	"io"
 	"bufio"
-	"os"
+	//"os"
 	"slices"
 	"reflect"
 )
@@ -63,56 +63,10 @@ func (self *BasicRuntime) init() {
 	self.scanner.init(self)
 	self.newEnvironment()
 
-	self.environment.functions["LEN"] = &BasicFunctionDef{
-		arglist: &BasicASTLeaf{
-			leaftype: LEAF_ARGUMENTLIST,
-			left: nil,
-			parent: nil,
-			expr: nil,
-			identifier: "",
-			operator: FUNCTION_ARGUMENT,
-			right: &BasicASTLeaf{
-				leaftype: LEAF_IDENTIFIER,
-				left: nil,
-				parent: nil,
-				expr: nil,
-				identifier: "X$",
-			},
-		},
-		expression: nil,
-		runtime: self,
-		name: "LEN",
-	}
-	self.environment.functions["MID"] = &BasicFunctionDef{
-		arglist: &BasicASTLeaf{
-			leaftype: LEAF_ARGUMENTLIST,
-			left: nil,
-			parent: nil,
-			expr: nil,
-			identifier: "",
-			operator: FUNCTION_ARGUMENT,
-			right: &BasicASTLeaf{
-				leaftype: LEAF_IDENTIFIER,
-				left: nil,
-				parent: nil,
-				expr: nil,
-				identifier: "STR$",
-				right: &BasicASTLeaf{
-					leaftype: LEAF_IDENTIFIER_INT,
-					identifier: "START#",
-					right: &BasicASTLeaf{
-						leaftype: LEAF_IDENTIFIER_INT,
-						identifier: "LENGTH#",
-					},
-				},
-			},
-		},
-		expression: nil,
-		runtime: self,
-		name: "LEN",
-	}
-
 	self.zero()
+	self.parser.zero()
+	self.scanner.zero()
+	self.initFunctions()
 }
 
 func (self *BasicRuntime) newEnvironment() {
@@ -267,6 +221,8 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		//fmt.Printf("Processing command %s\n", expr.identifier)
 		lval, err = self.commandByReflection("Function", expr, lval, rval)
 		if ( err != nil ) {
+			return nil, err
+		} else if ( lval == nil ) {
 			lval, err = self.userFunction(expr, lval, rval)
 			if ( err != nil ) {
 				return nil, err
@@ -279,7 +235,13 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		}
 	case LEAF_COMMAND_IMMEDIATE: fallthrough
 	case LEAF_COMMAND:
-		return self.commandByReflection("Command", expr, lval, rval)
+		lval, err = self.commandByReflection("Command", expr, lval, rval)
+		if ( err != nil ) {
+			return nil, err
+		} else if ( lval == nil ) {
+			return nil, fmt.Errorf("Unknown command %s", expr.identifier)
+		}
+		return lval, err
 		
 	case LEAF_BINARY:
 		lval, err = self.evaluate(expr.left)
@@ -379,7 +341,7 @@ func (self *BasicRuntime) commandByReflection(rootKey string, expr *BasicASTLeaf
 	}
 	rmethod = reflector.MethodByName(fmt.Sprintf("%s%s", rootKey, expr.identifier))
 	if ( !rmethod.IsValid() ) {
-		return nil, fmt.Errorf("Unknown command %s", expr.identifier)
+		return nil, nil
 	}
 	if ( !rmethod.CanInterface() ) {
 		return nil, fmt.Errorf("Unable to execute command %s", expr.identifier)
@@ -444,6 +406,7 @@ func (self *BasicRuntime) processLineRunStream(readbuff *bufio.Scanner) {
 			code:   line,
 			lineno: self.lineno}
 	} else {
+		self.nextline = 0
 		self.setMode(MODE_RUN)
 	}
 }
@@ -534,7 +497,7 @@ func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 		self.scanner.zero()
 		switch (self.mode) {
 		case MODE_QUIT:
-			os.Exit(0)
+			return
 		case MODE_RUNSTREAM:
 			self.processLineRunStream(readbuff)
 		case MODE_REPL:

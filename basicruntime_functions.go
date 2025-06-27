@@ -2,7 +2,59 @@ package main
 
 import (
 	"errors"
+	"math"
+	//"fmt"
+	//"bufio"
+	"strings"
 )
+
+func (self *BasicRuntime) initFunctions() {
+	var funcdefs string = `
+1 DEF ABS(X#) = X#
+2 DEF LEN(X$) = X$
+3 DEF MID(A$, S$, L#) = A$`
+	var oldmode int = self.mode
+	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
+	for _, basicfunc := range self.environment.functions {
+		basicfunc.expression = nil
+		self.scanner.commands[basicfunc.name] = FUNCTION
+		delete(self.scanner.functions, basicfunc.name)
+		//fmt.Printf("%+v\n", basicfunc)
+	}
+	for i, _ := range self.source {
+		self.source[i].code = ""
+		self.source[i].lineno = 0
+	}
+	self.setMode(oldmode)
+}
+
+func (self *BasicRuntime) FunctionABS(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var tval *BasicValue = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( rval.valuetype != TYPE_INTEGER &&
+			rval.valuetype != TYPE_FLOAT ) {
+			return nil, errors.New("ABS expected INTEGER or FLOAT")
+		}
+		tval, err = rval.clone(tval)
+		if ( tval == nil ) {
+			return nil, err
+		}
+		tval.intval = int64(math.Abs(float64(tval.intval)))
+		tval.floatval = math.Abs(tval.floatval)
+		return tval, nil
+	}
+	return nil, errors.New("ABS expected integer or float")
+}
 
 func (self *BasicRuntime) FunctionLEN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
