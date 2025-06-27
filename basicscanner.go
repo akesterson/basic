@@ -213,42 +213,6 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 	}
 	if len(self.functions) == 0 {
 		self.functions = make(map[string]BasicTokenType)
-		// self.functions["ASC"] =  FUNCTION
-		// self.functions["BUMP"] =  FUNCTION
-		// self.functions["CHR"] =  FUNCTION
-	        // self.functions["COS"] =  FUNCTION
-		// self.functions["FRE"] =  FUNCTION
-		// self.functions["HEX"] =  FUNCTION
-		// self.functions["INSTR"] =  FUNCTION
-		// self.functions["INT"] =  FUNCTION
-		// self.functions["JOY"] =  FUNCTION
-		// self.commands["LEN"] =  FUNCTION
-		// self.functions["LEFT"] =  FUNCTION
-		// self.functions["LOG"] =  FUNCTION
-		// self.commands["MID"] =  FUNCTION
-		// self.functions["PEEK"] =  FUNCTION
-		// self.functions["POINTER"] =  FUNCTION
-		// self.functions["POS"] =  FUNCTION
-		// self.functions["POT"] =  FUNCTION
-		// self.functions["RCLR"] =  FUNCTION
-		// self.functions["RDOT"] =  FUNCTION
-		// self.functions["RGR"] =  FUNCTION
-		// self.functions["RIGHT"] =  FUNCTION
-		// self.functions["RND"] =  FUNCTION
-		// self.functions["RSPCOLOR"] =  FUNCTION
-		// self.functions["RSPPOS"] =  FUNCTION
-		// self.functions["RSPRITE"] =  FUNCTION
-		// self.functions["RWINDOW"] =  FUNCTION
-		// self.functions["SGN"] =  FUNCTION
-		// self.functions["SIN"] =  FUNCTION
-		// self.functions["SPC"] =  FUNCTION
-		// self.functions["SQR"] =  FUNCTION
-		// self.functions["STR"] =  FUNCTION
-		// self.functions["TAB"] =  FUNCTION
-		// self.functions["TAN"] =  FUNCTION
-		// self.functions["USR"] =  FUNCTION
-		// self.functions["VAL"] =  FUNCTION
-		// self.functions["XOR"] =  FUNCTION
 	}
 	return nil
 }

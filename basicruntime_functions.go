@@ -12,7 +12,9 @@ func (self *BasicRuntime) initFunctions() {
 	var funcdefs string = `
 1 DEF ABS(X#) = X#
 2 DEF LEN(X$) = X$
-3 DEF MID(A$, S$, L#) = A$`
+3 DEF MID(A$, S$, L#) = A$
+4 DEF ATN(X#) = X#
+5 DEF CHR(X#) = X#`
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
@@ -54,6 +56,63 @@ func (self *BasicRuntime) FunctionABS(expr *BasicASTLeaf, lval *BasicValue, rval
 		return tval, nil
 	}
 	return nil, errors.New("ABS expected integer or float")
+}
+
+func (self *BasicRuntime) FunctionATN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var tval *BasicValue = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		tval, err = self.newValue()
+		if ( tval == nil ) {
+			return nil, err
+		}
+		tval.valuetype = TYPE_FLOAT
+		if ( rval.valuetype == TYPE_INTEGER ) {
+			tval.floatval = math.Atan(float64(rval.intval))
+		} else if ( rval.valuetype == TYPE_FLOAT ) {
+			tval.floatval = math.Atan(rval.floatval)
+		} else {
+			return nil, errors.New("ATN expected INTEGER or FLOAT")
+		}
+		return tval, nil
+	}
+	return nil, errors.New("ATN expected integer or float")
+}
+
+func (self *BasicRuntime) FunctionCHR(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var tval *BasicValue = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( rval.valuetype != TYPE_INTEGER ) {
+			return nil, errors.New("CHR expected INTEGER")
+		}
+		tval, err = self.newValue()
+		if ( tval == nil ) {
+			return nil, err
+		}
+		tval.valuetype = TYPE_STRING
+		tval.stringval = string(rune(rval.intval)) 
+		return tval, nil
+	}
+	return nil, errors.New("CHR expected INTEGER")
 }
 
 func (self *BasicRuntime) FunctionLEN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
