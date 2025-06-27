@@ -88,3 +88,4 @@ The following functions are implemented
 * `SIN(X#|X%)`: Returns the sine of the float or integer argument. Input and output are radians.
 * `SPC(X#)`: Returns a string of X# spaces. This is included for compatibility, you can also use `(" " * X)` to multiply strings.
 * `STR(X#)`: Returns the string representation of X (string or float).
+* `TAN(X#|X%)`: Returns the tangent of the float or integer variable X. Input and output are in radians.

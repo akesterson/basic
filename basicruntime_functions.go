@@ -25,7 +25,8 @@ func (self *BasicRuntime) initFunctions() {
 130 DEF SGN(X#) = X#
 140 DEF SIN(X#) = X#
 150 DEF SPC(X#) = " " * X#
-160 DEF STR(X#) = "" + X#`
+160 DEF STR(X#) = "" + X#
+170 DEF TAN(X#) = X#`
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
@@ -534,4 +535,34 @@ func (self *BasicRuntime) FunctionSIN(expr *BasicASTLeaf, lval *BasicValue, rval
 		return tval, nil
 	}
 	return nil, errors.New("SIN expected integer or float")
+}
+
+func (self *BasicRuntime) FunctionTAN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var tval *BasicValue = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		tval, err = self.newValue()
+		if ( tval == nil ) {
+			return nil, err
+		}
+		tval.valuetype = TYPE_FLOAT
+		if ( rval.valuetype == TYPE_INTEGER ) {
+			tval.floatval = math.Tan(float64(rval.intval))
+		} else if ( rval.valuetype == TYPE_FLOAT ) {
+			tval.floatval = math.Tan(rval.floatval)
+		} else {
+			return nil, errors.New("TAN expected INTEGER or FLOAT")
+		}
+		return tval, nil
+	}
+	return nil, errors.New("TAN expected integer or float")
 }
