@@ -86,3 +86,4 @@ The following functions are implemented
 * `RIGHT(X$, Y#)`: Return the rightmost Y# characters of the string in X$. Y# is clamped to LEN(X$).
 * `SGN(X#)`: Returns the sign of X# (-1 for negative, 1 for positive, 0 if 0).
 * `SIN(X#|X%)`: Returns the sine of the float or integer argument. Input and output are radians.
+* `SPC(X#)`: Returns a string of X# spaces. This is included for compatibility, you can also use `(" " * X)` to multiply strings.

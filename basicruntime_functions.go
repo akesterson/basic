@@ -23,11 +23,14 @@ func (self *BasicRuntime) initFunctions() {
 110 DEF RIGHT(X$, A#) = X$
 120 DEF RAD(X#) = X#
 130 DEF SGN(X#) = X#
-140 DEF SIN(X#) = X#`
+140 DEF SIN(X#) = X#
+150 DEF SPC(X#) = " " * X#`
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
-		basicfunc.expression = nil
+		if ( basicfunc.name != "SPC" ) {
+			basicfunc.expression = nil
+		}
 		self.scanner.commands[basicfunc.name] = FUNCTION
 		delete(self.scanner.functions, basicfunc.name)
 		//fmt.Printf("%+v\n", basicfunc)
