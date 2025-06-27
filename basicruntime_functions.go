@@ -19,7 +19,8 @@ func (self *BasicRuntime) initFunctions() {
 7 DEF RAD(X#) = X#
 8 DEF HEX(X#) = X#
 9 DEF INSTR(X$, Y$) = X$
-10 DEF LEFT(X$, A#) = X$`
+10 DEF LEFT(X$, A#) = X$
+11 DEF LOG(X#) = X#`
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
@@ -296,6 +297,34 @@ func (self *BasicRuntime) FunctionLEN(expr *BasicASTLeaf, lval *BasicValue, rval
 		rval.intval = int64(len(varref.values))
 	}
 	return rval, nil
+}
+
+func (self *BasicRuntime) FunctionLOG(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var tval *BasicValue = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( rval.valuetype != TYPE_INTEGER &&
+			rval.valuetype != TYPE_FLOAT ) {
+			return nil, errors.New("LOG expected INTEGER or FLOAT")
+		}
+		tval, err = rval.clone(tval)
+		if ( tval == nil ) {
+			return nil, err
+		}
+		tval.intval = int64(math.Log(float64(tval.intval)))
+		tval.floatval = math.Log(tval.floatval)
+		return tval, nil
+	}
+	return nil, errors.New("LOG expected integer or float")
 }
 
 func (self *BasicRuntime) FunctionMID(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
