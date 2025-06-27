@@ -24,11 +24,12 @@ func (self *BasicRuntime) initFunctions() {
 120 DEF RAD(X#) = X#
 130 DEF SGN(X#) = X#
 140 DEF SIN(X#) = X#
-150 DEF SPC(X#) = " " * X#`
+150 DEF SPC(X#) = " " * X#
+160 DEF STR(X#) = "" + X#`
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
-		if ( basicfunc.name != "SPC" ) {
+		if ( basicfunc.name != "SPC" && basicfunc.name != "STR" ) {
 			basicfunc.expression = nil
 		}
 		self.scanner.commands[basicfunc.name] = FUNCTION

@@ -87,3 +87,4 @@ The following functions are implemented
 * `SGN(X#)`: Returns the sign of X# (-1 for negative, 1 for positive, 0 if 0).
 * `SIN(X#|X%)`: Returns the sine of the float or integer argument. Input and output are radians.
 * `SPC(X#)`: Returns a string of X# spaces. This is included for compatibility, you can also use `(" " * X)` to multiply strings.
+* `STR(X#)`: Returns the string representation of X (string or float).
