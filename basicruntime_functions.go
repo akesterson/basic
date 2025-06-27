@@ -10,17 +10,18 @@ import (
 
 func (self *BasicRuntime) initFunctions() {
 	var funcdefs string = `
-1 DEF ABS(X#) = X#
-2 DEF LEN(X$) = X$
-3 DEF MID(A$, S$, L#) = A$
-4 DEF ATN(X#) = X#
-5 DEF CHR(X#) = X#
-6 DEF COS(X#) = X#
-7 DEF RAD(X#) = X#
-8 DEF HEX(X#) = X#
-9 DEF INSTR(X$, Y$) = X$
-10 DEF LEFT(X$, A#) = X$
-11 DEF LOG(X#) = X#`
+10 DEF ABS(X#) = X#
+20 DEF ATN(X#) = X#
+30 DEF CHR(X#) = X#
+40 DEF COS(X#) = X#
+50 DEF HEX(X#) = X#
+60 DEF INSTR(X$, Y$) = X$
+70 DEF LEFT(X$, A#) = X$
+80 DEF LEN(X$) = X$
+90 DEF LOG(X#) = X#
+100 DEF MID(A$, S$, L#) = A$
+110 DEF RIGHT(X$, A#) = X$
+120 DEF RAD(X#) = X#`
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
@@ -416,4 +417,50 @@ func (self *BasicRuntime) FunctionRAD(expr *BasicASTLeaf, lval *BasicValue, rval
 		return tval, nil
 	}
 	return nil, errors.New("RAD expected integer or float")
+}
+
+func (self *BasicRuntime) FunctionRIGHT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var strtarget *BasicValue = nil
+	var length *BasicValue = nil
+	var curarg *BasicASTLeaf = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	curarg = expr.firstArgument()
+
+	if ( curarg == nil ||
+		( curarg.leaftype != LEAF_IDENTIFIER_STRING &&
+			curarg.leaftype != LEAF_LITERAL_STRING )) {
+		return nil, errors.New("Expected (STRING, INTEGER)")
+	}
+	strtarget, err = self.evaluate(curarg)
+	if ( err != nil ) {
+		return nil, err
+	}
+	
+	curarg = curarg.right
+	if ( curarg == nil ||
+		( curarg.leaftype != LEAF_IDENTIFIER_INT &&
+			curarg.leaftype != LEAF_LITERAL_INT )) {
+		return nil, errors.New("Expected (STRING, INTEGER)")
+	}
+	length, err = self.evaluate(curarg)
+	if ( err != nil ) {
+		return nil, err
+	}
+	rval, err = self.newValue()
+	if ( err != nil ) {
+		return nil, err
+	}
+	var maxlen = int64(len(strtarget.stringval))
+	if ( length.intval >= maxlen ) {
+		rval.stringval = strings.Clone(strtarget.stringval)
+	} else {
+		var start int64 = maxlen - length.intval
+		rval.stringval = strtarget.stringval[start:maxlen]
+	}
+	rval.valuetype = TYPE_STRING
+	return rval, nil
 }
