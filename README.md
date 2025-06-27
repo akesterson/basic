@@ -90,3 +90,4 @@ The following functions are implemented
 * `STR(X#)`: Returns the string representation of X (string or float).
 * `TAN(X#|X%)`: Returns the tangent of the float or integer variable X. Input and output are in radians.
 * `VAL(X$)`: Returns the float value of the number in X$
+* `XOR(X#, Y#)`: Performs a bitwise exclusive OR on the two integer arguments

@@ -121,13 +121,28 @@ func (self *BasicValue) bitwiseOr(rval *BasicValue) (*BasicValue, error) {
 		return nil, errors.New("nil rval")
 	}
 	if ( self.valuetype != TYPE_INTEGER ) {
-		return nil, errors.New("Cannot only perform bitwise operations on integers")
+		return nil, errors.New("Can only perform bitwise operations on integers")
 	}
 	dest, err := self.clone(nil)
 	if ( err != nil ) {
 		return nil, err
 	}
 	dest.intval = self.intval | rval.intval
+	return dest, nil
+}
+
+func (self *BasicValue) bitwiseXor(rval *BasicValue) (*BasicValue, error) {
+	if ( rval == nil ) {
+		return nil, errors.New("nil rval")
+	}
+	if ( self.valuetype != TYPE_INTEGER || rval.valuetype != TYPE_INTEGER ) {
+		return nil, errors.New("Can only perform bitwise operations on integers")
+	}
+	dest, err := self.clone(nil)
+	if ( err != nil ) {
+		return nil, err
+	}
+	dest.intval = self.intval ^ rval.intval
 	return dest, nil
 }
 

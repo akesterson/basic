@@ -28,7 +28,8 @@ func (self *BasicRuntime) initFunctions() {
 150 DEF SPC(X#) = " " * X#
 160 DEF STR(X#) = "" + X#
 170 DEF TAN(X#) = X#
-180 DEF VAL(X$) = X#`
+180 DEF VAL(X$) = X#
+190 DEF XOR(X#, Y#) = X#`
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
@@ -607,4 +608,25 @@ func (self *BasicRuntime) FunctionVAL(expr *BasicASTLeaf, lval *BasicValue, rval
 		return nil, errors.New("Expected identifier or string literal")
 	}
 	return rval, nil
+}
+
+func (self *BasicRuntime) FunctionXOR(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		lval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		rval, err = self.evaluate(expr.right)
+		if ( err != nil ) {
+			return nil, err
+		}
+		return lval.bitwiseXor(rval)
+	}
+	return nil, errors.New("COS expected integer or float")
 }
