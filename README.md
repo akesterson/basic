@@ -80,4 +80,5 @@ The following functions are implemented
 * `HEX(x#)`: Return the string representation of the integer number in x#
 * `INSTR(X$, Y$)`: Return the index of `Y$` within `X$` (-1 if not present)
 * `LEN(var$)`: Return the length of the object `var$` (either a string or an array)
+* `LEFT(X$, Y#)`: Return the leftmost Y# characters of the string in X$. Y# is clamped to LEN(X$).
 * `MID(var$, start, length)` : Return a substring from `var$`
