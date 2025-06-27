@@ -1,0 +1,3 @@
+10 PRINT "97 : " + CHR(97)
+20 PRINT "65 : " + CHR(65)
+30 PRINT "64 : " + CHR(64)

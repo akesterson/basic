@@ -73,5 +73,10 @@ The following commands/verbs are implemented:
 
 The following functions are implemented
 
+* `ABS(x#|x%)`: Return the absolute value of the float or integer argument
+* `ATN(x#|x%)`: Return the arctangent of the float or integer argument. Input and output are in radians.
+* `CHR(x#)`: Return the character value of the UTF-8 unicode codepoint in x#. Returns as a string.
+* `COS(x#|x%)`: Return the osine of the float or integer argument. Input and output are in radians.
+* `HEX(x#)`: Return the string representation of the integer number in x#
 * `LEN(var$)`: Return the length of the object `var$` (either a string or an array)
 * `MID(var$, start, length)` : Return a substring from `var$`

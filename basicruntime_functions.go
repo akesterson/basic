@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"math"
-	//"fmt"
+	"fmt"
 	//"bufio"
 	"strings"
 )
@@ -16,7 +16,8 @@ func (self *BasicRuntime) initFunctions() {
 4 DEF ATN(X#) = X#
 5 DEF CHR(X#) = X#
 6 DEF COS(X#) = X#
-7 DEF RAD(X#) = X#`
+7 DEF RAD(X#) = X#
+8 DEF HEX(X#) = X#`
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
@@ -145,6 +146,33 @@ func (self *BasicRuntime) FunctionCOS(expr *BasicASTLeaf, lval *BasicValue, rval
 		return tval, nil
 	}
 	return nil, errors.New("COS expected integer or float")
+}
+
+func (self *BasicRuntime) FunctionHEX(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var tval *BasicValue = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( rval.valuetype != TYPE_INTEGER ) {
+			return nil, errors.New("CHR expected INTEGER")
+		}
+		tval, err = self.newValue()
+		if ( tval == nil ) {
+			return nil, err
+		}
+		tval.valuetype = TYPE_STRING
+		tval.stringval = fmt.Sprintf("%x", rval.intval) 
+		return tval, nil
+	}
+	return nil, errors.New("CHR expected INTEGER")
 }
 
 func (self *BasicRuntime) FunctionLEN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
