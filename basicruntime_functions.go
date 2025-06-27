@@ -21,7 +21,8 @@ func (self *BasicRuntime) initFunctions() {
 90 DEF LOG(X#) = X#
 100 DEF MID(A$, S$, L#) = A$
 110 DEF RIGHT(X$, A#) = X$
-120 DEF RAD(X#) = X#`
+120 DEF RAD(X#) = X#
+130 DEF SGN(X#) = X#`
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
@@ -463,4 +464,39 @@ func (self *BasicRuntime) FunctionRIGHT(expr *BasicASTLeaf, lval *BasicValue, rv
 	}
 	rval.valuetype = TYPE_STRING
 	return rval, nil
+}
+
+func (self *BasicRuntime) FunctionSGN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var tval *BasicValue = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( rval.valuetype != TYPE_INTEGER &&
+			rval.valuetype != TYPE_FLOAT ) {
+			return nil, errors.New("SGN expected INTEGER or FLOAT")
+		}
+		tval, err = self.newValue()
+		if ( tval == nil ) {
+			return nil, err
+		}
+		tval.zero()
+		tval.valuetype = TYPE_INTEGER
+		if ( rval.intval < 0 || rval.floatval < 0 ) {
+			tval.intval = -1
+		} else if ( rval.intval > 0 || rval.floatval > 0 ) {
+			tval.intval = 1
+		} else {
+			tval.intval = 0
+		}
+		return tval, nil
+	}
+	return nil, errors.New("ABS expected integer or float")
 }

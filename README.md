@@ -84,3 +84,4 @@ The following functions are implemented
 * `LOG(X#|X%)`: Return the natural logarithm of X#|X%
 * `MID(var$, start, length)` : Return a substring from `var$`
 * `RIGHT(X$, Y#)`: Return the rightmost Y# characters of the string in X$. Y# is clamped to LEN(X$).
+* `SGN(X#)`: Returns the sign of X# (-1 for negative, 1 for positive, 0 if 0).
