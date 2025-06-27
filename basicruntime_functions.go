@@ -17,7 +17,8 @@ func (self *BasicRuntime) initFunctions() {
 5 DEF CHR(X#) = X#
 6 DEF COS(X#) = X#
 7 DEF RAD(X#) = X#
-8 DEF HEX(X#) = X#`
+8 DEF HEX(X#) = X#
+9 DEF INSTR(X$, Y$) = X$`
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
@@ -173,6 +174,46 @@ func (self *BasicRuntime) FunctionHEX(expr *BasicASTLeaf, lval *BasicValue, rval
 		return tval, nil
 	}
 	return nil, errors.New("CHR expected INTEGER")
+}
+
+func (self *BasicRuntime) FunctionINSTR(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var strtarget *BasicValue = nil
+	var substr *BasicValue = nil
+	var curarg *BasicASTLeaf = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	curarg = expr.firstArgument()
+
+	if ( curarg == nil ||
+		( curarg.leaftype != LEAF_IDENTIFIER_STRING &&
+			curarg.leaftype != LEAF_LITERAL_STRING )) {
+		return nil, errors.New("Expected (STRING, STRING)")
+	}
+	strtarget, err = self.evaluate(curarg)
+	if ( err != nil ) {
+		return nil, err
+	}
+	
+	curarg = curarg.right
+	if ( curarg == nil ||
+		( curarg.leaftype != LEAF_IDENTIFIER_STRING &&
+			curarg.leaftype != LEAF_LITERAL_STRING )) {
+		return nil, errors.New("Expected (STRING, STRING)")
+	}
+	substr, err = self.evaluate(curarg)
+	if ( err != nil ) {
+		return nil, err
+	}
+	rval, err = self.newValue()
+	if ( err != nil ) {
+		return nil, err
+	}
+	rval.intval = int64(strings.Index(strtarget.stringval, substr.stringval))
+	rval.valuetype = TYPE_INTEGER
+	return rval, nil
 }
 
 func (self *BasicRuntime) FunctionLEN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {

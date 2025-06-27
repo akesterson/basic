@@ -78,5 +78,6 @@ The following functions are implemented
 * `CHR(x#)`: Return the character value of the UTF-8 unicode codepoint in x#. Returns as a string.
 * `COS(x#|x%)`: Return the osine of the float or integer argument. Input and output are in radians.
 * `HEX(x#)`: Return the string representation of the integer number in x#
+* `INSTR(X$, Y$)`: Return the index of `Y$` within `X$` (-1 if not present)
 * `LEN(var$)`: Return the length of the object `var$` (either a string or an array)
 * `MID(var$, start, length)` : Return a substring from `var$`

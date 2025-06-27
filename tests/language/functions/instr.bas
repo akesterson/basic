@@ -1,0 +1,3 @@
+10 X$ = "HELLO"
+20 Y$ = "LLO"
+30 PRINT INSTR(X$, Y$)
