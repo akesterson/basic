@@ -109,6 +109,13 @@ func (self *BasicASTLeaf) isIdentifier() bool {
 			self.leaftype == LEAF_IDENTIFIER_STRING ))
 }
 
+func (self *BasicASTLeaf) isLiteral() bool {
+	return ( self != nil &&
+		( self.leaftype == LEAF_LITERAL_INT ||
+			self.leaftype == LEAF_LITERAL_FLOAT ||
+			self.leaftype == LEAF_LITERAL_STRING ))
+}
+
 func (self *BasicASTLeaf) newPrimary(group *BasicASTLeaf, literal_string *string, literal_int *int64, literal_float *float64) error {
 	self.init(LEAF_PRIMARY)
 	if ( group != nil ) {

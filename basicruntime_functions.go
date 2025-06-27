@@ -6,6 +6,7 @@ import (
 	"fmt"
 	//"bufio"
 	"strings"
+	"strconv"
 )
 
 func (self *BasicRuntime) initFunctions() {
@@ -26,7 +27,8 @@ func (self *BasicRuntime) initFunctions() {
 140 DEF SIN(X#) = X#
 150 DEF SPC(X#) = " " * X#
 160 DEF STR(X#) = "" + X#
-170 DEF TAN(X#) = X#`
+170 DEF TAN(X#) = X#
+180 DEF VAL(X$) = X#`
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
@@ -283,7 +285,8 @@ func (self *BasicRuntime) FunctionLEN(expr *BasicASTLeaf, lval *BasicValue, rval
 	
 	if ( firstarg == nil ||
 		firstarg == nil ||
-		firstarg.isIdentifier() == false ) {
+		(firstarg.isIdentifier() == false &&
+			firstarg.isLiteral() == false)) {
 		//fmt.Printf("%+v\n", expr);
 		//fmt.Printf("%+v\n", expr.right);
 		return nil, errors.New("Expected identifier or string literal")
@@ -565,4 +568,43 @@ func (self *BasicRuntime) FunctionTAN(expr *BasicASTLeaf, lval *BasicValue, rval
 		return tval, nil
 	}
 	return nil, errors.New("TAN expected integer or float")
+}
+
+func (self *BasicRuntime) FunctionVAL(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var strval *BasicValue = nil
+	var firstarg *BasicASTLeaf = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	firstarg = expr.firstArgument()
+	
+	if ( firstarg == nil ||
+		firstarg == nil ||
+		(firstarg.isIdentifier() == false &&
+			firstarg.isLiteral() == false)) {
+		//fmt.Printf("%+v\n", expr);
+		//fmt.Printf("%+v\n", expr.right);
+		return nil, errors.New("Expected identifier or string literal")
+	}
+	rval, err = self.newValue()
+	if ( err != nil ) {
+		return nil, err
+	}	
+	rval.valuetype = TYPE_FLOAT
+	if ( firstarg.leaftype == LEAF_LITERAL_STRING ||
+		firstarg.leaftype == LEAF_IDENTIFIER_STRING ) {
+		strval, err = self.evaluate(firstarg)
+		if ( err != nil ) {
+			return nil, err
+		}
+		rval.floatval, err = strconv.ParseFloat(strval.stringval, 64)
+		if ( err != nil ) {
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("Expected identifier or string literal")
+	}
+	return rval, nil
 }
