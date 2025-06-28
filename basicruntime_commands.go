@@ -125,12 +125,12 @@ func (self *BasicRuntime) CommandPOKE(expr *BasicASTLeaf, lval *BasicValue, rval
 		rval, err = self.evaluate(expr.right)
 		
 		addr = uintptr(lval.intval)
-		fmt.Printf("addr: %v\n", addr)
+		//fmt.Printf("addr: %v\n", addr)
 		ptr = unsafe.Pointer(addr)
 		typedPtr = (*byte)(ptr)
-		fmt.Printf("Before set: %d\n", *typedPtr)
+		//fmt.Printf("Before set: %d\n", *typedPtr)
 		*typedPtr = byte(rval.intval)
-		fmt.Printf("After set: %d\n", *typedPtr)
+		//fmt.Printf("After set: %d\n", *typedPtr)
 		return &self.staticTrueValue, nil
 	}
 	return nil, errors.New("POKE expected INTEGER, INTEGER")
