@@ -225,7 +225,7 @@ func (self *BasicParser) assignment() (*BasicASTLeaf, error) {
 	return identifier, err
 }
 
-func (self *BasicParser) argumentList(argListType BasicTokenType) (*BasicASTLeaf, error) {
+func (self *BasicParser) argumentList(argListType BasicTokenType, requireParens bool) (*BasicASTLeaf, error) {
 	var expr *BasicASTLeaf = nil
 	var arglist *BasicASTLeaf = nil
 	var err error = nil
@@ -233,7 +233,7 @@ func (self *BasicParser) argumentList(argListType BasicTokenType) (*BasicASTLeaf
 	// argument lists are just (.right) joined expressions continuing
 	// ad-infinitum.
 
-	if ( !self.match(LEFT_PAREN) ) {
+	if ( !self.match(LEFT_PAREN) && requireParens == true ) {
 		//return nil, errors.New("Expected argument list (expression, ...)")
 		return nil, nil
 	}
@@ -262,7 +262,7 @@ func (self *BasicParser) argumentList(argListType BasicTokenType) (*BasicASTLeaf
 		//fmt.Printf("Argument : %+v\n", expr)
 	}
 	//fmt.Println("Done with loop")
-	if ( !self.match(RIGHT_PAREN) ) {
+	if ( !self.match(RIGHT_PAREN) && requireParens == true ) {
 		return nil, errors.New("Unbalanced parenthesis")
 	}
 	return arglist, nil
@@ -581,7 +581,7 @@ func (self *BasicParser) function() (*BasicASTLeaf, error) {
 		if ( fndef != nil ) {
 			// All we can do here is collect the argument list and
 			// check the length
-			arglist, err = self.argumentList(FUNCTION_ARGUMENT)
+			arglist, err = self.argumentList(FUNCTION_ARGUMENT, true)
 			if ( err != nil ) {
 				return nil, err
 			}
@@ -634,19 +634,19 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 			expr.newLiteralString(previous.lexeme)
 		case IDENTIFIER_INT:
 			expr.newIdentifier(LEAF_IDENTIFIER_INT, previous.lexeme)
-			expr.right, err = self.argumentList(ARRAY_SUBSCRIPT)
+			expr.right, err = self.argumentList(ARRAY_SUBSCRIPT, true)
 			if ( err != nil ) {
 				return nil, err
 			}
 		case IDENTIFIER_FLOAT:
 			expr.newIdentifier(LEAF_IDENTIFIER_FLOAT, previous.lexeme)
-			expr.right, err = self.argumentList(ARRAY_SUBSCRIPT)
+			expr.right, err = self.argumentList(ARRAY_SUBSCRIPT, true)
 			if ( err != nil ) {
 				return nil, err
 			}
 		case IDENTIFIER_STRING:
 			expr.newIdentifier(LEAF_IDENTIFIER_STRING, previous.lexeme)
-			expr.right, err = self.argumentList(ARRAY_SUBSCRIPT)
+			expr.right, err = self.argumentList(ARRAY_SUBSCRIPT, true)
 			if ( err != nil ) {
 				return nil, err
 			}
@@ -671,7 +671,7 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 		expr.newGrouping(groupexpr)
 		return expr, nil
 	}
-	//fmt.Printf("At curtoken %d\n", self.curtoken)
+	fmt.Printf("At curtoken %d\n", self.curtoken)
 	return nil, self.error("Expected expression or literal")
 }
 

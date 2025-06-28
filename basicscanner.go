@@ -165,7 +165,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 		// self.commands["OPENIO"] =  COMMAND
 		// self.commands["PAINT"] =  COMMAND
 		// self.commands["PLAY"] =  COMMAND
-		// self.commands["POKE"] =  COMMAND
+		self.commands["POKE"] =  COMMAND
 		self.commands["PRINT"] =  COMMAND
 		// self.commands["PRINTIO"] =  COMMAND
 		// self.commands["PUDEF"] =  COMMAND

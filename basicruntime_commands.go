@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"errors"
 	"strings"
+	"unsafe"
 )
 
 func (self *BasicRuntime) CommandDEF(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
@@ -97,6 +98,44 @@ func (self *BasicRuntime) CommandGOSUB(expr *BasicASTLeaf, lval *BasicValue, rva
 	self.nextline = rval.intval
 	return &self.staticTrueValue, nil
 }
+
+func (self *BasicRuntime) CommandPOKE(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var addr uintptr
+	var ptr unsafe.Pointer
+	var typedPtr *byte
+	
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		lval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( lval.valuetype != TYPE_INTEGER ) {
+			return nil, errors.New("POKE expected INTEGER, INTEGER")
+		}
+		if ( expr.right == nil ||
+			expr.right.leaftype != LEAF_LITERAL_INT &&
+			expr.right.leaftype != LEAF_IDENTIFIER_INT) {
+			return nil, errors.New("POKE expected INTEGER, INTEGER")
+		}
+		rval, err = self.evaluate(expr.right)
+		
+		addr = uintptr(lval.intval)
+		fmt.Printf("addr: %v\n", addr)
+		ptr = unsafe.Pointer(addr)
+		typedPtr = (*byte)(ptr)
+		fmt.Printf("Before set: %d\n", *typedPtr)
+		*typedPtr = byte(rval.intval)
+		fmt.Printf("After set: %d\n", *typedPtr)
+		return &self.staticTrueValue, nil
+	}
+	return nil, errors.New("POKE expected INTEGER, INTEGER")
+}
+
 
 func (self *BasicRuntime) CommandRETURN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	if ( self.environment.gosubReturnLine == 0 ) {

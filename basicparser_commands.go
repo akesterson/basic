@@ -46,7 +46,7 @@ func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
 	if ( identifier.leaftype != LEAF_IDENTIFIER ) {
 		return nil, errors.New("Expected identifier")
 	}
-	arglist, err = self.argumentList(FUNCTION_ARGUMENT)
+	arglist, err = self.argumentList(FUNCTION_ARGUMENT, true)
 	if ( err != nil ) {
 		return nil, errors.New("Expected argument list (identifier names)")
 	}
@@ -148,6 +148,22 @@ _basicparser_parsecommandfor_error:
 _basicparser_parsecommandfor_enverror:
 	self.runtime.prevEnvironment()
 	return nil, err
+}
+
+func (self *BasicParser) ParseCommandPOKE() (*BasicASTLeaf, error) {
+	var arglist *BasicASTLeaf = nil
+	var expr *BasicASTLeaf = nil
+	var err error
+	arglist, err = self.argumentList(FUNCTION_ARGUMENT, false)
+	if ( arglist == nil ) {
+		return nil, err
+	}
+	expr, err = self.newLeaf()
+	if ( err != nil ) {
+		return nil, err
+	}
+	expr.newCommand("POKE", arglist)
+	return expr, nil
 }
 
 func (self *BasicParser) ParseCommandIF() (*BasicASTLeaf, error) {
