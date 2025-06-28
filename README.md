@@ -64,6 +64,7 @@ The following commands/verbs are implemented:
 * `GOTO n`: Go to line n in the program
 * `GOSUB n`: Go to line n in the program and return here when `RETURN` is found
 * `LIST [n-n]`: List all or a portion of the lines in the current program
+* `POKE ADDRESS, VALUE`: Poke the single byte VALUE (may be an integer literal or an integer variable - only the first 8 bits are used) into the ADDRESS (which may be an integer literal or an integer variable holding a memory address).
 * `PRINT (expression)`
 * `QUIT` : Exit the interpreter
 * `RETURN` : return from `GOSUB` to the point where it was called
