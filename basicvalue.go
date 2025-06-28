@@ -89,6 +89,31 @@ func (self *BasicValue) invert() (*BasicValue, error) {
 	return dest, nil
 }
 
+func (self *BasicValue) bitwiseShiftLeft(bits int64) (*BasicValue, error) {
+	if ( self.valuetype != TYPE_INTEGER ) {
+		return nil, errors.New("Only integer datatypes can be bit-shifted")
+	}
+	dest, err := self.clone(nil)
+	if ( err != nil ) {
+		return nil, err
+	}
+	dest.intval = dest.intval << bits
+	return dest, nil
+}
+
+func (self *BasicValue) bitwiseShiftRight(bits int64) (*BasicValue, error) {
+	if ( self.valuetype != TYPE_INTEGER) {
+		return nil, errors.New("Only integer datatypes can be bit-shifted")
+	}
+	dest, err := self.clone(nil)
+	if ( err != nil ) {
+		return nil, err
+	}
+	dest.intval = dest.intval >> bits
+	return dest, nil
+	
+}
+
 func (self *BasicValue) bitwiseNot() (*BasicValue, error) {
 	if ( self.valuetype != TYPE_INTEGER ) {
 		return nil, errors.New("Cannot only perform bitwise operations on integers")

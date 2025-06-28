@@ -1,0 +1,4 @@
+10 A# = 32
+20 B# = SHR(A#, 2)
+30 PRINT B#
+40 PRINT SHR(32, 2)

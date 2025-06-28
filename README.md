@@ -89,6 +89,8 @@ The following functions are implemented
 * `POINTERVAR(X)` : Return the address in memory of the variable X. This is the address of the internal `BasicVariable` structure, which includes additional metadata about the variable, in addition to the value. For a pointer directly to the value, use `POINTERVAL`.
 * `RIGHT(X$, Y#)`: Return the rightmost Y# characters of the string in X$. Y# is clamped to LEN(X$).
 * `SGN(X#)`: Returns the sign of X# (-1 for negative, 1 for positive, 0 if 0).
+* `SHL(X#, Y#)`: Returns the value of X# shifted left Y# bits
+* `SHR(X#, Y#)`: Returns the value of X# shifted right Y# bits
 * `SIN(X#|X%)`: Returns the sine of the float or integer argument. Input and output are radians.
 * `SPC(X#)`: Returns a string of X# spaces. This is included for compatibility, you can also use `(" " * X)` to multiply strings.
 * `STR(X#)`: Returns the string representation of X (string or float).

@@ -1,0 +1,4 @@
+10 A# = 8
+20 B# = SHL(A#, 2)
+30 PRINT B#
+40 PRINT SHL(8, 2)

@@ -28,6 +28,8 @@ func (self *BasicRuntime) initFunctions() {
 110 DEF RIGHT(X$, A#) = X$
 120 DEF RAD(X#) = X#
 130 DEF SGN(X#) = X#
+135 DEF SHL(X#, Y#) = X#
+136 DEF SHR(X#, Y#) = X#
 140 DEF SIN(X#) = X#
 150 DEF SPC(X#) = " " * X#
 160 DEF STR(X#) = "" + X#
@@ -611,6 +613,64 @@ func (self *BasicRuntime) FunctionSGN(expr *BasicASTLeaf, lval *BasicValue, rval
 		return tval, nil
 	}
 	return nil, errors.New("ABS expected integer or float")
+}
+
+func (self *BasicRuntime) FunctionSHL(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var sval *BasicValue = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( rval.valuetype != TYPE_INTEGER &&
+			rval.valuetype != TYPE_FLOAT ) {
+			return nil, errors.New("SHL expected NUMERIC, INTEGER")
+		}
+		sval, err = self.evaluate(expr.right)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( rval.valuetype != TYPE_INTEGER) {
+			return nil, errors.New("SHL expected NUMERIC, INTEGER")
+		}
+		return rval.bitwiseShiftLeft(sval.intval)
+	}
+	return nil, errors.New("SHL expected NUMERIC, NUMERIC")
+}
+
+func (self *BasicRuntime) FunctionSHR(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var sval *BasicValue = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( rval.valuetype != TYPE_INTEGER &&
+			rval.valuetype != TYPE_FLOAT ) {
+			return nil, errors.New("SHR expected NUMERIC, INTEGER")
+		}
+		sval, err = self.evaluate(expr.right)
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( rval.valuetype != TYPE_INTEGER) {
+			return nil, errors.New("SHR expected NUMERIC, INTEGER")
+		}
+		return rval.bitwiseShiftRight(sval.intval)
+	}
+	return nil, errors.New("SHR expected NUMERIC, NUMERIC")
 }
 
 func (self *BasicRuntime) FunctionSIN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
