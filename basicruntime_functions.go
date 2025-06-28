@@ -7,6 +7,7 @@ import (
 	//"bufio"
 	"strings"
 	"strconv"
+	"unsafe"
 )
 
 func (self *BasicRuntime) initFunctions() {
@@ -21,6 +22,9 @@ func (self *BasicRuntime) initFunctions() {
 80 DEF LEN(X$) = X$
 90 DEF LOG(X#) = X#
 100 DEF MID(A$, S$, L#) = A$
+104 DEF PEEK(X#) = X#
+105 DEF POINTERVAR(X#) = X#
+106 DEF POINTER(X#) = X#
 110 DEF RIGHT(X$, A#) = X$
 120 DEF RAD(X#) = X#
 130 DEF SGN(X#) = X#
@@ -398,6 +402,104 @@ func (self *BasicRuntime) FunctionMID(expr *BasicASTLeaf, lval *BasicValue, rval
 	rval.stringval = strtarget.stringval[startpos.intval:(startpos.intval+length.intval)]
 	rval.valuetype = TYPE_STRING
 	return rval, nil
+}
+
+func (self *BasicRuntime) FunctionPEEK(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var tval *BasicValue = nil
+	var addr uintptr
+	var ptr unsafe.Pointer
+	var typedPtr *byte
+	
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		if ( expr.leaftype != LEAF_LITERAL_INT &&
+			expr.leaftype != LEAF_IDENTIFIER_INT) {
+			return nil, errors.New("PEEK expected INTEGER or INTEGER VARIABLE")
+		}
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		tval, err = self.newValue()
+		if ( err != nil ) {
+			return nil, err
+		}
+		if ( rval.valuetype != TYPE_INTEGER || rval.intval == 0 ) {
+			return nil, errors.New("PEEK got NIL pointer or uninitialized variable")
+		}
+		addr = uintptr(rval.intval)
+		ptr = unsafe.Pointer(addr)
+		typedPtr = (*byte)(ptr)
+		tval.valuetype = TYPE_INTEGER
+		tval.intval = int64(*typedPtr)
+		return tval, nil
+	}
+	return nil, errors.New("PEEK expected integer or float")
+}
+
+func (self *BasicRuntime) FunctionPOINTERVAR(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var tvar *BasicVariable = nil
+	var tval *BasicValue = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		if ( expr.isIdentifier() == false ) {
+			return nil, errors.New("POINTERVAR expected IDENTIFIER")
+		}
+		tvar = self.environment.get(expr.identifier)
+		tval, err = self.newValue()
+		if ( err != nil ) {
+			return nil, err
+		}
+		tval.valuetype = TYPE_INTEGER
+		tval.intval = int64(uintptr(unsafe.Pointer(tvar)))
+		return tval, nil
+	}
+	return nil, errors.New("POINTERVAR expected integer or float")
+}
+
+func (self *BasicRuntime) FunctionPOINTER(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var tval *BasicValue = nil
+
+	if ( expr == nil ) {
+		return nil, errors.New("NIL leaf")
+	}
+	expr = expr.firstArgument()
+	if (expr != nil) {
+		if ( expr.isIdentifier() == false ) {
+			return nil, errors.New("POINTER expected IDENTIFIER")
+		}
+		rval, err = self.evaluate(expr)
+		if ( err != nil ) {
+			return nil, err
+		}
+		tval, err = self.newValue()
+		if ( err != nil ) {
+			return nil, err
+		}
+		tval.valuetype = TYPE_INTEGER
+		switch (rval.valuetype) {
+		case TYPE_INTEGER:
+			tval.intval = int64(uintptr(unsafe.Pointer(&rval.intval)))
+		case TYPE_FLOAT:
+			tval.intval = int64(uintptr(unsafe.Pointer(&rval.floatval)))
+		case TYPE_STRING:
+			tval.intval = int64(uintptr(unsafe.Pointer(&rval.stringval)))
+		default:
+			return nil, errors.New("POINTER expects a INT, FLOAT or STRING variable")
+		}
+		return tval, nil
+	}
+	return nil, errors.New("POINTER expected integer or float")
 }
 
 func (self *BasicRuntime) FunctionRAD(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
