@@ -41,6 +41,12 @@ type BasicRuntime struct {
 	parser BasicParser
 	environment *BasicEnvironment
 	autoLineNumber int64
+	// The default behavior for evaluate() is to clone any value that comes from
+	// an identifier. This allows expressions like `I# + 1` to return a new value
+	// without modifying I#. However some commands (like POINTER), when they are
+	// evaluating an identifier, do not want the cloned value, they want the raw
+	// source value. Those commands will temporarily set this to `false`.
+	eval_clone_identifiers bool
 }
 
 func (self *BasicRuntime) zero() {
@@ -49,6 +55,7 @@ func (self *BasicRuntime) zero() {
 	}
 	self.errno = 0
 	self.nextvalue = 0
+	self.eval_clone_identifiers = true
 }
 
 func (self *BasicRuntime) init() {
@@ -63,6 +70,8 @@ func (self *BasicRuntime) init() {
 	self.scanner.init(self)
 	self.newEnvironment()
 
+	self.eval_clone_identifiers = true
+	
 	self.zero()
 	self.parser.zero()
 	self.scanner.zero()
@@ -194,8 +203,11 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		if ( lval == nil ) {
 			return nil, fmt.Errorf("Identifier %s is undefined", expr.identifier)
 		}
-		return lval, nil
-		//return lval.clone(nil)
+		if ( self.eval_clone_identifiers == false ) {
+			return lval, nil
+		} else {
+			return lval.clone(nil)
+		}
 	case LEAF_LITERAL_INT:
 		lval.valuetype = TYPE_INTEGER
 		lval.intval = expr.literal_int

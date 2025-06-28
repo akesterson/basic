@@ -110,7 +110,9 @@ func (self *BasicRuntime) CommandPOKE(expr *BasicASTLeaf, lval *BasicValue, rval
 	}
 	expr = expr.firstArgument()
 	if (expr != nil) {
+		self.eval_clone_identifiers = false
 		lval, err = self.evaluate(expr)
+		self.eval_clone_identifiers = true
 		if ( err != nil ) {
 			return nil, err
 		}

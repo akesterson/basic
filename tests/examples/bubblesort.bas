@@ -13,7 +13,9 @@
 32 ITERATIONS# = ITERATIONS# + 1
 35 FOR I# = 0 TO 3
 45     J# = I#+1
+46     REM PRINT "COMPARING INDEXES " + I# + " (" + A#(I#) + ") AND " + J# + "
 50     IF A#(I#) <= A#(J#) THEN GOTO 100
+55     REM PRINT "SWAPPING INDEXES " + I# + " AND " + J#
 60     TMP# = A#(I#)
 70     A#(I#) = A#(J#)
 80     A#(J#) = TMP#
