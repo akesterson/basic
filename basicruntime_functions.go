@@ -7,6 +7,7 @@ import (
 	//"bufio"
 	"strings"
 	"strconv"
+	"slices"
 	"unsafe"
 )
 
@@ -22,6 +23,7 @@ func (self *BasicRuntime) initFunctions() {
 80 DEF LEN(X$) = X$
 90 DEF LOG(X#) = X#
 100 DEF MID(A$, S$, L#) = A$
+101 DEF MOD(X#, Y#) = (X# - (X# / Y#))
 104 DEF PEEK(X#) = X#
 105 DEF POINTERVAR(X#) = X#
 106 DEF POINTER(X#) = X#
@@ -36,10 +38,14 @@ func (self *BasicRuntime) initFunctions() {
 170 DEF TAN(X#) = X#
 180 DEF VAL(X$) = X#
 190 DEF XOR(X#, Y#) = X#`
+	var freeStandingFunctions = []string{
+		"MOD",
+		"SPC",
+		"STR"}
 	var oldmode int = self.mode
 	self.run(strings.NewReader(funcdefs), MODE_RUNSTREAM)
 	for _, basicfunc := range self.environment.functions {
-		if ( basicfunc.name != "SPC" && basicfunc.name != "STR" ) {
+		if ( slices.Contains(freeStandingFunctions, basicfunc.name) == false ) {
 			basicfunc.expression = nil
 		}
 		self.scanner.commands[basicfunc.name] = FUNCTION
