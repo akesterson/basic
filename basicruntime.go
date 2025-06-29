@@ -410,15 +410,25 @@ func (self *BasicRuntime) findPreviousLineNumber() int64 {
 
 func (self *BasicRuntime) processLineRunStream(readbuff *bufio.Scanner) {
 	var line string
+	// All we're doing is getting the line #
+	// and storing the source line in this mode.
 	if ( readbuff.Scan() ) {
 		line = readbuff.Text()
-		// All we're doing is getting the line #
-		// and storing the source line in this mode.
-		self.scanner.scanTokens(line)
+		//fmt.Printf("processLineRunStream loaded %s\n", line)
+		if ( self.mode == MODE_REPL ) {
+			// DLOAD calls this method from inside of
+			// MODE_REPL. In that case we want to strip the
+			// line numbers off the beginning of the lines
+			// the same way we do in the repl.
+			line = self.scanner.scanTokens(line)
+		} else {
+			self.scanner.scanTokens(line)
+		}
 		self.source[self.lineno] = BasicSourceLine{
 			code:   line,
 			lineno: self.lineno}
 	} else {
+		//fmt.Printf("processLineRunStream exiting\n")
 		self.nextline = 0
 		self.setMode(MODE_RUN)
 	}

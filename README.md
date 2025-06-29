@@ -52,6 +52,7 @@ The following commands/verbs are implemented:
   * `DELETE n-n`: List lines between `n` and `n` (inclusive)
   * `DELETE -n`: List lines from 0 to `n`
   * `DELETE n`: Delete lines from `n` to the end of the program
+* `DLOAD FILENAME`: Load the BASIC program in the file FILENAME (string literal or string variable) into memory
 * `DSAVE FILENAME`: Save the current BASIC program in memory to the file specified by FILENAME (string literal or string variable)
 * `EXIT`: Exit a loop before it would normally finish
 * `FOR` : Iterate over a range of values and perform (statement) or block each time.

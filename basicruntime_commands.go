@@ -6,6 +6,7 @@ import (
 	"strings"
 	"unsafe"
 	"os"
+	"bufio"
 )
 
 func (self *BasicRuntime) CommandDEF(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
@@ -50,6 +51,48 @@ func (self *BasicRuntime) CommandDIM(expr *BasicASTLeaf, lval *BasicValue, rval 
 		return nil, err
 	}
 	varref.zero()
+	return &self.staticTrueValue, nil
+}
+
+func (self *BasicRuntime) CommandDLOAD(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	var scanner *bufio.Scanner = nil
+	var runtimemode int = self.mode
+	if ( expr.right == nil ) {
+		return nil, errors.New("Expected expression")
+	}
+	rval, err = self.evaluate(expr.right)
+	if ( err != nil ) {
+		return nil, err
+	}
+	if ( rval.valuetype != TYPE_STRING ) {
+		return nil, errors.New("Expected STRING")
+	}
+	f, err := os.Open(rval.stringval)
+	if ( err != nil ) {
+		return nil, err
+	}
+	scanner = bufio.NewScanner(f)
+	for _, sourceline := range(self.source) {
+		sourceline.code = ""
+		sourceline.lineno = 0
+	}
+	self.lineno = 0
+	self.nextline = 0
+	// Not sure how it will work resetting the runtime's state
+	// from within this function....
+	
+	for {
+		self.zero()
+		self.parser.zero()
+		self.scanner.zero()
+		self.processLineRunStream(scanner)
+		if ( self.nextline == 0 && self.mode == MODE_RUN ) {
+			break
+		}
+	}
+	self.setMode(runtimemode)
+	f.Close()
 	return &self.staticTrueValue, nil
 }
 
