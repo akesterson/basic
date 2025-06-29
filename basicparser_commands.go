@@ -75,12 +75,12 @@ func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
 	command.newCommand("DEF", nil)
 
 	// Inject the new function into the runtime and return
-	self.runtime.environment.functions[identifier.identifier] = &BasicFunctionDef{
+	self.runtime.environment.functions[strings.ToUpper(identifier.identifier)] = &BasicFunctionDef{
 		arglist: arglist.clone(),
 		expression: expression.clone(),
 		runtime: self.runtime,
-		name: strings.Clone(identifier.identifier)}
-	self.runtime.scanner.functions[identifier.identifier] = FUNCTION
+		name: strings.ToUpper(identifier.identifier)}
+	self.runtime.scanner.functions[strings.ToUpper(identifier.identifier)] = FUNCTION
 	return command, nil
 }
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"slices"
 	"reflect"
+	"strings"
 )
 
 type BasicToken struct {
@@ -159,7 +160,7 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 		}
 
 		// Is it a command that requires special parsing?
-		expr, err = self.commandByReflection("ParseCommand", operator.lexeme)
+		expr, err = self.commandByReflection("ParseCommand", strings.ToUpper(operator.lexeme))
 		if ( err != nil ) {
 			return nil, err
 		}
@@ -574,7 +575,7 @@ func (self *BasicParser) function() (*BasicASTLeaf, error) {
 		}
 		//fmt.Printf("Checking for existence of user function %s...\n", operator.lexeme)
 
-		fndef = self.runtime.environment.getFunction(operator.lexeme)
+		fndef = self.runtime.environment.getFunction(strings.ToUpper(operator.lexeme))
 		if ( fndef == nil ) {
 			return nil, fmt.Errorf("No such function %s", operator.lexeme)
 		}

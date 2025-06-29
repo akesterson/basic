@@ -7,6 +7,7 @@ import (
 	"bufio"
 	//"os"
 	"slices"
+	"strings"
 	"reflect"
 )
 
@@ -307,7 +308,7 @@ func (self *BasicRuntime) userFunction(expr *BasicASTLeaf, lval *BasicValue, rva
 	var leafvalue *BasicValue = nil
 	var err error = nil
 	
-	fndef = self.environment.getFunction(expr.identifier)
+	fndef = self.environment.getFunction(strings.ToUpper(expr.identifier))
 	//fmt.Printf("Function : %+v\n", fndef)
 	if ( fndef == nil ) {
 		return nil, nil
@@ -352,7 +353,7 @@ func (self *BasicRuntime) commandByReflection(rootKey string, expr *BasicASTLeaf
 	if ( reflector.IsNil() || reflector.Kind() != reflect.Ptr ) {
 		return nil, errors.New("Unable to reflect runtime structure to find command method")
 	}
-	rmethod = reflector.MethodByName(fmt.Sprintf("%s%s", rootKey, expr.identifier))
+	rmethod = reflector.MethodByName(fmt.Sprintf("%s%s", rootKey, strings.ToUpper(expr.identifier)))
 	if ( !rmethod.IsValid() ) {
 		return nil, nil
 	}

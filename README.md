@@ -14,6 +14,10 @@ make basic.exe
 
 This implementation is significantly more complete than my last stab at a BASIC, in my [piquant bootloader project](https://github.com/akesterson/piquant). This one may actually get finished. If it does, I'll rewrite the piquant bootloader in Rust and move this interpreter in there. It will be a glorious abomination.
 
+## Case Sensitivity
+
+The old computers BASIC was originally written on only had CAPITAL LETTER KEYS on their keyboards. Modern keyboards have the indescribable luxury of upper and lower case. In this basic, verbs and function names are case insensitive. Variable names are case sensitive.
+
 ## Variables
 
 * `A#` Integer variables
