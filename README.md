@@ -84,6 +84,7 @@ The following functions are implemented
 * `LEFT(X$, Y#)`: Return the leftmost Y# characters of the string in X$. Y# is clamped to LEN(X$).
 * `LOG(X#|X%)`: Return the natural logarithm of X#|X%
 * `MID(var$, start, length)` : Return a substring from `var$`
+* `MOD(x%, y%)`: Return the modulus of ( x / y). Only works on integers, produces unreliable results with floating points.
 * `PEEK(X)`: Return the value of the BYTE at the memory location of integer X and return it as an integer
 * `POINTER(X)`: Return the address in memory for the value of the variable identified in X. This is the direct integer, float or string value stored, it is not a reference to a `BasicVariable` or `BasicValue` structure.
 * `POINTERVAR(X)` : Return the address in memory of the variable X. This is the address of the internal `BasicVariable` structure, which includes additional metadata about the variable, in addition to the value. For a pointer directly to the value, use `POINTERVAL`.

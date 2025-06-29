@@ -23,7 +23,7 @@ func (self *BasicRuntime) initFunctions() {
 80 DEF LEN(X$) = X$
 90 DEF LOG(X#) = X#
 100 DEF MID(A$, S$, L#) = A$
-101 DEF MOD(X#, Y#) = (X# - (X# / Y#))
+101 DEF MOD(X%, Y%) = X% - (Y% * (X% / Y%))
 104 DEF PEEK(X#) = X#
 105 DEF POINTERVAR(X#) = X#
 106 DEF POINTER(X#) = X#
