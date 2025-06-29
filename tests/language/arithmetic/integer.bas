@@ -1,0 +1,5 @@
+10 PRINT 2 + 2
+20 PRINT 2 * 2
+30 PRINT 4 / 2
+40 PRINT 4 - 2
+
