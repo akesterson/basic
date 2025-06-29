@@ -47,7 +47,12 @@ The following commands/verbs are implemented:
 * `AUTO n` : Turn automatic line numbering on/off at increments of `n`
 * `REM` : everything after this is a comment
 * `DEF FN(X, ...) = expression` : Define a function with arguments that performs a given expression
-* `IF (comparison) THEN (statement) [ELSE (statement)]` : Conditional branching
+* `DELETE [n-n]`: Delete some portion of the lines in the current program
+  * `DELETE`: Delete ALL lines in the program
+  * `DELETE n-n`: List lines between `n` and `n` (inclusive)
+  * `DELETE -n`: List lines from 0 to `n`
+  * `DELETE n`: Delete lines from `n` to the end of the program
+* `DSAVE FILENAME`: Save the current BASIC program in memory to the file specified by FILENAME (string literal or string variable)
 * `EXIT`: Exit a loop before it would normally finish
 * `FOR` : Iterate over a range of values and perform (statement) or block each time.
 
@@ -63,16 +68,12 @@ The following commands/verbs are implemented:
 
 * `GOTO n`: Go to line n in the program
 * `GOSUB n`: Go to line n in the program and return here when `RETURN` is found
+* `IF (comparison) THEN (statement) [ELSE (statement)]` : Conditional branching
 * `LIST [n-n]`: List all or a portion of the lines in the current program
   * `LIST`: List all lines
   * `LIST n-n`: List lines between `n` and `n` (inclusive)
   * `LIST -n`: List lines from 0 to `n`
   * `LIST n`: List lines from `n` to the end of the program
-* `DELETE [n-n]`: Delete some portion of the lines in the current program
-  * `DELETE`: Delete ALL lines in the program
-  * `DELETE n-n`: List lines between `n` and `n` (inclusive)
-  * `DELETE -n`: List lines from 0 to `n`
-  * `DELETE n`: Delete lines from `n` to the end of the program
 * `POKE ADDRESS, VALUE`: Poke the single byte VALUE (may be an integer literal or an integer variable - only the first 8 bits are used) into the ADDRESS (which may be an integer literal or an integer variable holding a memory address).
 * `PRINT (expression)`
 * `QUIT` : Exit the interpreter

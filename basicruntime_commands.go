@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 	"unsafe"
+	"os"
 )
 
 func (self *BasicRuntime) CommandDEF(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
@@ -49,6 +50,32 @@ func (self *BasicRuntime) CommandDIM(expr *BasicASTLeaf, lval *BasicValue, rval 
 		return nil, err
 	}
 	varref.zero()
+	return &self.staticTrueValue, nil
+}
+
+func (self *BasicRuntime) CommandDSAVE(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error = nil
+	if ( expr.right == nil ) {
+		return nil, errors.New("Expected expression")
+	}
+	rval, err = self.evaluate(expr.right)
+	if ( err != nil ) {
+		return nil, err
+	}
+	if ( rval.valuetype != TYPE_STRING ) {
+		return nil, errors.New("Expected STRING")
+	}
+	f, err := os.Create(rval.stringval)
+	if ( err != nil ) {
+		return nil, err
+	}
+	for _, sourceline := range(self.source) {
+		if ( len(sourceline.code) == 0 ) {
+			continue
+		}
+		f.WriteString(fmt.Sprintf("%d %s\n", sourceline.lineno, sourceline.code))
+	}
+	f.Close()
 	return &self.staticTrueValue, nil
 }
 

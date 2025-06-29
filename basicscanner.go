@@ -126,7 +126,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 		// self.commands["DO"] =  COMMAND
 		// self.commands["DOPEN"] =  COMMAND
 		// self.commands["DRAW"] =  COMMAND
-		// self.commands["DSAVE"] =  COMMAND
+		self.commands["DSAVE"] =  COMMAND_IMMEDIATE
 		// self.commands["DVERIFY"] =  COMMAND
 		self.commands["ELSE"] =  COMMAND
 		// self.commands["END"] =  COMMAND
