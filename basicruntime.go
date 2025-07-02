@@ -102,7 +102,7 @@ func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
 			self.basicError(RUNTIME, "Could not get SDL window surface")
 		} else {
 			self.maxCharsW = (windowSurface.W / int32(self.fontWidth))
-			self.maxCharsH = (windowSurface.H / int32(self.fontHeight))
+			self.maxCharsH = (windowSurface.H / int32(self.fontHeight))-1
 		}
 	}
 	self.printSurface, err = sdl.CreateRGBSurface(0, windowSurface.W, windowSurface.H, int32(windowSurface.Format.BitsPerPixel), 0, 0, 0, 0)
