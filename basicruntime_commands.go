@@ -5,7 +5,9 @@ import (
 	"errors"
 	"strings"
 	"unsafe"
-	"os"
+	//"os"
+	"io"
+	"github.com/veandco/go-sdl2/sdl"
 	"bufio"
 )
 
@@ -68,10 +70,11 @@ func (self *BasicRuntime) CommandDLOAD(expr *BasicASTLeaf, lval *BasicValue, rva
 	if ( rval.valuetype != TYPE_STRING ) {
 		return nil, errors.New("Expected STRING")
 	}
-	f, err := os.Open(rval.stringval)
-	if ( err != nil ) {
-		return nil, err
+	f := sdl.RWFromFile(rval.stringval, "r")
+	if ( f == nil ) {
+		return nil, sdl.GetError()
 	}
+	defer io.Closer.Close(f)
 	scanner = bufio.NewScanner(f)
 	for _, sourceline := range(self.source) {
 		sourceline.code = ""
@@ -92,7 +95,6 @@ func (self *BasicRuntime) CommandDLOAD(expr *BasicASTLeaf, lval *BasicValue, rva
 		}
 	}
 	self.setMode(runtimemode)
-	f.Close()
 	return &self.staticTrueValue, nil
 }
 
@@ -108,17 +110,17 @@ func (self *BasicRuntime) CommandDSAVE(expr *BasicASTLeaf, lval *BasicValue, rva
 	if ( rval.valuetype != TYPE_STRING ) {
 		return nil, errors.New("Expected STRING")
 	}
-	f, err := os.Create(rval.stringval)
-	if ( err != nil ) {
-		return nil, err
+	f := sdl.RWFromFile(rval.stringval, "w")
+	if ( f == nil ) {
+		return nil, sdl.GetError()
 	}
+	defer io.Closer.Close(f)
 	for _, sourceline := range(self.source) {
 		if ( len(sourceline.code) == 0 ) {
 			continue
 		}
-		f.WriteString(fmt.Sprintf("%d %s\n", sourceline.lineno, sourceline.code))
+		f.Write([]byte(fmt.Sprintf("%d %s\n", sourceline.lineno, sourceline.code)))
 	}
-	f.Close()
 	return &self.staticTrueValue, nil
 }
 
