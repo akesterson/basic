@@ -68,6 +68,7 @@ func (self *BasicRuntime) scrollWindow(x int32, y int32) error {
 			W: windowSurface.W, H: newTextHeight})
 	self.cursorX = 0
 	self.cursorY = (self.maxCharsH - int32(strings.Count(self.printBuffer, "\n")))
+	
 	return nil
 }
 
@@ -89,6 +90,7 @@ func (self *BasicRuntime) advanceCursor(text string) {
 func (self *BasicRuntime) Println(text string) {
 	fmt.Println(text)
 	self.printBuffer += text + "\n"
+	self.cursorY += int32(strings.Count(text, "\n"))
 }
 
 func (self *BasicRuntime) drawPrintBuffer() error {
@@ -96,11 +98,13 @@ func (self *BasicRuntime) drawPrintBuffer() error {
 	if ( len(self.printBuffer) == 0 ) {
 		return nil
 	}
-	if ( self.cursorY >= self.maxCharsH ) {
+	if ( self.cursorY >= self.maxCharsH - 1) {
 		err = self.scrollWindow(0, int32(self.fontHeight * strings.Count(self.printBuffer, "\n"))+1)
 		if ( err != nil ) {
+			fmt.Println(err)
 			return err
 		}
+		//fmt.Printf("Cursor X %d Y %d\n", self.cursorX, self.cursorY)
 	}
 	for _, line := range strings.Split(self.printBuffer, "\n") {
 		if ( len(line) == 0 ) {
@@ -117,10 +121,10 @@ func (self *BasicRuntime) drawPrintBuffer() error {
 		self.cursorX = 0
 		self.cursorY += 1
 	}
-	fmt.Println("Cursor X %d Y %d", self.cursorX, self.cursorY)
-	if ( self.cursorY >= self.maxCharsH - 2) {
-		fmt.Println("Forcing cursor to bottom -2")
-		self.cursorY = self.maxCharsH - 2
+	//fmt.Printf("Cursor X %d Y %d\n", self.cursorX, self.cursorY)
+	if ( self.cursorY >= self.maxCharsH - 1) {
+		fmt.Println("Forcing cursor to bottom -1")
+		self.cursorY = self.maxCharsH - 1
 	}
 	return nil
 }
