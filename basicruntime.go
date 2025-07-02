@@ -9,6 +9,8 @@ import (
 	"slices"
 	"strings"
 	"reflect"
+	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/ttf"	
 )
 
 type BasicError int
@@ -48,6 +50,8 @@ type BasicRuntime struct {
 	// evaluating an identifier, do not want the cloned value, they want the raw
 	// source value. Those commands will temporarily set this to `false`.
 	eval_clone_identifiers bool
+	window *sdl.Window
+	font *ttf.Font
 }
 
 func (self *BasicRuntime) zero() {
@@ -59,7 +63,7 @@ func (self *BasicRuntime) zero() {
 	self.eval_clone_identifiers = true
 }
 
-func (self *BasicRuntime) init() {
+func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
 	self.environment = nil
 	self.lineno = 0
 	self.nextline = 0
@@ -72,6 +76,8 @@ func (self *BasicRuntime) init() {
 	self.newEnvironment()
 
 	self.eval_clone_identifiers = true
+	self.window = window
+	self.font = font
 	
 	self.zero()
 	self.parser.zero()

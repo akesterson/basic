@@ -7,6 +7,7 @@ import (
 	//"unsafe"
 	"io"
 	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/ttf"
 )
 
 const (
@@ -26,13 +27,46 @@ const (
 
 func main() {
 	var runtime BasicRuntime;
+	var window *sdl.Window
+	var font *ttf.Font
+	//var surface *sdl.Surface
+	//var text *sdl.Surface
 
 	err := sdl.Init(sdl.INIT_EVERYTHING)
 	if ( err != nil ) {
 		panic(err)
 	}
 	defer sdl.Quit()
-	runtime.init()
+
+	err = ttf.Init()
+	if ( err != nil ) {
+		panic(err)
+	}
+
+	window, err = sdl.CreateWindow(
+		"BASIC",
+		sdl.WINDOWPOS_UNDEFINED,
+		sdl.WINDOWPOS_UNDEFINED,
+		800, 600,
+		sdl.WINDOW_SHOWN)
+	if ( err != nil ) {
+		return
+	}
+	defer window.Destroy()
+
+	//if surface, err = window.GetSurface(); err != nil {
+	//	return
+	//}
+
+	// Load the font for our text
+	font, err = ttf.OpenFont("./fonts/C64_Pro_Mono-STYLE.ttf", 16)
+	if ( err != nil ) {
+		return
+	}
+	defer font.Close()
+
+	runtime.init(window, font)
+	
 	if ( len(os.Args) > 1 ) {
 		f := sdl.RWFromFile(os.Args[1], "r")
 		if ( f == nil ) {

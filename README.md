@@ -113,3 +113,9 @@ The following functions are implemented
 * `TAN(X#|X%)`: Returns the tangent of the float or integer variable X. Input and output are in radians.
 * `VAL(X$)`: Returns the float value of the number in X$
 * `XOR(X#, Y#)`: Performs a bitwise exclusive OR on the two integer arguments
+
+## Dependencies
+
+This project uses the SDL2 library : https://pkg.go.dev/github.com/veandco/go-sdl2
+
+This project also uses the Commodore truetype font from https://style64.org
