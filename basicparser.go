@@ -672,7 +672,7 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 		expr.newGrouping(groupexpr)
 		return expr, nil
 	}
-	fmt.Printf("At curtoken %d\n", self.curtoken)
+	//fmt.Printf("At curtoken %d\n", self.curtoken)
 	return nil, self.error("Expected expression or literal")
 }
 

@@ -51,7 +51,14 @@ type BasicRuntime struct {
 	// source value. Those commands will temporarily set this to `false`.
 	eval_clone_identifiers bool
 	window *sdl.Window
+	cursorX int32
+	cursorY int32
+	
 	font *ttf.Font
+	fontWidth int
+	fontHeight int
+	maxCharsW int32
+	maxCharsH int32
 }
 
 func (self *BasicRuntime) zero() {
@@ -64,6 +71,9 @@ func (self *BasicRuntime) zero() {
 }
 
 func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
+	var err error = nil
+	var windowSurface *sdl.Surface = nil
+	
 	self.environment = nil
 	self.lineno = 0
 	self.nextline = 0
@@ -78,6 +88,19 @@ func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
 	self.eval_clone_identifiers = true
 	self.window = window
 	self.font = font
+
+	self.fontWidth, self.fontHeight, err = self.font.SizeUTF8("A")
+	if ( err != nil ) {
+		self.basicError(RUNTIME, "Could not get the height and width of the font")
+	} else {
+		windowSurface, err = self.window.GetSurface()
+		if ( err != nil ) {
+			self.basicError(RUNTIME, "Could not get SDL window surface")
+		} else {
+			self.maxCharsW = (windowSurface.W / int32(self.fontWidth))
+			self.maxCharsH = (windowSurface.H / int32(self.fontHeight))
+		}
+	}
 	
 	self.zero()
 	self.parser.zero()
@@ -112,7 +135,7 @@ func (self *BasicRuntime) errorCodeToString(errno BasicError) string {
 
 func (self *BasicRuntime) basicError(errno BasicError, message string) {
 	self.errno = errno
-	fmt.Printf("? %d : %s %s\n", self.lineno, self.errorCodeToString(errno), message)
+	self.Println(fmt.Sprintf("? %d : %s %s\n", self.lineno, self.errorCodeToString(errno), message))
 }
 
 func (self *BasicRuntime) newVariable() (*BasicVariable, error) {
@@ -507,14 +530,13 @@ func (self *BasicRuntime) processLineRun(readbuff *bufio.Scanner) {
 func (self *BasicRuntime) setMode(mode int) {
 	self.mode = mode
 	if ( self.mode == MODE_REPL ) {
-		fmt.Println("READY")
+		self.Println("READY")
 	}
 }
 
 func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 	var readbuff = bufio.NewScanner(fileobj)
 
-	self.draw_text(100, 100, "Hello World!")
 	self.setMode(mode)
 	if ( self.mode == MODE_REPL ) {
 		self.run_finished_mode = MODE_REPL

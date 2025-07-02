@@ -133,7 +133,7 @@ func (self *BasicRuntime) CommandPRINT(expr *BasicASTLeaf, lval *BasicValue, rva
 	if ( err != nil ) {
 		return nil, err
 	}
-	fmt.Println(rval.toString())
+	self.Println(rval.toString())
 	return &self.staticTrueValue, nil
 }
 
@@ -323,7 +323,7 @@ func (self *BasicRuntime) CommandLIST(expr *BasicASTLeaf, lval *BasicValue, rval
 	}
 	for i = startidx; i <= endidx; i++ {
 		if ( len(self.source[i].code) > 0 ) {
-			fmt.Printf("%d %s\n", self.source[i].lineno, self.source[i].code)
+			self.Println(fmt.Sprintf("%d %s", self.source[i].lineno, self.source[i].code))
 		}
 	}
 	return &self.staticTrueValue, nil
