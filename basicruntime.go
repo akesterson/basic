@@ -51,6 +51,7 @@ type BasicRuntime struct {
 	// source value. Those commands will temporarily set this to `false`.
 	eval_clone_identifiers bool
 	window *sdl.Window
+	printSurface *sdl.Surface
 	cursorX int32
 	cursorY int32
 	
@@ -59,12 +60,15 @@ type BasicRuntime struct {
 	fontHeight int
 	maxCharsW int32
 	maxCharsH int32
+
+	printBuffer string
 }
 
 func (self *BasicRuntime) zero() {
 	for i, _ := range self.values {
 		self.values[i].init()
 	}
+	self.printBuffer = ""
 	self.errno = 0
 	self.nextvalue = 0
 	self.eval_clone_identifiers = true
@@ -100,6 +104,10 @@ func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
 			self.maxCharsW = (windowSurface.W / int32(self.fontWidth))
 			self.maxCharsH = (windowSurface.H / int32(self.fontHeight))
 		}
+	}
+	self.printSurface, err = sdl.CreateRGBSurface(0, windowSurface.W, windowSurface.H, int32(windowSurface.Format.BitsPerPixel), 0, 0, 0, 0)
+	if ( err != nil ) {
+		self.basicError(RUNTIME, "Could not create the print buffer surface")
 	}
 	
 	self.zero()
@@ -545,6 +553,7 @@ func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 	}
 	for {
 		//fmt.Printf("Starting in mode %d\n", self.mode)
+		self.drawPrintBuffer()
 		self.zero()
 		self.parser.zero()
 		self.scanner.zero()
