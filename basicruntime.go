@@ -514,6 +514,7 @@ func (self *BasicRuntime) setMode(mode int) {
 func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 	var readbuff = bufio.NewScanner(fileobj)
 
+	self.draw_text(100, 100, "Hello World!")
 	self.setMode(mode)
 	if ( self.mode == MODE_REPL ) {
 		self.run_finished_mode = MODE_REPL
