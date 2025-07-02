@@ -2,7 +2,11 @@ package main
 
 import (
 	"os"
+	//"fmt"
 	//"strings"
+	//"unsafe"
+	"io"
+	"github.com/veandco/go-sdl2/sdl"
 )
 
 const (
@@ -22,13 +26,19 @@ const (
 
 func main() {
 	var runtime BasicRuntime;
+
+	err := sdl.Init(sdl.INIT_EVERYTHING)
+	if ( err != nil ) {
+		panic(err)
+	}
+	defer sdl.Quit()
 	runtime.init()
 	if ( len(os.Args) > 1 ) {
-		f, err := os.Open(os.Args[1])
-		if ( err != nil ) {
-			panic(err.Error())
+		f := sdl.RWFromFile(os.Args[1], "r")
+		if ( f == nil ) {
+			panic(sdl.GetError())
 		}
-		defer f.Close()
+		defer io.Closer.Close(f)
 		runtime.run(f, MODE_RUNSTREAM)
 	} else {
 		runtime.run(os.Stdin, MODE_REPL)
