@@ -558,7 +558,7 @@ func (self *BasicRuntime) sdlEvents() error {
 		case *sdl.QuitEvent:
 			self.setMode(MODE_QUIT)
 		case *sdl.TextInputEvent:
-			// This is LAZY and WRONG but it works on US ASCII keyboards so I guess
+			// This is LAZY but it works on US ASCII keyboards so I guess
 			// international users go EFF themselves? It's how we did it in the old days...
 			ir = rune(t.Text[0])
 			if ( unicode.IsPrint(ir) ) {
