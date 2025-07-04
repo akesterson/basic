@@ -585,7 +585,30 @@ func (self *BasicRuntime) sdlEvents() error {
 				//fmt.Printf("Key released: %s (Scancode: %d, Keycode: %d)\n", sdl.GetKeyName(t.Keysym.Sym), t.Keysym.Scancode, t.Keysym.Sym)
 				ir = self.runeForSDLScancode(t.Keysym)
 				//fmt.Printf("Rune: %c", ir)
-				if ( ir == sdl.K_BACKSPACE ) {
+				if ( ir == sdl.K_LEFT ) {
+					if ( self.userlineIndex == 0 ) {
+						return nil
+					}
+					err = self.drawText(
+						(self.cursorX * int32(self.fontWidth)),
+						(self.cursorY * int32(self.fontHeight)),
+						string(self.lineInProgress[self.userlineIndex]),
+						true)
+					self.userlineIndex -= 1
+					self.advanceCursor(-1, 0)
+				} else if ( ir == sdl.K_RIGHT ) {
+					if ( self.userlineIndex >= MAX_LINE_LENGTH ||
+						self.lineInProgress[self.userlineIndex] == 0 ) {
+						return nil
+					}
+					err = self.drawText(
+						(self.cursorX * int32(self.fontWidth)),
+						(self.cursorY * int32(self.fontHeight)),
+						string(self.lineInProgress[self.userlineIndex]),
+						true)
+					self.userlineIndex += 1
+					self.advanceCursor(+1, 0)
+				} else if ( ir == sdl.K_BACKSPACE ) {
 					if ( self.userlineIndex == 0 ) {
 						return nil
 					}
