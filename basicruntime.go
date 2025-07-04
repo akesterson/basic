@@ -576,6 +576,11 @@ func (self *BasicRuntime) sdlEvents() error {
 				self.advanceCursor(1, 0)
 			}
 		case *sdl.KeyboardEvent:
+			err = self.drawText(
+				(self.cursorX * int32(self.fontWidth)),
+				(self.cursorY * int32(self.fontHeight)),
+				" ",
+				true)
 			if ( t.Type == sdl.KEYUP ) {
 				//fmt.Printf("Key released: %s (Scancode: %d, Keycode: %d)\n", sdl.GetKeyName(t.Keysym.Sym), t.Keysym.Scancode, t.Keysym.Sym)
 				ir = self.runeForSDLScancode(t.Keysym)
@@ -586,11 +591,6 @@ func (self *BasicRuntime) sdlEvents() error {
 					}
 					self.lineInProgress[self.userlineIndex-1] = 0
 					self.userlineIndex -= 1
-					err = self.drawText(
-						(self.cursorX * int32(self.fontWidth)),
-						(self.cursorY * int32(self.fontHeight)),
-						" ",
-						true)
 					if ( err != nil ) {
 						return err
 					}
