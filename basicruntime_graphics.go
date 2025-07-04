@@ -34,9 +34,10 @@ func (self *BasicRuntime) drawText(x int32, y int32, text string) error {
 		return err
 	}
 
-	textSurface, err = self.font.RenderUTF8Blended(
+	textSurface, err = self.font.RenderUTF8Shaded(
 		text,
-		sdl.Color{R: 255, G: 255, B: 255, A: 255})
+		sdl.Color{R: 255, G: 255, B: 255, A: 255},
+		sdl.Color{R: 0, G: 0, B: 0, A: 255})
 	if ( err != nil ) {
 		return err
 	}
