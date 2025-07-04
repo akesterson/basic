@@ -6,6 +6,24 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+func (self *BasicRuntime) advanceCursor(x int32, y int32) error {
+	var err error
+	self.cursorX += x
+	if ( self.cursorX > self.maxCharsW ) {
+		self.cursorX = 0
+		self.cursorY += 1
+	}
+	self.cursorY += y
+	if ( self.cursorY >= self.maxCharsH - 1 ) {
+		err = self.scrollWindow(0, 1)
+		if ( err != nil ) {
+			return err
+		}
+		self.cursorY -= 1
+	}
+	return nil
+}
+
 func (self *BasicRuntime) drawText(x int32, y int32, text string) error {
 	var windowSurface *sdl.Surface
 	var textSurface *sdl.Surface

@@ -548,10 +548,11 @@ func (self *BasicRuntime) setMode(mode int) {
 	}
 }
 
-func (self *BasicRuntime) sdlEvents() {
+func (self *BasicRuntime) sdlEvents() error {
 	var ir rune
 	var sb strings.Builder
 	var i int
+	var err error
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch t := event.(type) {
 		case *sdl.QuitEvent:
@@ -563,6 +564,15 @@ func (self *BasicRuntime) sdlEvents() {
 			if ( unicode.IsPrint(ir) ) {
 				self.lineInProgress[self.userlineIndex] = ir
 				self.userlineIndex += 1
+				err = self.drawText(
+					(self.cursorX * int32(self.fontWidth)),
+					(self.cursorY * int32(self.fontHeight)),
+					string(ir))
+				if ( err != nil ) {
+					fmt.Println(err)
+					return err
+				}
+				self.advanceCursor(1, 0)
 			}
 		case *sdl.KeyboardEvent:
 			if ( t.Type == sdl.KEYUP ) {
@@ -582,11 +592,13 @@ func (self *BasicRuntime) sdlEvents() {
 					self.userline = sb.String()
 					self.userlineIndex = 0
 					//fmt.Println(self.userline)
-					self.Println(self.userline)
+					//self.Println(self.userline)
+					self.advanceCursor(-(self.cursorX), 1)
 				}
 			}
 		}
-	}	
+	}
+	return nil
 }
 
 func (self *BasicRuntime) runeForSDLScancode(keysym sdl.Keysym) rune {
@@ -606,6 +618,7 @@ func (self *BasicRuntime) runeForSDLScancode(keysym sdl.Keysym) rune {
 
 func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 	var readbuff = bufio.NewScanner(fileobj)
+	var err error
 
 	self.setMode(mode)
 	if ( self.mode == MODE_REPL ) {
@@ -626,7 +639,10 @@ func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 		case MODE_RUNSTREAM:
 			self.processLineRunStream(readbuff)
 		case MODE_REPL:
-			self.sdlEvents()
+			err = self.sdlEvents()
+			if ( err != nil ) {
+				self.basicError(RUNTIME, err.Error())
+			}
 			self.processLineRepl(readbuff)
 		case MODE_RUN:
 			self.processLineRun(readbuff)
