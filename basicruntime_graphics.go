@@ -6,15 +6,15 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-func (self *BasicRuntime) advanceCursor(x int32, y int32) error {
-	var err error
+func (self *BasicRuntime) advanceCursor(x int32, y int32) error { var
+	err error
 	self.cursorX += x
-	if ( self.cursorX > self.maxCharsW ) {
+	if ( self.cursorX >= self.maxCharsW ) {
 		self.cursorX = 0
 		self.cursorY += 1
 	} else if ( self.cursorX < 0 ) {
 		if ( self.cursorY > 0 ) {
-			self.cursorY -= 1
+			self.cursorY -=1
 		}
 		self.cursorX = self.maxCharsW
 	}
@@ -26,11 +26,41 @@ func (self *BasicRuntime) advanceCursor(x int32, y int32) error {
 		}
 		self.cursorY -= 1
 	}
-	fmt.Println("Cursor X, Y : %d, %d", self.cursorX, self.cursorY)
+	//fmt.Println("Cursor X, Y : %d, %d", self.cursorX, self.cursorY)
 	return nil
 }
 
-func (self *BasicRuntime) drawText(x int32, y int32, text string) error {
+func (self *BasicRuntime) drawWrappedText(x int32, y int32, text string) error {
+	var err error
+	var curslice string
+	var curstartidx int32 = 0
+	var endidx int32 = 0
+
+	// chop the text up into slices that will fit onto the screen after the cursor
+	for ( curstartidx < int32(len(text)) ) {
+		endidx = curstartidx + (self.maxCharsW - self.cursorX)
+		if ( endidx >= int32(len(text)) ) {
+			endidx = int32(len(text))
+		}
+		curslice = text[curstartidx:endidx]
+		//fmt.Printf("Drawing \"%s\"\n", curslice)
+		err = self.drawText(x, y, curslice, false)
+		self.advanceCursor(int32(len(curslice)), 0)
+		x = (self.cursorX * int32(self.fontWidth))
+		y = (self.cursorY * int32(self.fontHeight))
+		self.window.UpdateSurface()
+		if ( err != nil ) {
+			return err
+		}
+		if ( endidx == int32(len(text)) ) {
+			break
+		}
+		curstartidx += int32(len(curslice))
+	}
+	return nil
+}
+
+func (self *BasicRuntime) drawText(x int32, y int32, text string, updateWindow bool) error {
 	var windowSurface *sdl.Surface
 	var textSurface *sdl.Surface
 	var err error
@@ -48,7 +78,7 @@ func (self *BasicRuntime) drawText(x int32, y int32, text string) error {
 		return err
 	}
 	defer textSurface.Free()
-
+	
 	err = textSurface.Blit(nil,
 		windowSurface,
 		&sdl.Rect{
@@ -59,7 +89,9 @@ func (self *BasicRuntime) drawText(x int32, y int32, text string) error {
 	if ( err != nil ) {
 		return err
 	}
-	self.window.UpdateSurface()
+	if ( updateWindow == true ) {
+		self.window.UpdateSurface()
+	}		
 	return nil
 }
 
@@ -120,7 +152,7 @@ func (self *BasicRuntime) drawPrintBuffer() error {
 		if ( len(line) == 0 ) {
 			break
 		}
-		err = self.drawText(
+		err = self.drawWrappedText(
 			(self.cursorX * int32(self.fontWidth)),
 			(self.cursorY * int32(self.fontHeight)),
 			line)
@@ -133,7 +165,7 @@ func (self *BasicRuntime) drawPrintBuffer() error {
 	}
 	//fmt.Printf("Cursor X %d Y %d\n", self.cursorX, self.cursorY)
 	if ( self.cursorY >= self.maxCharsH - 1) {
-		fmt.Println("Forcing cursor to bottom -1")
+		//fmt.Println("Forcing cursor to bottom -1")
 		self.cursorY = self.maxCharsH - 1
 	}
 	return nil

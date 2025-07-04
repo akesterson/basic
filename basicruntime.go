@@ -567,7 +567,8 @@ func (self *BasicRuntime) sdlEvents() error {
 				err = self.drawText(
 					(self.cursorX * int32(self.fontWidth)),
 					(self.cursorY * int32(self.fontHeight)),
-					string(ir))
+					string(ir),
+					true)
 				if ( err != nil ) {
 					fmt.Println(err)
 					return err
@@ -589,7 +590,8 @@ func (self *BasicRuntime) sdlEvents() error {
 					err = self.drawText(
 						(self.cursorX * int32(self.fontWidth)),
 						(self.cursorY * int32(self.fontHeight)),
-						" ")
+						" ",
+						true)
 					if ( err != nil ) {
 						return err
 					}
