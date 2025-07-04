@@ -7,6 +7,7 @@ import (
 	"bufio"
 	//"os"
 	"slices"
+	"unicode"
 	"strings"
 	"reflect"
 	"github.com/veandco/go-sdl2/sdl"
@@ -30,6 +31,11 @@ type BasicSourceLine struct {
 type BasicRuntime struct {
 	source [MAX_SOURCE_LINES]BasicSourceLine
 	lineno int64
+	
+	lineInProgress [MAX_LINE_LENGTH]rune
+	userlineIndex int
+	userline string
+
 	values [MAX_VALUES]BasicValue
 	variables [MAX_VARIABLES]BasicVariable
 	staticTrueValue BasicValue
@@ -71,6 +77,7 @@ func (self *BasicRuntime) zero() {
 	self.printBuffer = ""
 	self.errno = 0
 	self.nextvalue = 0
+	self.userline = ""
 	self.eval_clone_identifiers = true
 }
 
@@ -476,14 +483,13 @@ func (self *BasicRuntime) processLineRepl(readbuff *bufio.Scanner) {
 	var leaf *BasicASTLeaf = nil
 	var value *BasicValue = nil
 	var err error = nil
-	var line string
 	if ( self.autoLineNumber > 0 ) {
 		fmt.Printf("%d ", (self.lineno + self.autoLineNumber))
 	}
-	if ( readbuff.Scan() ) {
-		line = readbuff.Text()
+	// get a new line from the keyboard
+	if ( len(self.userline) > 0 ) {
 		self.lineno += self.autoLineNumber
-		line = self.scanner.scanTokens(line)
+		self.userline = self.scanner.scanTokens(self.userline)
 		for ( !self.parser.isAtEnd() ) {
 			leaf, err = self.parser.parse()
 			if ( err != nil ) {
@@ -496,7 +502,7 @@ func (self *BasicRuntime) processLineRepl(readbuff *bufio.Scanner) {
 			if ( value == nil ) {
 				// Only store the line and increment the line number if we didn't run an immediate command
 				self.source[self.lineno] = BasicSourceLine{
-					code:   line,
+					code:   self.userline,
 					lineno: self.lineno}
 			} else if ( self.autoLineNumber > 0 ) {
 				self.lineno = self.findPreviousLineNumber()
@@ -542,12 +548,69 @@ func (self *BasicRuntime) setMode(mode int) {
 	}
 }
 
+func (self *BasicRuntime) sdlEvents() {
+	var ir rune
+	var sb strings.Builder
+	var i int
+	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+		switch t := event.(type) {
+		case *sdl.QuitEvent:
+			self.setMode(MODE_QUIT)
+		case *sdl.TextInputEvent:
+			// This is LAZY and WRONG but it works on US ASCII keyboards so I guess
+			// international users go EFF themselves? It's how we did it in the old days...
+			ir = rune(t.Text[0])
+			if ( unicode.IsPrint(ir) ) {
+				self.lineInProgress[self.userlineIndex] = ir
+				self.userlineIndex += 1
+			}
+		case *sdl.KeyboardEvent:
+			if ( t.Type == sdl.KEYUP ) {
+				//fmt.Printf("Key released: %s (Scancode: %d, Keycode: %d)\n", sdl.GetKeyName(t.Keysym.Sym), t.Keysym.Scancode, t.Keysym.Sym)
+				ir = self.runeForSDLScancode(t.Keysym)
+				//fmt.Printf("Rune: %c", ir)
+				if ( ir == sdl.K_RETURN || ir == '\n' ) {
+					self.userline = ""
+					for i = 0; i <= self.userlineIndex; i++  {
+						if ( self.lineInProgress[i] == 0 ) {
+							break
+						}
+						sb.WriteRune(self.lineInProgress[i])
+						self.lineInProgress[i] = 0
+					}
+					//fmt.Printf("\n")
+					self.userline = sb.String()
+					self.userlineIndex = 0
+					//fmt.Println(self.userline)
+					self.Println(self.userline)
+				}
+			}
+		}
+	}	
+}
+
+func (self *BasicRuntime) runeForSDLScancode(keysym sdl.Keysym) rune {
+	var rc rune = 0
+	var keyboardstate []uint8
+	rc = rune(keysym.Sym)
+	keyboardstate = sdl.GetKeyboardState()
+	if ( keyboardstate[sdl.SCANCODE_LSHIFT] != 0 ||
+		keyboardstate[sdl.SCANCODE_RSHIFT] != 0 ) {
+		if ( unicode.IsUpper(rc) ) {
+			return unicode.ToLower(rc)
+		}
+		return unicode.ToUpper(rc)
+	}
+	return rc
+}
+
 func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 	var readbuff = bufio.NewScanner(fileobj)
 
 	self.setMode(mode)
 	if ( self.mode == MODE_REPL ) {
 		self.run_finished_mode = MODE_REPL
+		sdl.StartTextInput()
 	} else {
 		self.run_finished_mode = MODE_QUIT
 	}
@@ -563,6 +626,7 @@ func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 		case MODE_RUNSTREAM:
 			self.processLineRunStream(readbuff)
 		case MODE_REPL:
+			self.sdlEvents()
 			self.processLineRepl(readbuff)
 		case MODE_RUN:
 			self.processLineRun(readbuff)
@@ -571,6 +635,5 @@ func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 			self.setMode(self.run_finished_mode)
 		}
 		//fmt.Printf("Finishing in mode %d\n", self.mode)
-
 	}
 }

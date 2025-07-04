@@ -72,21 +72,6 @@ func (self *BasicRuntime) scrollWindow(x int32, y int32) error {
 	return nil
 }
 
-func (self *BasicRuntime) advanceCursor(text string) {
-	var y int = strings.Count(text, "\n")
-	var x = (len(text) - strings.LastIndex(text, "\n"))
-	if ( int32(x) > self.maxCharsW ) {
-		y += 1
-	}
-	if ( y > 0 ) {
-		self.cursorX = int32(x)
-	} else {
-		self.cursorX += int32(x)
-	}
-	self.cursorY += int32(y)
-	fmt.Println("New cursor X %d Y %d", self.cursorX, self.cursorY)
-}
-
 func (self *BasicRuntime) Println(text string) {
 	fmt.Println(text)
 	self.printBuffer += text + "\n"

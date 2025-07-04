@@ -6,8 +6,8 @@ OS:=$(shell uname -o)
 # CGO_CFLAGS="-I/mingw64/include" CGO_LDFLAGS="-L/mingw64/lib -lSDL2" go install github.com/veandco/go-sdl2/sdl
 # CGO_CFLAGS="-I/mingw64/include" CGO_LDFLAGS="-L/mingw64/lib -lSDL2" go install github.com/veandco/go-sdl2/ttf
 
-SDL2_INCLUDE:="-I/mingw64/include"
-SDL2_LIB:="-L/mingw64/lib -lSDL2"
+SDL2_INCLUDE:="$(shell pkg-config --cflags -- sdl2)"
+SDL2_LIB:="$(shell pkg-config --ld -- sdl2)"
 
 ifeq ($(OS),Msys)
 	EXE_EXT:=.exe
