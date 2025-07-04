@@ -12,6 +12,11 @@ func (self *BasicRuntime) advanceCursor(x int32, y int32) error {
 	if ( self.cursorX > self.maxCharsW ) {
 		self.cursorX = 0
 		self.cursorY += 1
+	} else if ( self.cursorX < 0 ) {
+		if ( self.cursorY > 0 ) {
+			self.cursorY -= 1
+		}
+		self.cursorX = self.maxCharsW
 	}
 	self.cursorY += y
 	if ( self.cursorY >= self.maxCharsH - 1 ) {
@@ -21,6 +26,7 @@ func (self *BasicRuntime) advanceCursor(x int32, y int32) error {
 		}
 		self.cursorY -= 1
 	}
+	fmt.Println("Cursor X, Y : %d, %d", self.cursorX, self.cursorY)
 	return nil
 }
 
