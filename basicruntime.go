@@ -586,6 +586,14 @@ func (self *BasicRuntime) sdlEvents() error {
 					}
 					self.lineInProgress[self.userlineIndex-1] = 0
 					self.userlineIndex -= 1
+					err = self.drawText(
+						(self.cursorX * int32(self.fontWidth)),
+						(self.cursorY * int32(self.fontHeight)),
+						" ",
+						true)
+					if ( err != nil ) {
+						return err
+					}
 					self.advanceCursor(-1, 0)
 					err = self.drawText(
 						(self.cursorX * int32(self.fontWidth)),
@@ -656,6 +664,10 @@ func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 			self.processLineRunStream(readbuff)
 		case MODE_REPL:
 			err = self.sdlEvents()
+			if ( err != nil ) {
+				self.basicError(RUNTIME, err.Error())
+			}
+			err = self.drawCursor()
 			if ( err != nil ) {
 				self.basicError(RUNTIME, err.Error())
 			}

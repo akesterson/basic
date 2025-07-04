@@ -30,6 +30,14 @@ func (self *BasicRuntime) advanceCursor(x int32, y int32) error { var
 	return nil
 }
 
+func (self *BasicRuntime) drawCursor() error {
+	return self.drawText(
+		(self.cursorX * int32(self.fontWidth)),
+		(self.cursorY * int32(self.fontHeight)),
+		"_",
+		true)
+}
+
 func (self *BasicRuntime) drawWrappedText(x int32, y int32, text string) error {
 	var err error
 	var curslice string
