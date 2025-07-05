@@ -441,6 +441,11 @@ func (self *BasicRuntime) CommandREAD(expr *BasicASTLeaf, lval *BasicValue, rval
 	return &self.staticTrueValue, nil
 }
 
+func (self *BasicRuntime) CommandSTOP(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	self.setMode(MODE_REPL)
+	return &self.staticTrueValue, nil
+}
+
 func (self *BasicRuntime) CommandDATA(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var curIdentifier *BasicASTLeaf = nil
 	var curAssignCommand BasicASTLeaf

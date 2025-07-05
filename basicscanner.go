@@ -191,7 +191,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 		// self.commands["SSHAPE"] =  COMMAND
 		// self.commands["STASH"] =  COMMAND
 		self.commands["STEP"] =  COMMAND
-		// self.commands["STOP"] =  COMMAND
+		self.commands["STOP"] =  COMMAND
 		// self.commands["SWAP"] =  COMMAND
 		// self.commands["SYS"] =  COMMAND
 		// self.commands["TEMPO"] =  COMMAND
