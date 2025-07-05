@@ -30,6 +30,11 @@ type BasicEnvironment struct {
 	
 	gosubReturnLine int64
 
+	// READ command variables
+	readReturnLine int64
+	readIdentifierLeaves [MAX_LEAVES]*BasicASTLeaf
+	readIdentifierIdx int64
+
 	// When this is set, no lines are executed until a COMMAND
 	// matching this string is found, then execution resumes.
 	// This prevents us from automatically executing things

@@ -50,6 +50,7 @@ The following commands/verbs are implemented:
 
 * `AUTO n` : Turn automatic line numbering on/off at increments of `n`
 * `REM` : everything after this is a comment
+* `DATA LITERAL[, ...]`: Define a series of literal values that can be read by a preceding `READ` verb
 * `DEF FN(X, ...) = expression` : Define a function with arguments that performs a given expression
 * `DELETE [n-n]`: Delete some portion of the lines in the current program
   * `DELETE`: Delete ALL lines in the program
@@ -82,6 +83,7 @@ The following commands/verbs are implemented:
 * `POKE ADDRESS, VALUE`: Poke the single byte VALUE (may be an integer literal or an integer variable - only the first 8 bits are used) into the ADDRESS (which may be an integer literal or an integer variable holding a memory address).
 * `PRINT (expression)`
 * `QUIT` : Exit the interpreter
+* `READ IDENTIFIER[, ...]` : Fill the named variables with data from a subsequent DATA statement
 * `RETURN` : return from `GOSUB` to the point where it was called
 * `RUN`: Run the program currently in memory
 

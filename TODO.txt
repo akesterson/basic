@@ -1,6 +1,5 @@
-Get file operations working
+Get file operations working (File IO)
 
-Get user input working
+Get user input working (reading variables from the user)
 
-Coerce all numeric types to floating point behind the scenes, makes my life easier, and this is how Commodore BASIC 7.0 worked
 

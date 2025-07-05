@@ -150,6 +150,73 @@ _basicparser_parsecommandfor_enverror:
 	return nil, err
 }
 
+func (self *BasicParser) ParseCommandREAD() (*BasicASTLeaf, error) {
+	// READ          VARNAME          [, ...]
+	// COMMAND       ARGUMENTLIST
+	var argumentList *BasicASTLeaf
+	var expr *BasicASTLeaf
+	var readCommand *BasicASTLeaf
+	var i int = 0
+	var err error
+
+	argumentList, err = self.argumentList(FUNCTION_ARGUMENT, false)
+	if ( err != nil ) {
+		return nil, err
+	}
+	if ( argumentList.right == nil ) {
+		return nil, errors.New("Expected identifier")
+	}
+	expr = argumentList.right
+	for i = 0; i < MAX_LEAVES ; i++ {
+		if ( expr != nil ) {
+			if ( expr.isIdentifier() == false ) {
+				return nil, errors.New("Expected identifier")
+			}
+			self.runtime.environment.readIdentifierLeaves[i] = expr.clone()
+			expr = expr.right
+		} else {
+			self.runtime.environment.readIdentifierLeaves[i] = nil
+		}
+	}
+	self.runtime.environment.readReturnLine = self.runtime.lineno + 1
+	readCommand, err = self.newLeaf()
+	if ( err != nil ) {
+		return nil, err
+	}
+	readCommand.newCommand("READ", argumentList)
+	return readCommand, nil
+}
+
+func (self *BasicParser) ParseCommandDATA() (*BasicASTLeaf, error) {
+	// DATA          LITERAL          [, ...]
+	// COMMAND       ARGUMENTLIST
+	var argumentList *BasicASTLeaf
+	var expr *BasicASTLeaf
+	var dataCommand *BasicASTLeaf
+	var err error
+
+	argumentList, err = self.argumentList(FUNCTION_ARGUMENT, false)
+	if ( err != nil ) {
+		return nil, err
+	}
+	if ( argumentList.right == nil ) {
+		return nil, errors.New("Expected literal")
+	}
+	expr = argumentList.right
+	for ( expr != nil ) {
+		if ( expr.isLiteral() == false ) {
+			return nil, errors.New("Expected literal")
+		}
+		expr = expr.right
+	}
+	dataCommand, err = self.newLeaf()
+	if ( err != nil ) {
+		return nil, err
+	}
+	dataCommand.newCommand("DATA", argumentList)
+	return dataCommand, nil
+}
+
 func (self *BasicParser) ParseCommandPOKE() (*BasicASTLeaf, error) {
 	var arglist *BasicASTLeaf = nil
 	var expr *BasicASTLeaf = nil

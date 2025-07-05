@@ -435,6 +435,46 @@ func (self *BasicRuntime) evaluateForCondition(rval *BasicValue) (bool, error) {
 	return truth.isTrue(), nil
 }
 
+func (self *BasicRuntime) CommandREAD(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	self.environment.waitForCommand("DATA")
+	self.environment.readIdentifierIdx = 0
+	return &self.staticTrueValue, nil
+}
+
+func (self *BasicRuntime) CommandDATA(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var curIdentifier *BasicASTLeaf = nil
+	var curAssignCommand BasicASTLeaf
+	var err error
+	if ( expr == nil || expr.right == nil ) {
+		return nil, errors.New("NIL expression or argument list")
+	}
+	expr = expr.right.right
+	for ( expr != nil ) {
+		curIdentifier = self.environment.readIdentifierLeaves[self.environment.readIdentifierIdx]
+		if ( curIdentifier == nil ) {
+			break
+		}
+		curAssignCommand.newBinary(curIdentifier, ASSIGNMENT, expr)
+		_, err = self.evaluate(&curAssignCommand)
+		if ( err != nil ) {
+			return nil, err
+		}
+		self.environment.readIdentifierIdx += 1
+		expr = expr.right
+	}
+	if ( expr == nil &&
+		self.environment.readIdentifierIdx < MAX_LEAVES &&
+		self.environment.readIdentifierLeaves[self.environment.readIdentifierIdx] != nil ) {
+		// We ran out of DATA and still have READ items left to fulfill, leave us in waitingFor mode
+		return &self.staticTrueValue, nil
+	}
+	// we fulfilled all our READ items, exit waitingFor mode
+	self.environment.stopWaiting("DATA")
+	self.lineno = self.environment.readReturnLine
+	self.environment.readIdentifierIdx = 0
+	return &self.staticTrueValue, nil
+}
+
 func (self *BasicRuntime) CommandFOR(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	// At this point the assignment has already been evaluated. We need to
 	// evaluate the STEP expression if there is one, and the TO

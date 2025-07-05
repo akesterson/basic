@@ -115,7 +115,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 		// self.commands["CONCAT"] =  COMMAND
 		// self.commands["CONT"] =  COMMAND
 		// self.commands["COPY"] =  COMMAND
-		// self.commands["DATA"] =  COMMAND
+		self.commands["DATA"] =  COMMAND
 		// self.commands["DCLEAR"] =  COMMAND
 		// self.commands["DCLOSE"] =  COMMAND
 		self.commands["DEF"] =  COMMAND
@@ -170,7 +170,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 		// self.commands["PRINTIO"] =  COMMAND
 		// self.commands["PUDEF"] =  COMMAND
 		self.commands["QUIT"] = COMMAND_IMMEDIATE
-		// self.commands["READ"] =  COMMAND
+		self.commands["READ"] =  COMMAND
 		// self.commands["RECORDIO"] =  COMMAND
 		// self.commands["RENAME"] =  COMMAND
 		// self.commands["RENUMBER"] =  COMMAND
