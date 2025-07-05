@@ -116,6 +116,99 @@ The following functions are implemented
 * `VAL(X$)`: Returns the float value of the number in X$
 * `XOR(X#, Y#)`: Performs a bitwise exclusive OR on the two integer arguments
 
+## What Isn't Implemented / Isn't Working
+
+* Multiple statements on one line (e.g. `10 PRINT A$ : REM This prints the thing`)
+* Using an array reference inside of a parameter list (e.g. `READ A$(0), B#`) results in parsing errors
+* `APPEND`
+* `BACKUP`
+* `BANK` - the modern PC memory layout is incompatible with the idea of bank switching
+* `BEGIN`
+* `BEND`
+* `BLOAD`
+* `BOOT`
+* `BOX`
+* `BSAVE`
+* `CALLFN`
+* `CATALOG`
+* `CHAR`
+* `CHARCIRCLE`
+* `CLOSE`
+* `CLR`
+* `CMD`
+* `COLLECT`
+* `COLLISION`
+* `COLOR`
+* `CONCAT`
+* `CONT`
+* `COPY`
+* `DCLEAR`
+* `DCLOSE`
+* `DIRECTORY`
+* `DO`, `LOOP`, `WHILE`, `UNTIL`. You can do the same thing with `IF` and `GOTO`.
+* `DOPEN`
+* `DRAW`
+* `DVERIFY`
+* `END`
+* `ENVELOPE`
+* `ER`
+* `ERR`
+* `FAST` - Irrelevant on modern PC CPUs
+* `FETCH`
+* `FILTER`
+* `GET`
+* `GETIO`
+* `GETKEY`
+* `GRAPHIC`
+* `GSHAPE`
+* `HEADER`
+* `HELP`
+* `INPUT`
+* `INPUTIO`
+* `KEY`
+* `LOAD`
+* `LOCATE`
+* `MONITOR`
+* `MOVSPR`
+* `NEW`
+* `ON`
+* `OPENIO`
+* `PAINT`
+* `PLAY`
+* `PRINTIO`
+* `PUDEF`
+* `RECORDIO`
+* `RENAME`
+* `RENUMBER`
+* `RESTORE`
+* `RESUME`
+* `SAVE`
+* `SCALE`
+* `SCNCLR`
+* `SCRATCH`
+* `SLEEP`
+* `SOUND`
+* `SPRCOLOR`
+* `SPRDEF`
+* `SPRITE`
+* `SPRSAV`
+* `SSHAPE`
+* `STASH`
+* `STOP`
+* `SWAP`
+* `SYS`
+* `TEMPO`
+* `TI`
+* `TRAP`
+* `TROFF`
+* `TRON`
+* `USING`
+* `VERIFY`
+* `VOL`
+* `WAIT`
+* `WIDTH`
+* `WINDOW`
+
 ## Dependencies
 
 This project uses the SDL2 library : https://pkg.go.dev/github.com/veandco/go-sdl2
