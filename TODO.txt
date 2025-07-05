@@ -1,5 +1,0 @@
-Get file operations working (File IO)
-
-Get user input working (reading variables from the user)
-
-
