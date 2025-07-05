@@ -148,7 +148,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 		// self.commands["HEADER"] =  COMMAND
 		// self.commands["HELP"] =  COMMAND
 		self.commands["IF"] =  COMMAND
-		// self.commands["INPUT"] =  COMMAND
+		self.commands["INPUT"] =  COMMAND
 		// self.commands["INPUTIO"] =  COMMAND
 		// self.commands["KEY"] =  COMMAND
 		// self.commands["ABS"] =  COMMAND

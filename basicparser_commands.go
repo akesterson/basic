@@ -277,3 +277,33 @@ func (self *BasicParser) ParseCommandIF() (*BasicASTLeaf, error) {
 	branch.newBranch(relation, then_command, else_command)
 	return branch, nil
 }
+
+func (self *BasicParser) ParseCommandINPUT() (*BasicASTLeaf, error) {
+	// INPUT             "PROMPT",    VARIABLE
+	// COMMAND           EXPRESSION   IDENTIFIER
+	var identifier *BasicASTLeaf = nil
+	var promptexpr *BasicASTLeaf = nil
+	var command *BasicASTLeaf = nil
+	var err error = nil
+
+	promptexpr, err = self.expression()
+	if ( err != nil ) {
+		return nil, err
+	}
+	identifier, err = self.primary()
+	if ( err != nil ) {
+		return nil, err
+	}
+	if ( identifier.isIdentifier() == false ) {
+		return nil, errors.New("Expected identifier")
+	}
+	command, err = self.newLeaf()
+	if ( err != nil ) {
+		return nil, err
+	}
+
+	command.newCommand("INPUT", identifier)
+	identifier.left = promptexpr
+	return command, nil
+	
+}

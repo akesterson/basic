@@ -75,6 +75,7 @@ The following commands/verbs are implemented:
 * `GOTO n`: Go to line n in the program
 * `GOSUB n`: Go to line n in the program and return here when `RETURN` is found
 * `IF (comparison) THEN (statement) [ELSE (statement)]` : Conditional branching
+* `INPUT "PROMPT STRING" VARIABLE`: Read input from the user and store it in the named variable
 * `LIST [n-n]`: List all or a portion of the lines in the current program
   * `LIST`: List all lines
   * `LIST n-n`: List lines between `n` and `n` (inclusive)
@@ -86,6 +87,7 @@ The following commands/verbs are implemented:
 * `READ IDENTIFIER[, ...]` : Fill the named variables with data from a subsequent DATA statement
 * `RETURN` : return from `GOSUB` to the point where it was called
 * `RUN`: Run the program currently in memory
+* `STOP`: Stop program execution at the current point
 
 ## Functions
 
@@ -163,7 +165,6 @@ The following functions are implemented
 * `GSHAPE`
 * `HEADER`
 * `HELP`
-* `INPUT`
 * `INPUTIO`
 * `KEY`
 * `LOAD`
@@ -194,7 +195,6 @@ The following functions are implemented
 * `SPRSAV`
 * `SSHAPE`
 * `STASH`
-* `STOP`
 * `SWAP`
 * `SYS`
 * `TEMPO`

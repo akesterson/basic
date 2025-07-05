@@ -137,10 +137,19 @@ func (self *BasicRuntime) scrollWindow(x int32, y int32) error {
 	return nil
 }
 
+func (self *BasicRuntime) Write(text string) {
+	fmt.Printf(text)
+	self.drawWrappedText(
+		(self.cursorX * int32(self.fontWidth)),
+		(self.cursorY * int32(self.fontHeight)),
+		text)
+}
+
 func (self *BasicRuntime) Println(text string) {
 	fmt.Println(text)
 	self.printBuffer += text + "\n"
 	self.cursorY += int32(strings.Count(text, "\n"))
+	self.cursorX = 0
 }
 
 func (self *BasicRuntime) drawPrintBuffer() error {

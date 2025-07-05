@@ -9,6 +9,7 @@ import (
 	"io"
 	"github.com/veandco/go-sdl2/sdl"
 	"bufio"
+	"strconv"
 )
 
 func (self *BasicRuntime) CommandDEF(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
@@ -347,6 +348,57 @@ func (self *BasicRuntime) CommandRUN(expr *BasicASTLeaf, lval *BasicValue, rval 
 	}
 	self.setMode(MODE_RUN)
 	//fmt.Printf("Set mode %d with nextline %d\n", self.mode, self.nextline)
+	return &self.staticTrueValue, nil
+}
+
+func (self *BasicRuntime) CommandINPUT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error 
+	var promptmsg *BasicValue = nil
+	var assignment *BasicASTLeaf = nil
+	var assignValue BasicASTLeaf
+
+	if ( expr == nil || expr.right == nil || expr.right.left == nil || expr.right.isIdentifier() == false ) {
+		return nil, errors.New("Expected INPUT \"PROMPT\" IDENTIFIER")
+	}
+	promptmsg, err = self.evaluate(expr.right.left)
+	if ( err != nil ) {
+		return nil, err
+	}
+	self.Write(promptmsg.stringval)
+	self.drawPrintBuffer()
+	// get the string from the user
+	for ( len(self.userline) == 0 ) {
+		self.sdlEvents()
+	}
+	
+	assignment, err = self.parser.newLeaf()
+	if ( err != nil ) {
+		return nil, err
+	}
+	switch (expr.right.leaftype) {
+	case LEAF_IDENTIFIER_STRING:
+		assignValue.leaftype = LEAF_LITERAL_STRING
+		assignValue.literal_string = self.userline
+		assignValue.operator = LITERAL_STRING
+	case LEAF_IDENTIFIER_INT:
+		assignValue.leaftype = LEAF_LITERAL_INT
+		var i int
+		i, err = strconv.Atoi(self.userline)
+		if ( err != nil ) {
+			return nil, err
+		}
+		assignValue.literal_int = int64(i)
+		assignValue.operator = LITERAL_INT
+	case LEAF_IDENTIFIER_FLOAT:
+		assignValue.leaftype = LEAF_LITERAL_FLOAT
+		assignValue.literal_float, err = strconv.ParseFloat(self.userline, 64)
+		if ( err != nil ) {
+			return nil, err
+		}
+		assignValue.operator = LITERAL_FLOAT
+	}
+	assignment.newBinary(expr.right, ASSIGNMENT, &assignValue)
+	self.evaluate(assignment)
 	return &self.staticTrueValue, nil
 }
 
