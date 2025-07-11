@@ -1,3 +1,4 @@
+VERSION:=0.2
 SRCFILES:=$(shell find . -type f -maxdepth 1 -name '*.go')
 DISTFILE:=basic.exe
 OS:=$(shell uname -o)
@@ -35,3 +36,4 @@ release/windows/$(DISTFILE): $(DISTFILE)
 	mkdir -p release/windows
 	cp $$(ldd $(DISTFILE) | cut -d '>' -f 2 | cut -d '(' -f 1 | grep -vi /windows/system) release/windows/
 	cp $(DISTFILE) release/windows/$(DISTFILE)
+	cd release/windows && zip basic-$(VERSION).zip basic.exe *dll
