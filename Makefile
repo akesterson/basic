@@ -1,4 +1,4 @@
-VERSION:=0.2
+VERSION:=$(shell ./gitversion.sh | grep '^VERSION=' | cut -d = -f 2-)
 SRCFILES:=$(shell find . -type f -maxdepth 1 -name '*.go')
 OS:=$(shell uname -o)
 ARCH:=$(shell uname -m)
@@ -51,5 +51,4 @@ release/windows/$(DISTFILE): $(DISTFILE)
 release/linux/$(DISTFILE): $(DISTFILE)
 	mkdir -p release/linux
 	cp $(DISTFILE) release/linux/$(DISTFILE)
-	cd release/linux
-	tar -czvf $(DISTFILE)-$(GO_OS)-$(GO_ARCH)-$(VERSION).tar.gz $(DISTFILE)
+	cd release/linux && tar -czvf $(DISTFILE)-$(GO_OS)-$(GO_ARCH)-$(VERSION).tar.gz $(DISTFILE)
