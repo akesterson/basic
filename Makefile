@@ -15,7 +15,7 @@ ifeq ($(OS),Msys)
 	BUILD=CGO_ENABLED=1 CC=gcc GOOS=$(GO_OS) GOARCH=$(GO_ARCH) "$(GO)" build -o basic$(EXE_EXT) $(SRCFILES)
 else
 	EXE_EXT:=
-ifeq ($(OS),darwin)
+ifeq ($(OS),Darwin)
 	GO_OS=darwin
 else
 	GO_OS:=linux
@@ -52,3 +52,9 @@ release/linux/$(DISTFILE): $(DISTFILE)
 	mkdir -p release/linux
 	cp $(DISTFILE) release/linux/$(DISTFILE)
 	cd release/linux && tar -czvf $(DISTFILE)-$(GO_OS)-$(GO_ARCH)-$(VERSION).tar.gz $(DISTFILE)
+
+release/darwin/$(DISTFILE):
+	mkdir -p release/darwin
+	cp $(DISTFILE) release/darwin/$(DISTFILE)
+	cd release/darwin && tar -czvf $(DISTFILE)-$(GO_OS)-$(GO_ARCH)-$(VERSION).tar.gz $(DISTFILE)
+
