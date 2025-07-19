@@ -81,7 +81,7 @@ func (self *BasicRuntime) CommandDLOAD(expr *BasicASTLeaf, lval *BasicValue, rva
 		sourceline.code = ""
 		sourceline.lineno = 0
 	}
-	self.lineno = 0
+	self.environment.lineno = 0
 	self.nextline = 0
 	// Not sure how it will work resetting the runtime's state
 	// from within this function....
@@ -167,7 +167,7 @@ func (self *BasicRuntime) CommandGOSUB(expr *BasicASTLeaf, lval *BasicValue, rva
 		return nil, errors.New("Expected integer")
 	}
 	self.newEnvironment()
-	self.environment.gosubReturnLine = self.lineno + 1
+	self.environment.gosubReturnLine = self.environment.lineno + 1
 	self.nextline = rval.intval
 	return &self.staticTrueValue, nil
 }
@@ -181,7 +181,7 @@ func (self *BasicRuntime) CommandLABEL(expr *BasicASTLeaf, lval *BasicValue, rva
 		expr.right.isIdentifier() == false ) {
 		return nil, errors.New("Expected LABEL IDENTIFIER")
 	}
-	err = self.environment.setLabel(expr.right.identifier, self.lineno)
+	err = self.environment.setLabel(expr.right.identifier, self.environment.lineno)
 	if ( err != nil ) {
 		return &self.staticFalseValue, err
 	}
@@ -229,12 +229,30 @@ func (self *BasicRuntime) CommandPOKE(expr *BasicASTLeaf, lval *BasicValue, rval
 
 
 func (self *BasicRuntime) CommandRETURN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error
+	if ( self.environment.isWaitingForCommand("RETURN") ) {
+		// we probably got here from a DEF line and should not execute, just return
+		self.environment.stopWaiting("RETURN")
+		return &self.staticTrueValue, nil
+	}
 	if ( self.environment.gosubReturnLine == 0 ) {
 		return nil, errors.New("RETURN outside the context of GOSUB")
 	}
+	//fmt.Printf("RETURN : %s\n", expr.toString())
+	if ( expr.right != nil ) {
+		rval, err = self.evaluate(expr.right)
+	} else {
+		rval = &self.staticTrueValue
+		err = nil
+	}
 	self.nextline = self.environment.gosubReturnLine
 	self.environment = self.environment.parent
-	return &self.staticTrueValue, nil
+	// if ( rval != nil ) {
+	// 	fmt.Printf("RETURNing %s\n", rval.toString())
+	// } else {
+	// 	fmt.Printf("RETURN got an expression but it evaluated to nil : %s\n", err)
+	// }
+	return rval, err
 }
 
 
@@ -543,7 +561,7 @@ func (self *BasicRuntime) CommandDATA(expr *BasicASTLeaf, lval *BasicValue, rval
 	}
 	// we fulfilled all our READ items, exit waitingFor mode
 	self.environment.stopWaiting("DATA")
-	self.lineno = self.environment.readReturnLine
+	self.environment.lineno = self.environment.readReturnLine
 	self.environment.readIdentifierIdx = 0
 	return &self.staticTrueValue, nil
 }
@@ -614,7 +632,7 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 		expr.right.leaftype != LEAF_IDENTIFIER_FLOAT ) {
 		return nil, errors.New("FOR ... NEXT only valid over INT and FLOAT types")
 	}
-	self.environment.loopExitLine = self.lineno + 1
+	self.environment.loopExitLine = self.environment.lineno + 1
 
 	//fmt.Println("Found NEXT %s, I'm waiting for NEXT %s\n", self.environment.forNextVariable.name, expr.right.identifier)
 	if ( strings.Compare(expr.right.identifier, self.environment.forNextVariable.name) != 0 ) {

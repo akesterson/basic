@@ -221,7 +221,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 
 func (self *BasicScanner) addToken(token BasicTokenType, lexeme string) {
 	self.runtime.parser.tokens[self.runtime.parser.nexttoken].tokentype = token
-	self.runtime.parser.tokens[self.runtime.parser.nexttoken].lineno = self.runtime.lineno
+	self.runtime.parser.tokens[self.runtime.parser.nexttoken].lineno = self.runtime.environment.lineno
 	self.runtime.parser.tokens[self.runtime.parser.nexttoken].lexeme = lexeme
 	
 	//fmt.Printf("%+v\n", self.runtime.parser.tokens[self.runtime.parser.nexttoken])
@@ -330,7 +330,7 @@ func (self *BasicScanner) matchNumber() {
 			self.runtime.basicError(PARSE, fmt.Sprintf("INTEGER CONVERSION ON '%s'", self.getLexeme()))
 			self.hasError = true
 		}
-		self.runtime.lineno = int64(lineno)
+		self.runtime.environment.lineno = int64(lineno)
 		self.tokentype = LINE_NUMBER
 	}
 }

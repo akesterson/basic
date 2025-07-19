@@ -29,25 +29,11 @@ type BasicSourceLine struct {
 }
 
 type BasicRuntime struct {
-	source [MAX_SOURCE_LINES]BasicSourceLine
-	lineno int64
-	
-	lineInProgress [MAX_LINE_LENGTH]rune
-	userlineIndex int
-	userline string
-
 	values [MAX_VALUES]BasicValue
-	variables [MAX_VARIABLES]BasicVariable
-	staticTrueValue BasicValue
-	staticFalseValue BasicValue
 	nextvalue int
 	nextvariable int
 	nextline int64
-	mode int
 	errno BasicError
-	run_finished_mode int
-	scanner BasicScanner
-	parser BasicParser
 	environment *BasicEnvironment
 	autoLineNumber int64
 	// The default behavior for evaluate() is to clone any value that comes from
@@ -56,6 +42,21 @@ type BasicRuntime struct {
 	// evaluating an identifier, do not want the cloned value, they want the raw
 	// source value. Those commands will temporarily set this to `false`.
 	eval_clone_identifiers bool
+
+
+	source [MAX_SOURCE_LINES]BasicSourceLine
+	mode int
+	run_finished_mode int
+
+	scanner BasicScanner
+	parser BasicParser
+	
+	staticTrueValue BasicValue
+	staticFalseValue BasicValue
+
+	lineInProgress [MAX_LINE_LENGTH]rune
+	userlineIndex int
+	userline string
 	window *sdl.Window
 	printSurface *sdl.Surface
 	cursorX int32
@@ -86,15 +87,16 @@ func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
 	var windowSurface *sdl.Surface = nil
 	
 	self.environment = nil
-	self.lineno = 0
-	self.nextline = 0
-	self.autoLineNumber = 0
 	self.staticTrueValue.basicBoolValue(true)
 	self.staticFalseValue.basicBoolValue(false)
 
+	self.newEnvironment()
 	self.parser.init(self)
 	self.scanner.init(self)
-	self.newEnvironment()
+
+	self.environment.lineno = 0
+	self.nextline = 0
+	self.autoLineNumber = 0
 
 	self.eval_clone_identifiers = true
 	self.window = window
@@ -121,6 +123,17 @@ func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
 	self.parser.zero()
 	self.scanner.zero()
 	self.initFunctions()
+}
+
+func (self *BasicRuntime) newValue() (*BasicValue, error) {
+       var value *BasicValue
+       if ( self.nextvalue < MAX_VALUES ) {
+               value = &self.values[self.nextvalue]
+               self.nextvalue += 1
+               value.runtime = self
+               return value, nil
+       }
+       return nil, errors.New("Maximum values per line reached")
 }
 
 func (self *BasicRuntime) newEnvironment() {
@@ -150,30 +163,7 @@ func (self *BasicRuntime) errorCodeToString(errno BasicError) string {
 
 func (self *BasicRuntime) basicError(errno BasicError, message string) {
 	self.errno = errno
-	self.Println(fmt.Sprintf("? %d : %s %s\n", self.lineno, self.errorCodeToString(errno), message))
-}
-
-func (self *BasicRuntime) newVariable() (*BasicVariable, error) {
-	var variable *BasicVariable
-	if ( self.nextvariable < MAX_VARIABLES ) {
-		variable = &self.variables[self.nextvariable]
-		self.nextvariable += 1
-		variable.runtime = self
-		return variable, nil
-	}
-	return nil, errors.New("Maximum runtime variables reached")
-}
-
-
-func (self *BasicRuntime) newValue() (*BasicValue, error) {
-	var value *BasicValue
-	if ( self.nextvalue < MAX_VALUES ) {
-		value = &self.values[self.nextvalue]
-		self.nextvalue += 1
-		value.runtime = self
-		return value, nil
-	}
-	return nil, errors.New("Maximum values per line reached")
+	self.Println(fmt.Sprintf("? %d : %s %s\n", self.environment.lineno, self.errorCodeToString(errno), message))
 }
 
 func (self *BasicRuntime) evaluateSome(expr *BasicASTLeaf, leaftypes ...BasicASTLeafType) (*BasicValue, error) {
@@ -384,9 +374,9 @@ func (self *BasicRuntime) userFunction(expr *BasicASTLeaf, lval *BasicValue, rva
 		self.environment = &fndef.environment
 		//self.environment.dumpVariables()
 		leafvalue, err = self.evaluate(fndef.expression)
-		self.environment = fndef.environment.parent
-		return leafvalue, err
+		self.environment = self.environment.parent
 		// return the result
+		return leafvalue, err
 	}
 }
 
@@ -452,12 +442,12 @@ func (self *BasicRuntime) interpretImmediate(expr *BasicASTLeaf) (*BasicValue, e
 
 func (self *BasicRuntime) findPreviousLineNumber() int64 {
 	var i int64
-	for i = self.lineno - 1; i > 0 ; i-- {
+	for i = self.environment.lineno - 1; i > 0 ; i-- {
 		if ( len(self.source[i].code) > 0 ) {
 			return i
 		}
 	}
-	return self.lineno
+	return self.environment.lineno
 }
 
 func (self *BasicRuntime) processLineRunStream(readbuff *bufio.Scanner) {
@@ -476,9 +466,9 @@ func (self *BasicRuntime) processLineRunStream(readbuff *bufio.Scanner) {
 		} else {
 			self.scanner.scanTokens(line)
 		}
-		self.source[self.lineno] = BasicSourceLine{
+		self.source[self.environment.lineno] = BasicSourceLine{
 			code:   line,
-			lineno: self.lineno}
+			lineno: self.environment.lineno}
 	} else {
 		//fmt.Printf("processLineRunStream exiting\n")
 		self.nextline = 0
@@ -491,11 +481,11 @@ func (self *BasicRuntime) processLineRepl(readbuff *bufio.Scanner) {
 	var value *BasicValue = nil
 	var err error = nil
 	if ( self.autoLineNumber > 0 ) {
-		fmt.Printf("%d ", (self.lineno + self.autoLineNumber))
+		fmt.Printf("%d ", (self.environment.lineno + self.autoLineNumber))
 	}
 	// get a new line from the keyboard
 	if ( len(self.userline) > 0 ) {
-		self.lineno += self.autoLineNumber
+		self.environment.lineno += self.autoLineNumber
 		self.userline = self.scanner.scanTokens(self.userline)
 		for ( !self.parser.isAtEnd() ) {
 			leaf, err = self.parser.parse()
@@ -508,12 +498,12 @@ func (self *BasicRuntime) processLineRepl(readbuff *bufio.Scanner) {
 			value, err = self.interpretImmediate(leaf)
 			if ( value == nil ) {
 				// Only store the line and increment the line number if we didn't run an immediate command
-				self.source[self.lineno] = BasicSourceLine{
+				self.source[self.environment.lineno] = BasicSourceLine{
 					code:   self.userline,
-					lineno: self.lineno}
+					lineno: self.environment.lineno}
 			} else if ( self.autoLineNumber > 0 ) {
-				self.lineno = self.findPreviousLineNumber()
-				//fmt.Printf("Reset line number to %d\n", self.lineno)
+				self.environment.lineno = self.findPreviousLineNumber()
+				//fmt.Printf("Reset line number to %d\n", self.environment.lineno)
 			}
 		}
 		//fmt.Printf("Leaving repl function in mode %d", self.mode)
@@ -530,7 +520,7 @@ func (self *BasicRuntime) processLineRun(readbuff *bufio.Scanner) {
 		return
 	}
 	line = self.source[self.nextline].code
-	self.lineno = self.nextline
+	self.environment.lineno = self.nextline
 	self.nextline += 1
 	if ( line == "" ) {
 		return

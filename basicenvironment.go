@@ -46,6 +46,8 @@ type BasicEnvironment struct {
 	
 	parent *BasicEnvironment
 	runtime *BasicRuntime
+
+	lineno int64
 }
 
 func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironment) {
@@ -57,6 +59,9 @@ func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironme
 	self.forNextVariable = nil
 	self.forStepLeaf = nil
 	self.forToLeaf = nil
+	if ( self.parent != nil ) {
+		self.lineno = self.parent.lineno
+	}
 }
 
 func (self *BasicEnvironment) waitForCommand(command string) {
