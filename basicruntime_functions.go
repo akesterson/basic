@@ -100,7 +100,7 @@ func (self *BasicRuntime) FunctionATN(expr *BasicASTLeaf, lval *BasicValue, rval
 		if ( err != nil ) {
 			return nil, err
 		}
-		tval, err = self.newValue()
+		tval, err = self.environment.newValue()
 		if ( tval == nil ) {
 			return nil, err
 		}
@@ -133,7 +133,7 @@ func (self *BasicRuntime) FunctionCHR(expr *BasicASTLeaf, lval *BasicValue, rval
 		if ( rval.valuetype != TYPE_INTEGER ) {
 			return nil, errors.New("CHR expected INTEGER")
 		}
-		tval, err = self.newValue()
+		tval, err = self.environment.newValue()
 		if ( tval == nil ) {
 			return nil, err
 		}
@@ -157,7 +157,7 @@ func (self *BasicRuntime) FunctionCOS(expr *BasicASTLeaf, lval *BasicValue, rval
 		if ( err != nil ) {
 			return nil, err
 		}
-		tval, err = self.newValue()
+		tval, err = self.environment.newValue()
 		if ( tval == nil ) {
 			return nil, err
 		}
@@ -190,7 +190,7 @@ func (self *BasicRuntime) FunctionHEX(expr *BasicASTLeaf, lval *BasicValue, rval
 		if ( rval.valuetype != TYPE_INTEGER ) {
 			return nil, errors.New("CHR expected INTEGER")
 		}
-		tval, err = self.newValue()
+		tval, err = self.environment.newValue()
 		if ( tval == nil ) {
 			return nil, err
 		}
@@ -232,7 +232,7 @@ func (self *BasicRuntime) FunctionINSTR(expr *BasicASTLeaf, lval *BasicValue, rv
 	if ( err != nil ) {
 		return nil, err
 	}
-	rval, err = self.newValue()
+	rval, err = self.environment.newValue()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -272,7 +272,7 @@ func (self *BasicRuntime) FunctionLEFT(expr *BasicASTLeaf, lval *BasicValue, rva
 	if ( err != nil ) {
 		return nil, err
 	}
-	rval, err = self.newValue()
+	rval, err = self.environment.newValue()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -304,7 +304,7 @@ func (self *BasicRuntime) FunctionLEN(expr *BasicASTLeaf, lval *BasicValue, rval
 		//fmt.Printf("%+v\n", expr.right);
 		return nil, errors.New("Expected identifier or string literal")
 	}
-	rval, err = self.newValue()
+	rval, err = self.environment.newValue()
 	if ( err != nil ) {
 		return nil, err
 	}	
@@ -396,14 +396,14 @@ func (self *BasicRuntime) FunctionMID(expr *BasicASTLeaf, lval *BasicValue, rval
 			return nil, err
 		}
 	} else {
-		length, err = self.newValue()
+		length, err = self.environment.newValue()
 		if ( err != nil ) {
 			return nil, err
 		}
 		length.intval = int64(len(strtarget.stringval))
 	}
 
-	rval, err = self.newValue()
+	rval, err = self.environment.newValue()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -432,7 +432,7 @@ func (self *BasicRuntime) FunctionPEEK(expr *BasicASTLeaf, lval *BasicValue, rva
 		if ( err != nil ) {
 			return nil, err
 		}
-		tval, err = self.newValue()
+		tval, err = self.environment.newValue()
 		if ( err != nil ) {
 			return nil, err
 		}
@@ -463,7 +463,7 @@ func (self *BasicRuntime) FunctionPOINTERVAR(expr *BasicASTLeaf, lval *BasicValu
 			return nil, errors.New("POINTERVAR expected IDENTIFIER")
 		}
 		tvar = self.environment.get(expr.identifier)
-		tval, err = self.newValue()
+		tval, err = self.environment.newValue()
 		if ( err != nil ) {
 			return nil, err
 		}
@@ -490,7 +490,7 @@ func (self *BasicRuntime) FunctionPOINTER(expr *BasicASTLeaf, lval *BasicValue, 
 		if ( err != nil ) {
 			return nil, err
 		}
-		tval, err = self.newValue()
+		tval, err = self.environment.newValue()
 		if ( err != nil ) {
 			return nil, err
 		}
@@ -523,7 +523,7 @@ func (self *BasicRuntime) FunctionRAD(expr *BasicASTLeaf, lval *BasicValue, rval
 		if ( err != nil ) {
 			return nil, err
 		}
-		tval, err = self.newValue()
+		tval, err = self.environment.newValue()
 		if ( tval == nil ) {
 			return nil, err
 		}
@@ -571,7 +571,7 @@ func (self *BasicRuntime) FunctionRIGHT(expr *BasicASTLeaf, lval *BasicValue, rv
 	if ( err != nil ) {
 		return nil, err
 	}
-	rval, err = self.newValue()
+	rval, err = self.environment.newValue()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -603,7 +603,7 @@ func (self *BasicRuntime) FunctionSGN(expr *BasicASTLeaf, lval *BasicValue, rval
 			rval.valuetype != TYPE_FLOAT ) {
 			return nil, errors.New("SGN expected INTEGER or FLOAT")
 		}
-		tval, err = self.newValue()
+		tval, err = self.environment.newValue()
 		if ( tval == nil ) {
 			return nil, err
 		}
@@ -692,7 +692,7 @@ func (self *BasicRuntime) FunctionSIN(expr *BasicASTLeaf, lval *BasicValue, rval
 		if ( err != nil ) {
 			return nil, err
 		}
-		tval, err = self.newValue()
+		tval, err = self.environment.newValue()
 		if ( tval == nil ) {
 			return nil, err
 		}
@@ -722,7 +722,7 @@ func (self *BasicRuntime) FunctionTAN(expr *BasicASTLeaf, lval *BasicValue, rval
 		if ( err != nil ) {
 			return nil, err
 		}
-		tval, err = self.newValue()
+		tval, err = self.environment.newValue()
 		if ( tval == nil ) {
 			return nil, err
 		}
@@ -757,7 +757,7 @@ func (self *BasicRuntime) FunctionVAL(expr *BasicASTLeaf, lval *BasicValue, rval
 		//fmt.Printf("%+v\n", expr.right);
 		return nil, errors.New("Expected identifier or string literal")
 	}
-	rval, err = self.newValue()
+	rval, err = self.environment.newValue()
 	if ( err != nil ) {
 		return nil, err
 	}	

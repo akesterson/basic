@@ -186,7 +186,7 @@ func (self *BasicParser) command() (*BasicASTLeaf, error) {
 			expr.newImmediateCommand(operator.lexeme, right)
 		} else {
 			expr.newCommand(operator.lexeme, right)
-			fmt.Printf("Command : %s->%s\n", expr.toString(), expr.right.toString())
+			//fmt.Printf("Command : %s->%s\n", expr.toString(), expr.right.toString())
 		}
 		return expr, nil
 	}

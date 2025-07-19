@@ -30,19 +30,15 @@ type BasicSourceLine struct {
 
 type BasicRuntime struct {
 	source [MAX_SOURCE_LINES]BasicSourceLine
-	lineno int64
 	
 	lineInProgress [MAX_LINE_LENGTH]rune
 	userlineIndex int
 	userline string
 
-	values [MAX_VALUES]BasicValue
 	variables [MAX_VARIABLES]BasicVariable
 	staticTrueValue BasicValue
 	staticFalseValue BasicValue
-	nextvalue int
 	nextvariable int
-	nextline int64
 	mode int
 	errno BasicError
 	run_finished_mode int
@@ -71,14 +67,12 @@ type BasicRuntime struct {
 }
 
 func (self *BasicRuntime) zero() {
-	for i, _ := range self.values {
-		self.values[i].init()
+	for i, _ := range self.environment.values {
+		self.environment.values[i].init()
 	}
+	self.environment.zero()
 	self.printBuffer = ""
-	self.errno = 0
-	self.nextvalue = 0
 	self.userline = ""
-	self.eval_clone_identifiers = true
 }
 
 func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
@@ -86,8 +80,6 @@ func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
 	var windowSurface *sdl.Surface = nil
 	
 	self.environment = nil
-	self.lineno = 0
-	self.nextline = 0
 	self.autoLineNumber = 0
 	self.staticTrueValue.basicBoolValue(true)
 	self.staticFalseValue.basicBoolValue(false)
@@ -150,7 +142,7 @@ func (self *BasicRuntime) errorCodeToString(errno BasicError) string {
 
 func (self *BasicRuntime) basicError(errno BasicError, message string) {
 	self.errno = errno
-	self.Println(fmt.Sprintf("? %d : %s %s\n", self.lineno, self.errorCodeToString(errno), message))
+	self.Println(fmt.Sprintf("? %d : %s %s\n", self.environment.lineno, self.errorCodeToString(errno), message))
 }
 
 func (self *BasicRuntime) newVariable() (*BasicVariable, error) {
@@ -164,17 +156,6 @@ func (self *BasicRuntime) newVariable() (*BasicVariable, error) {
 	return nil, errors.New("Maximum runtime variables reached")
 }
 
-
-func (self *BasicRuntime) newValue() (*BasicValue, error) {
-	var value *BasicValue
-	if ( self.nextvalue < MAX_VALUES ) {
-		value = &self.values[self.nextvalue]
-		self.nextvalue += 1
-		value.runtime = self
-		return value, nil
-	}
-	return nil, errors.New("Maximum values per line reached")
-}
 
 func (self *BasicRuntime) evaluateSome(expr *BasicASTLeaf, leaftypes ...BasicASTLeafType) (*BasicValue, error) {
 	if ( slices.Contains(leaftypes, expr.leaftype)) {
@@ -191,7 +172,7 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 	var err error = nil
 	var subscripts []int64
 
-	lval, err = self.newValue()
+	lval, err = self.environment.newValue()
 	if ( err != nil ) {
 		return nil, err
 	}
@@ -391,8 +372,8 @@ func (self *BasicRuntime) userFunction(expr *BasicASTLeaf, lval *BasicValue, rva
 		} else {
 			// behave like GOSUB after populating the environment with variables
 			//fmt.Printf("Environment prepped, GOSUB to %d\n", fndef.lineno)
-			self.environment.gosubReturnLine = self.lineno + 1
-			self.nextline = fndef.lineno
+			self.environment.gosubReturnLine = self.environment.lineno + 1
+			self.environment.nextline = fndef.lineno
 			return &self.staticTrueValue, nil
 		}
 	}
@@ -460,12 +441,12 @@ func (self *BasicRuntime) interpretImmediate(expr *BasicASTLeaf) (*BasicValue, e
 
 func (self *BasicRuntime) findPreviousLineNumber() int64 {
 	var i int64
-	for i = self.lineno - 1; i > 0 ; i-- {
+	for i = self.environment.lineno - 1; i > 0 ; i-- {
 		if ( len(self.source[i].code) > 0 ) {
 			return i
 		}
 	}
-	return self.lineno
+	return self.environment.lineno
 }
 
 func (self *BasicRuntime) processLineRunStream(readbuff *bufio.Scanner) {
@@ -484,12 +465,12 @@ func (self *BasicRuntime) processLineRunStream(readbuff *bufio.Scanner) {
 		} else {
 			self.scanner.scanTokens(line)
 		}
-		self.source[self.lineno] = BasicSourceLine{
+		self.source[self.environment.lineno] = BasicSourceLine{
 			code:   line,
-			lineno: self.lineno}
+			lineno: self.environment.lineno}
 	} else {
 		//fmt.Printf("processLineRunStream exiting\n")
-		self.nextline = 0
+		self.environment.nextline = 0
 		self.setMode(MODE_RUN)
 	}
 }
@@ -499,11 +480,11 @@ func (self *BasicRuntime) processLineRepl(readbuff *bufio.Scanner) {
 	var value *BasicValue = nil
 	var err error = nil
 	if ( self.autoLineNumber > 0 ) {
-		fmt.Printf("%d ", (self.lineno + self.autoLineNumber))
+		fmt.Printf("%d ", (self.environment.lineno + self.autoLineNumber))
 	}
 	// get a new line from the keyboard
 	if ( len(self.userline) > 0 ) {
-		self.lineno += self.autoLineNumber
+		self.environment.lineno += self.autoLineNumber
 		self.userline = self.scanner.scanTokens(self.userline)
 		for ( !self.parser.isAtEnd() ) {
 			leaf, err = self.parser.parse()
@@ -516,12 +497,12 @@ func (self *BasicRuntime) processLineRepl(readbuff *bufio.Scanner) {
 			value, err = self.interpretImmediate(leaf)
 			if ( value == nil ) {
 				// Only store the line and increment the line number if we didn't run an immediate command
-				self.source[self.lineno] = BasicSourceLine{
+				self.source[self.environment.lineno] = BasicSourceLine{
 					code:   self.userline,
-					lineno: self.lineno}
+					lineno: self.environment.lineno}
 			} else if ( self.autoLineNumber > 0 ) {
-				self.lineno = self.findPreviousLineNumber()
-				//fmt.Printf("Reset line number to %d\n", self.lineno)
+				self.environment.lineno = self.findPreviousLineNumber()
+				//fmt.Printf("Reset line number to %d\n", self.environment.lineno)
 			}
 		}
 		//fmt.Printf("Leaving repl function in mode %d", self.mode)
@@ -532,14 +513,14 @@ func (self *BasicRuntime) processLineRun(readbuff *bufio.Scanner) {
 	var line string
 	var leaf *BasicASTLeaf = nil
 	var err error = nil
-	//fmt.Printf("RUN line %d\n", self.nextline)
-	if ( self.nextline >= MAX_SOURCE_LINES ) {
+	//fmt.Printf("RUN line %d\n", self.environment.nextline)
+	if ( self.environment.nextline >= MAX_SOURCE_LINES ) {
 		self.setMode(self.run_finished_mode)
 		return
 	}
-	line = self.source[self.nextline].code
-	self.lineno = self.nextline
-	self.nextline += 1
+	line = self.source[self.environment.nextline].code
+	self.environment.lineno = self.environment.nextline
+	self.environment.nextline += 1
 	if ( line == "" ) {
 		return
 	}

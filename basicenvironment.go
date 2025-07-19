@@ -89,6 +89,17 @@ func (self *BasicEnvironment) zero() {
 	self.eval_clone_identifiers = true
 }
 
+func (self *BasicEnvironment) newValue() (*BasicValue, error) {
+       var value *BasicValue
+       if ( self.nextvalue < MAX_VALUES ) {
+               value = &self.values[self.nextvalue]
+               self.nextvalue += 1
+               value.runtime = self.runtime
+               return value, nil
+       }
+       return nil, errors.New("Maximum values per line reached")
+}
+
 func (self *BasicEnvironment) waitForCommand(command string) {
 	if ( len(self.waitingForCommand) != 0 ) {
 		panic("Can't wait on multiple commands in the same environment")

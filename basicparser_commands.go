@@ -103,7 +103,7 @@ func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
 	self.runtime.environment.functions[strings.ToUpper(identifier.identifier)] = &BasicFunctionDef{
 		arglist: arglist.clone(),
 		expression: expression,
-		lineno: self.runtime.lineno + 1,
+		lineno: self.runtime.environment.lineno + 1,
 		runtime: self.runtime,
 		name: strings.ToUpper(identifier.identifier)}
 	self.runtime.scanner.functions[strings.ToUpper(identifier.identifier)] = FUNCTION

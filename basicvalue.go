@@ -42,7 +42,7 @@ func (self *BasicValue) zero() {
 func (self *BasicValue) clone(dest *BasicValue) (*BasicValue, error) {
 	var err error
 	if ( dest == nil ) {
-		dest, err = self.runtime.newValue()
+		dest, err = self.runtime.environment.newValue()
 		if ( err != nil ) {
 			return nil, err
 		}
