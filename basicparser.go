@@ -28,12 +28,6 @@ func (self BasicToken) toString() string {
 
 type BasicParser struct {
 	runtime *BasicRuntime
-	tokens [MAX_TOKENS]BasicToken
-	errorToken *BasicToken
-	nexttoken int
-	curtoken int
-	leaves [MAX_TOKENS]BasicASTLeaf
-	nextleaf int
 	immediate_commands []string
 }
 
@@ -60,13 +54,13 @@ func (self *BasicParser) init(runtime *BasicRuntime) error {
 	if ( runtime == nil ) {
 		return errors.New("nil runtime argument")
 	}
-	self.zero()
 	self.runtime = runtime
+	self.zero()
 	return nil
 }
 
 func (self *BasicParser) dump() {
-	for idx, value := range(self.tokens) {
+	for idx, value := range(self.runtime.environment.tokens) {
 		fmt.Printf("token[%d] = %+v\n", idx, value)
 	}
 }
@@ -75,22 +69,22 @@ func (self *BasicParser) zero() {
 	if ( self == nil ) {
 		panic("nil self reference!")
 	}
-	for i, _ := range self.leaves {
-		self.leaves[i].init(LEAF_UNDEFINED)
+	for i, _ := range self.runtime.environment.leaves {
+		self.runtime.environment.leaves[i].init(LEAF_UNDEFINED)
 	}
-	for i, _ := range self.tokens {
-		self.tokens[i].init()
+	for i, _ := range self.runtime.environment.tokens {
+		self.runtime.environment.tokens[i].init()
 	}
-	self.curtoken = 0
-	self.nexttoken = 0
-	self.nextleaf = 0
+	self.runtime.environment.curtoken = 0
+	self.runtime.environment.nexttoken = 0
+	self.runtime.environment.nextleaf = 0
 }
 
 func (self *BasicParser) newLeaf() (*BasicASTLeaf, error) {
 	var leaf *BasicASTLeaf
-	if ( self.nextleaf < MAX_LEAVES ) {
-		leaf = &self.leaves[self.nextleaf]
-		self.nextleaf += 1
+	if ( self.runtime.environment.nextleaf < MAX_LEAVES ) {
+		leaf = &self.runtime.environment.leaves[self.runtime.environment.nextleaf]
+		self.runtime.environment.nextleaf += 1
 		return leaf, nil
 	} else {
 		return nil, errors.New("No more leaves available")
@@ -672,19 +666,19 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 		expr.newGrouping(groupexpr)
 		return expr, nil
 	}
-	//fmt.Printf("At curtoken %d\n", self.curtoken)
+	//fmt.Printf("At curtoken %d\n", self.runtime.environment.curtoken)
 	return nil, self.error("Expected expression or literal")
 }
 
 func (self *BasicParser) error(message string) error {
-	self.errorToken = self.peek()
-	if ( self.errorToken == nil ) {
+	self.runtime.environment.errorToken = self.peek()
+	if ( self.runtime.environment.errorToken == nil ) {
 		return errors.New("peek() returned nil token!")
 	}
-	if ( self.errorToken.tokentype == EOF ) {
-		return errors.New(fmt.Sprintf("%d at end %s", self.errorToken.lineno, message))
+	if ( self.runtime.environment.errorToken.tokentype == EOF ) {
+		return errors.New(fmt.Sprintf("%d at end %s", self.runtime.environment.errorToken.lineno, message))
 	} else {
-		return errors.New(fmt.Sprintf("%d at '%s', %s", self.errorToken.lineno, self.errorToken.lexeme, message))
+		return errors.New(fmt.Sprintf("%d at '%s', %s", self.runtime.environment.errorToken.lineno, self.runtime.environment.errorToken.lexeme, message))
 	}
 }
 
@@ -717,13 +711,13 @@ func (self *BasicParser) check(tokentype BasicTokenType) bool {
 
 func (self *BasicParser) advance() (*BasicToken, error) {
 	if ( !self.isAtEnd() ) {
-		self.curtoken += 1
+		self.runtime.environment.curtoken += 1
 	}
 	return self.previous()
 }
 
 func (self *BasicParser) isAtEnd() bool {
-	if (self.curtoken >= (MAX_TOKENS - 1) || self.curtoken >= self.nexttoken ) {
+	if (self.runtime.environment.curtoken >= (MAX_TOKENS - 1) || self.runtime.environment.curtoken >= self.runtime.environment.nexttoken ) {
 		return true
 	}
 	return false
@@ -733,14 +727,14 @@ func (self *BasicParser) peek() *BasicToken {
 	if ( self.isAtEnd() ) {
 		return nil
 	}
-	return &self.tokens[self.curtoken]
+	return &self.runtime.environment.tokens[self.runtime.environment.curtoken]
 }
 
 func (self *BasicParser) previous() (*BasicToken, error) {
-	if ( self.curtoken == 0 ) {
+	if ( self.runtime.environment.curtoken == 0 ) {
 		return  nil, errors.New("Current token is index 0, no previous token")
 	}
-	return &self.tokens[self.curtoken - 1], nil
+	return &self.runtime.environment.tokens[self.runtime.environment.curtoken - 1], nil
 }	
 
 

@@ -220,12 +220,12 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 }
 
 func (self *BasicScanner) addToken(token BasicTokenType, lexeme string) {
-	self.runtime.parser.tokens[self.runtime.parser.nexttoken].tokentype = token
-	self.runtime.parser.tokens[self.runtime.parser.nexttoken].lineno = self.runtime.environment.lineno
-	self.runtime.parser.tokens[self.runtime.parser.nexttoken].lexeme = lexeme
+	self.runtime.environment.tokens[self.runtime.environment.nexttoken].tokentype = token
+	self.runtime.environment.tokens[self.runtime.environment.nexttoken].lineno = self.runtime.environment.lineno
+	self.runtime.environment.tokens[self.runtime.environment.nexttoken].lexeme = lexeme
 	
-	//fmt.Printf("%+v\n", self.runtime.parser.tokens[self.runtime.parser.nexttoken])
-	self.runtime.parser.nexttoken += 1
+	//fmt.Printf("%+v\n", self.runtime.environment.tokens[self.runtime.environment.nexttoken])
+	self.runtime.environment.nexttoken += 1
 }
 
 func (self *BasicScanner) getLexeme() string {
@@ -304,7 +304,7 @@ func (self *BasicScanner) matchString() {
 }
 
 func (self *BasicScanner) matchNumber() {
-	var linenumber bool = (self.runtime.parser.nexttoken == 0)
+	var linenumber bool = (self.runtime.environment.nexttoken == 0)
 	self.tokentype = LITERAL_INT
 	for !self.isAtEnd() {
 		// Discard the error, we're checking isAtEnd()

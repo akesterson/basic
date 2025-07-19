@@ -245,8 +245,9 @@ func (self *BasicRuntime) CommandRETURN(expr *BasicASTLeaf, lval *BasicValue, rv
 		rval = &self.staticTrueValue
 		err = nil
 	}
-	self.environment.nextline = self.environment.gosubReturnLine
-	self.environment = self.environment.parent
+	self.environment.parent.nextline = self.environment.gosubReturnLine
+	rval.clone(&self.environment.returnValue)
+	self.prevEnvironment()
 	// if ( rval != nil ) {
 	// 	fmt.Printf("RETURNing %s\n", rval.toString())
 	// } else {

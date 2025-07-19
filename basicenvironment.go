@@ -47,6 +47,7 @@ type BasicEnvironment struct {
 	parent *BasicEnvironment
 	runtime *BasicRuntime
 
+	// runtime bits
 	lineno int64
 	values [MAX_VALUES]BasicValue
 	nextvalue int
@@ -58,6 +59,15 @@ type BasicEnvironment struct {
 	// evaluating an identifier, do not want the cloned value, they want the raw
 	// source value. Those commands will temporarily set this to `false`.
 	eval_clone_identifiers bool
+	returnValue BasicValue
+
+	// parser bits
+	tokens [MAX_TOKENS]BasicToken	
+	nexttoken int
+	curtoken int
+	leaves [MAX_TOKENS]BasicASTLeaf
+	nextleaf int
+	errorToken *BasicToken
 }
 
 func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironment) {
@@ -291,6 +301,6 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 		return nil, errors.New("Invalid assignment")		
 	}
 	variable.valuetype = rval.valuetype
-	//fmt.Printf("Assigned %+v\n", variable)
+	fmt.Printf("Assigned %+v\n", variable)
 	return tval, nil
 }

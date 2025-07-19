@@ -30,6 +30,7 @@ type BasicSourceLine struct {
 
 type BasicRuntime struct {
 	source [MAX_SOURCE_LINES]BasicSourceLine
+	readbuff *bufio.Scanner
 	
 	lineInProgress [MAX_LINE_LENGTH]rune
 	userlineIndex int
@@ -84,9 +85,9 @@ func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
 	self.staticTrueValue.basicBoolValue(true)
 	self.staticFalseValue.basicBoolValue(false)
 
+	self.newEnvironment()
 	self.parser.init(self)
 	self.scanner.init(self)
-	self.newEnvironment()
 
 	self.eval_clone_identifiers = true
 	self.window = window
@@ -178,7 +179,7 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 	}
 	lval.init()
 
-	//fmt.Printf("Evaluating leaf type %d\n", expr.leaftype)
+	fmt.Printf("Evaluating leaf type %d\n", expr.leaftype)
 	switch (expr.leaftype) {
 	case LEAF_GROUPING: return self.evaluate(expr.expr)
 	case LEAF_BRANCH:
@@ -264,17 +265,20 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 			return nil, errors.New(fmt.Sprintf("Don't know how to perform operation %d on unary type %d", expr.operator, rval.valuetype))
 		}
 	case LEAF_FUNCTION:
-		//fmt.Printf("Processing command %s\n", expr.identifier)
+		fmt.Printf("Processing command %s\n", expr.identifier)
 		lval, err = self.commandByReflection("Function", expr, lval, rval)
 		if ( err != nil ) {
 			return nil, err
 		} else if ( lval == nil ) {
 			lval, err = self.userFunction(expr, lval, rval)
 			if ( err != nil ) {
+				fmt.Printf("userFunction returned error\n")
 				return nil, err
 			} else if ( lval != nil ) {
+				fmt.Printf("userFunction returned lval %s\n", lval.toString())
 				return lval, nil
 			}
+			fmt.Printf("userFunction did not return err and did not return lval\n")
 			return nil, err
 		} else if ( lval != nil ) {
 			return lval, nil
@@ -290,16 +294,21 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		return lval, err
 		
 	case LEAF_BINARY:
+		fmt.Printf("Processing binary leaf\n")
 		lval, err = self.evaluate(expr.left)
 		if ( err != nil ) {
+			fmt.Printf("Binary leaf left expression returned error %s\n", err)
 			return nil, err
 		}
 		rval, err = self.evaluate(expr.right)
 		if ( err != nil ) {
+			fmt.Printf("Binary leaf right expression returned error %s\n", err)
 			return nil, err
 		}
+		fmt.Printf("PROCEEDING WITH BINARY %+v\n", expr)
 		switch (expr.operator) {
 		case ASSIGNMENT:
+			fmt.Printf("Processing assignment\n")
 			return self.environment.assign(expr.left, rval)
 		case MINUS:
 			return lval.mathMinus(rval)
@@ -338,6 +347,7 @@ func (self *BasicRuntime) userFunction(expr *BasicASTLeaf, lval *BasicValue, rva
 	var leafptr *BasicASTLeaf = nil
 	var argptr *BasicASTLeaf = nil
 	var leafvalue *BasicValue = nil
+	var targetenv *BasicEnvironment = self.environment
 	var err error = nil
 	
 	fndef = self.environment.getFunction(strings.ToUpper(expr.identifier))
@@ -370,11 +380,17 @@ func (self *BasicRuntime) userFunction(expr *BasicASTLeaf, lval *BasicValue, rva
 			// return the result
 			return leafvalue, err
 		} else {
-			// behave like GOSUB after populating the environment with variables
 			//fmt.Printf("Environment prepped, GOSUB to %d\n", fndef.lineno)
 			self.environment.gosubReturnLine = self.environment.lineno + 1
 			self.environment.nextline = fndef.lineno
-			return &self.staticTrueValue, nil
+
+			// pass control to the new environment and let it run until it terminates
+			for ( self.environment != targetenv && self.mode == MODE_RUN ) {
+				self.processLineRun(self.readbuff)
+			}
+			// collect the result from the child environment
+			fmt.Printf("Subroutine returning %s\n", fndef.environment.returnValue.toString())
+			return &fndef.environment.returnValue, nil
 		}
 	}
 }
@@ -418,7 +434,7 @@ func (self *BasicRuntime) interpret(expr *BasicASTLeaf) (*BasicValue, error) {
 			return &self.staticTrueValue, nil
 		}
 	}
-	//fmt.Printf("Interpreting %+v\n", expr)
+	fmt.Printf("Interpreting %+v\n", expr)
 	value, err = self.evaluate(expr)
 	if ( err != nil ) {
 		self.basicError(RUNTIME, err.Error())
@@ -530,7 +546,7 @@ func (self *BasicRuntime) processLineRun(readbuff *bufio.Scanner) {
 		leaf, err = self.parser.parse()
 		if ( err != nil ) {
 			self.basicError(PARSE, err.Error())
-			self.setMode(MODE_QUIT)
+			self.setMode(self.run_finished_mode)
 			return
 		}
 		_, _ = self.interpret(leaf)
@@ -660,9 +676,9 @@ func (self *BasicRuntime) runeForSDLScancode(keysym sdl.Keysym) rune {
 }
 
 func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
-	var readbuff = bufio.NewScanner(fileobj)
 	var err error
 
+	self.readbuff = bufio.NewScanner(fileobj)
 	self.setMode(mode)
 	if ( self.mode == MODE_REPL ) {
 		self.run_finished_mode = MODE_REPL
@@ -680,7 +696,7 @@ func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 		case MODE_QUIT:
 			return
 		case MODE_RUNSTREAM:
-			self.processLineRunStream(readbuff)
+			self.processLineRunStream(self.readbuff)
 		case MODE_REPL:
 			err = self.sdlEvents()
 			if ( err != nil ) {
@@ -690,9 +706,9 @@ func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 			if ( err != nil ) {
 				self.basicError(RUNTIME, err.Error())
 			}
-			self.processLineRepl(readbuff)
+			self.processLineRepl(self.readbuff)
 		case MODE_RUN:
-			self.processLineRun(readbuff)
+			self.processLineRun(self.readbuff)
 		}
 		if ( self.errno != 0 ) {
 			self.setMode(self.run_finished_mode)
