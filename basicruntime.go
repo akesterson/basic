@@ -29,8 +29,6 @@ type BasicSourceLine struct {
 }
 
 type BasicRuntime struct {
-	values [MAX_VALUES]BasicValue
-	nextvalue int
 	nextvariable int
 	nextline int64
 	errno BasicError
@@ -72,12 +70,9 @@ type BasicRuntime struct {
 }
 
 func (self *BasicRuntime) zero() {
-	for i, _ := range self.values {
-		self.values[i].init()
-	}
+	self.environment.zero()
 	self.printBuffer = ""
 	self.errno = 0
-	self.nextvalue = 0
 	self.userline = ""
 	self.eval_clone_identifiers = true
 }
@@ -127,9 +122,9 @@ func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
 
 func (self *BasicRuntime) newValue() (*BasicValue, error) {
        var value *BasicValue
-       if ( self.nextvalue < MAX_VALUES ) {
-               value = &self.values[self.nextvalue]
-               self.nextvalue += 1
+       if ( self.environment.nextvalue < MAX_VALUES ) {
+               value = &self.environment.values[self.environment.nextvalue]
+               self.environment.nextvalue += 1
                value.runtime = self
                return value, nil
        }

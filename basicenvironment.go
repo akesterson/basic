@@ -48,6 +48,8 @@ type BasicEnvironment struct {
 	runtime *BasicRuntime
 
 	lineno int64
+	values [MAX_VALUES]BasicValue
+	nextvalue int
 }
 
 func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironment) {
@@ -62,6 +64,13 @@ func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironme
 	if ( self.parent != nil ) {
 		self.lineno = self.parent.lineno
 	}
+}
+
+func (self *BasicEnvironment) zero() {
+	for i, _ := range self.values {
+		self.values[i].init()
+	}
+	self.nextvalue = 0
 }
 
 func (self *BasicEnvironment) waitForCommand(command string) {
