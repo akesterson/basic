@@ -159,7 +159,7 @@ func (self *BasicParser) ParseCommandFOR() (*BasicASTLeaf, error) {
 		self.runtime.environment.forStepLeaf, err = self.newLeaf()
 		self.runtime.environment.forStepLeaf.newLiteralInt("1")
 	}
-	self.runtime.environment.loopFirstLine = (self.runtime.lineno + 1)
+	self.runtime.environment.loopFirstLine = (self.runtime.environment.lineno + 1)
 	expr, err = self.newLeaf()
 	if ( err != nil ) {
 		goto _basicparser_parsecommandfor_enverror
@@ -204,7 +204,7 @@ func (self *BasicParser) ParseCommandREAD() (*BasicASTLeaf, error) {
 			self.runtime.environment.readIdentifierLeaves[i] = nil
 		}
 	}
-	self.runtime.environment.readReturnLine = self.runtime.lineno + 1
+	self.runtime.environment.readReturnLine = self.runtime.environment.lineno + 1
 	readCommand, err = self.newLeaf()
 	if ( err != nil ) {
 		return nil, err

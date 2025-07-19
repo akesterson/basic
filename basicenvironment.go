@@ -46,6 +46,18 @@ type BasicEnvironment struct {
 	
 	parent *BasicEnvironment
 	runtime *BasicRuntime
+
+	lineno int64
+	values [MAX_VALUES]BasicValue
+	nextvalue int
+	nextline int64
+	errno BasicError
+	// The default behavior for evaluate() is to clone any value that comes from
+	// an identifier. This allows expressions like `I# + 1` to return a new value
+	// without modifying I#. However some commands (like POINTER), when they are
+	// evaluating an identifier, do not want the cloned value, they want the raw
+	// source value. Those commands will temporarily set this to `false`.
+	eval_clone_identifiers bool
 }
 
 func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironment) {
@@ -57,6 +69,24 @@ func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironme
 	self.forNextVariable = nil
 	self.forStepLeaf = nil
 	self.forToLeaf = nil
+	if ( self.parent != nil ) {
+		self.lineno = self.parent.lineno
+		self.nextline = self.parent.nextline
+		self.eval_clone_identifiers = self.parent.eval_clone_identifiers
+	} else {
+		self.lineno = 0
+		self.nextline = 0
+		self.eval_clone_identifiers = true
+	}
+}
+
+func (self *BasicEnvironment) zero() {
+	for i, _ := range self.values {
+		self.values[i].init()
+	}
+	self.nextvalue = 0
+	self.errno = 0
+	self.eval_clone_identifiers = true
 }
 
 func (self *BasicEnvironment) waitForCommand(command string) {

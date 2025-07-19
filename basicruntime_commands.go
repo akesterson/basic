@@ -125,6 +125,22 @@ func (self *BasicRuntime) CommandDSAVE(expr *BasicASTLeaf, lval *BasicValue, rva
 	return &self.staticTrueValue, nil
 }
 
+func (self *BasicRuntime) CommandLABEL(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error
+	// LABEL IDENTIFIER
+	// expr.right should be an identifier
+	if ( expr == nil ||
+		expr.right == nil ||
+		expr.right.isIdentifier() == false ) {
+		return nil, errors.New("Expected LABEL IDENTIFIER")
+	}
+	err = self.environment.setLabel(expr.right.identifier, self.lineno)
+	if ( err != nil ) {
+		return &self.staticFalseValue, err
+	}
+	return &self.staticTrueValue, nil
+}
+
 func (self *BasicRuntime) CommandPRINT(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
 	if ( expr.right == nil ) {
@@ -169,22 +185,6 @@ func (self *BasicRuntime) CommandGOSUB(expr *BasicASTLeaf, lval *BasicValue, rva
 	self.newEnvironment()
 	self.environment.gosubReturnLine = self.lineno + 1
 	self.nextline = rval.intval
-	return &self.staticTrueValue, nil
-}
-
-func (self *BasicRuntime) CommandLABEL(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
-	var err error
-	// LABEL IDENTIFIER
-	// expr.right should be an identifier
-	if ( expr == nil ||
-		expr.right == nil ||
-		expr.right.isIdentifier() == false ) {
-		return nil, errors.New("Expected LABEL IDENTIFIER")
-	}
-	err = self.environment.setLabel(expr.right.identifier, self.lineno)
-	if ( err != nil ) {
-		return &self.staticFalseValue, err
-	}
 	return &self.staticTrueValue, nil
 }
 
@@ -673,3 +673,4 @@ func (self *BasicRuntime) CommandEXIT(expr *BasicASTLeaf, lval *BasicValue, rval
 	self.prevEnvironment()
 	return &self.staticTrueValue, nil
 }
+
