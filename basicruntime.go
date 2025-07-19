@@ -30,7 +30,6 @@ type BasicSourceLine struct {
 
 type BasicRuntime struct {
 	nextvariable int
-	errno BasicError
 	environment *BasicEnvironment
 	autoLineNumber int64
 	// The default behavior for evaluate() is to clone any value that comes from
@@ -71,7 +70,6 @@ type BasicRuntime struct {
 func (self *BasicRuntime) zero() {
 	self.environment.zero()
 	self.printBuffer = ""
-	self.errno = 0
 	self.userline = ""
 	self.eval_clone_identifiers = true
 }
@@ -156,7 +154,7 @@ func (self *BasicRuntime) errorCodeToString(errno BasicError) string {
 }
 
 func (self *BasicRuntime) basicError(errno BasicError, message string) {
-	self.errno = errno
+	self.environment.errno = errno
 	self.Println(fmt.Sprintf("? %d : %s %s\n", self.environment.lineno, self.errorCodeToString(errno), message))
 }
 
@@ -689,7 +687,7 @@ func (self *BasicRuntime) run(fileobj io.Reader, mode int) {
 		case MODE_RUN:
 			self.processLineRun(readbuff)
 		}
-		if ( self.errno != 0 ) {
+		if ( self.environment.errno != 0 ) {
 			self.setMode(self.run_finished_mode)
 		}
 		//fmt.Printf("Finishing in mode %d\n", self.mode)

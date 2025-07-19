@@ -51,6 +51,7 @@ type BasicEnvironment struct {
 	values [MAX_VALUES]BasicValue
 	nextvalue int
 	nextline int64
+	errno BasicError
 }
 
 func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironment) {
@@ -76,6 +77,7 @@ func (self *BasicEnvironment) zero() {
 		self.values[i].init()
 	}
 	self.nextvalue = 0
+	self.errno = 0
 }
 
 func (self *BasicEnvironment) waitForCommand(command string) {
