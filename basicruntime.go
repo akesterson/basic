@@ -383,10 +383,18 @@ func (self *BasicRuntime) userFunction(expr *BasicASTLeaf, lval *BasicValue, rva
 		//fmt.Printf(")\n")
 		self.environment = &fndef.environment
 		//self.environment.dumpVariables()
-		leafvalue, err = self.evaluate(fndef.expression)
-		self.environment = fndef.environment.parent
-		return leafvalue, err
-		// return the result
+		if ( fndef.expression != nil ) {
+			leafvalue, err = self.evaluate(fndef.expression)
+			self.environment = self.environment.parent
+			// return the result
+			return leafvalue, err
+		} else {
+			// behave like GOSUB after populating the environment with variables
+			//fmt.Printf("Environment prepped, GOSUB to %d\n", fndef.lineno)
+			self.environment.gosubReturnLine = self.lineno + 1
+			self.nextline = fndef.lineno
+			return &self.staticTrueValue, nil
+		}
 	}
 }
 

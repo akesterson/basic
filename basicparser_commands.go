@@ -51,8 +51,8 @@ func (self *BasicParser) ParseCommandDIM() (*BasicASTLeaf, error) {
 }
 
 func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
-	// DEF     NAME       (A, ...)        =           ....
-	// COMMAND IDENTIFIER ARGUMENTLIST    ASSIGNMENT  EXPRESSION
+	// DEF     NAME       (A, ...)        [=           ....]
+	// COMMAND IDENTIFIER ARGUMENTLIST    [ASSIGNMENT  EXPRESSION]
 	var identifier *BasicASTLeaf = nil
 	var arglist *BasicASTLeaf = nil
 	var expression *BasicASTLeaf = nil
@@ -87,6 +87,11 @@ func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
 		if ( err != nil ) {
 			return nil, err
 		}
+		expression = expression.clone()
+	} else {
+		// Instead of storing an expression we are storing a line number reference
+		expression = nil
+		self.runtime.environment.waitForCommand("RETURN")
 	}
 	command, err = self.newLeaf()
 	if ( err != nil ) {
@@ -97,7 +102,8 @@ func (self *BasicParser) ParseCommandDEF() (*BasicASTLeaf, error) {
 	// Inject the new function into the runtime and return
 	self.runtime.environment.functions[strings.ToUpper(identifier.identifier)] = &BasicFunctionDef{
 		arglist: arglist.clone(),
-		expression: expression.clone(),
+		expression: expression,
+		lineno: self.runtime.lineno + 1,
 		runtime: self.runtime,
 		name: strings.ToUpper(identifier.identifier)}
 	self.runtime.scanner.functions[strings.ToUpper(identifier.identifier)] = FUNCTION

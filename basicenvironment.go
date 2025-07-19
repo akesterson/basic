@@ -78,12 +78,15 @@ func (self *BasicEnvironment) isWaitingForAnyCommand() bool {
 }
 
 func (self *BasicEnvironment) isWaitingForCommand(command string) bool {
+	//fmt.Printf("Environment waiting for command %s? ", command)
 	if (strings.Compare(self.waitingForCommand, command) == 0) {
+		//fmt.Printf("YES\n")
 		return true
 	}
 	if ( self.parent != nil ) {
 		return self.parent.isWaitingForCommand(command)
 	}
+	//fmt.Printf("NO\n")
 	return false
 }
 

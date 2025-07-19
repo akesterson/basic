@@ -229,12 +229,30 @@ func (self *BasicRuntime) CommandPOKE(expr *BasicASTLeaf, lval *BasicValue, rval
 
 
 func (self *BasicRuntime) CommandRETURN(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error
+	if ( self.environment.isWaitingForCommand("RETURN") ) {
+		// we probably got here from a DEF line and should not execute, just return
+		self.environment.stopWaiting("RETURN")
+		return &self.staticTrueValue, nil
+	}
 	if ( self.environment.gosubReturnLine == 0 ) {
 		return nil, errors.New("RETURN outside the context of GOSUB")
 	}
+	fmt.Printf("RETURN : %s\n", expr.toString())
+	if ( expr.right != nil ) {
+		rval, err = self.evaluate(expr.right)
+	} else {
+		rval = &self.staticTrueValue
+		err = nil
+	}
 	self.nextline = self.environment.gosubReturnLine
 	self.environment = self.environment.parent
-	return &self.staticTrueValue, nil
+	if ( rval != nil ) {
+		fmt.Printf("RETURNing %s\n", rval.toString())
+	} else {
+		fmt.Printf("RETURN got an expression but it evaluated to nil : %s\n", err)
+	}
+	return rval, err
 }
 
 
