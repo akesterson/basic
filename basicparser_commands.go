@@ -10,6 +10,26 @@ func (self *BasicParser) ParseCommandLET() (*BasicASTLeaf, error) {
 	return self.assignment()
 }
 
+func (self *BasicParser) ParseCommandLABEL() (*BasicASTLeaf, error) {
+	var identifier *BasicASTLeaf = nil
+	var command *BasicASTLeaf = nil
+	var err error = nil
+	identifier, err = self.primary()
+	if ( err != nil ) {
+		return nil, err
+	}
+	if ( identifier.isIdentifier() == false ) {
+		return nil, errors.New("Expected identifier")
+	}
+	command, err = self.newLeaf()
+	if ( err != nil ) {
+		return nil, err
+	}
+
+	command.newCommand("LABEL", identifier)
+	return command, nil
+}
+
 func (self *BasicParser) ParseCommandDIM() (*BasicASTLeaf, error) {
 	var identifier *BasicASTLeaf = nil
 	var command *BasicASTLeaf = nil

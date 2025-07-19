@@ -253,6 +253,13 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		} else {
 			return lval.clone(nil)
 		}
+	case LEAF_IDENTIFIER:
+		// is it a label?
+		lval.valuetype = TYPE_INTEGER
+		lval.intval, err = self.environment.getLabel(expr.identifier)
+		if ( err != nil ) {
+			return nil, err
+		}
 	case LEAF_LITERAL_INT:
 		lval.valuetype = TYPE_INTEGER
 		lval.intval = expr.literal_int

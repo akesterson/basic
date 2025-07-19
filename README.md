@@ -76,6 +76,7 @@ The following commands/verbs are implemented:
 * `GOSUB n`: Go to line n in the program and return here when `RETURN` is found
 * `IF (comparison) THEN (statement) [ELSE (statement)]` : Conditional branching
 * `INPUT "PROMPT STRING" VARIABLE`: Read input from the user and store it in the named variable
+* `LABEL IDENTIFIER`: Place a label at the current line number. Labels are constant integer identifiers that can be used in expressions like variables (including GOTO) but which cannot be assigned to. Labels do not have a type suffix (`$`, `#` or `%`).
 * `LIST [n-n]`: List all or a portion of the lines in the current program
   * `LIST`: List all lines
   * `LIST n-n`: List lines between `n` and `n` (inclusive)

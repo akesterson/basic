@@ -9,6 +9,7 @@ import (
 type BasicEnvironment struct {
 	variables map[string]*BasicVariable
 	functions map[string]*BasicFunctionDef
+	labels map[string]int64
 	
 	// IF variables
 	ifThenLine int64
@@ -50,6 +51,7 @@ type BasicEnvironment struct {
 func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironment) {
 	self.variables = make(map[string]*BasicVariable)
 	self.functions = make(map[string]*BasicFunctionDef)
+	self.labels = make(map[string]int64)
 	self.parent = parent
 	self.runtime = runtime
 	self.forNextVariable = nil
@@ -104,6 +106,33 @@ func (self *BasicEnvironment) getFunction(fname string) *BasicFunctionDef {
 		return self.parent.getFunction(fname)
 	}
 	return nil
+}
+
+func (self *BasicEnvironment) getLabel(label string) (int64, error) {
+	var ok bool
+	var labelval int64
+	var err error
+	if labelval, ok = self.labels[label]; ok {
+		return labelval, nil
+	} else if ( self.parent != nil ) {
+		labelval, err = self.parent.getLabel(label)
+		if ( err != nil ) {
+			return 0, err			
+		}
+		return labelval, nil
+	}
+	return 0, fmt.Errorf("Unable to find or create label %s in environment", label)
+}
+
+func (self *BasicEnvironment) setLabel(label string, value int64) error {
+	// Only the toplevel environment creates labels
+	if ( self.runtime.environment == self ) {
+		self.labels[label] = value
+		return nil
+	} else if ( self.parent != nil ) {
+		return self.parent.setLabel(label, value)
+	}
+	return errors.New("Unable to create label in orphaned environment")	
 }
 
 func (self *BasicEnvironment) get(varname string) *BasicVariable {

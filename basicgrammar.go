@@ -30,6 +30,7 @@ const (
 	LEAF_FUNCTION // 17
 	LEAF_BRANCH // 18
 	LEAF_ARGUMENTLIST // 19
+	LEAF_IDENTIFIER_STRUCT // 20
 )
 
 type BasicASTLeaf struct {
@@ -284,6 +285,8 @@ func (self *BasicASTLeaf) toString() string {
 	case LEAF_IDENTIFIER_STRING: fallthrough
 	case LEAF_IDENTIFIER:
 		return fmt.Sprintf("%s", self.identifier)
+	case LEAF_IDENTIFIER_STRUCT:
+		return fmt.Sprintf("NOT IMPLEMENTED")
 	case LEAF_UNARY:
 		return fmt.Sprintf(
 			"(%s %s)",

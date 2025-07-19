@@ -53,7 +53,8 @@ const (
 	RIGHT_SQUAREBRACKET // 36
 	ARRAY_SUBSCRIPT // 37
 	FUNCTION_ARGUMENT // 38
-	
+	ATSYMBOL // 39
+	IDENTIFIER_STRUCT // 40
 )
 
 type BasicScanner struct {
@@ -152,6 +153,7 @@ func (self *BasicScanner) init(runtime *BasicRuntime) error {
 		// self.commands["INPUTIO"] =  COMMAND
 		// self.commands["KEY"] =  COMMAND
 		// self.commands["ABS"] =  COMMAND
+		self.commands["LABEL"]= COMMAND
 		self.commands["LET"] =  COMMAND
 		self.commands["LIST"] =  COMMAND_IMMEDIATE
 		// self.commands["LOAD"] =  COMMAND
@@ -343,6 +345,9 @@ func (self *BasicScanner) matchIdentifier() {
 			self.current += 1
 		} else {
 			switch (c) {
+			case '@':
+				self.tokentype = IDENTIFIER_STRUCT
+				self.current += 1
 			case '$':
 				self.tokentype = IDENTIFIER_STRING
 				self.current += 1
@@ -393,6 +398,7 @@ func (self *BasicScanner) scanTokens(line string) string {
 		// Discard the error, we're doing our own isAtEnd()
 		c, _ = self.advance()
 		switch (c) {
+		case '@': self.tokentype = ATSYMBOL
 		case '^': self.tokentype = CARAT
 		case '(': self.tokentype = LEFT_PAREN
 		case ')': self.tokentype = RIGHT_PAREN

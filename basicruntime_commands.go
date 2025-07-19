@@ -172,6 +172,22 @@ func (self *BasicRuntime) CommandGOSUB(expr *BasicASTLeaf, lval *BasicValue, rva
 	return &self.staticTrueValue, nil
 }
 
+func (self *BasicRuntime) CommandLABEL(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
+	var err error
+	// LABEL IDENTIFIER
+	// expr.right should be an identifier
+	if ( expr == nil ||
+		expr.right == nil ||
+		expr.right.isIdentifier() == false ) {
+		return nil, errors.New("Expected LABEL IDENTIFIER")
+	}
+	err = self.environment.setLabel(expr.right.identifier, self.lineno)
+	if ( err != nil ) {
+		return &self.staticFalseValue, err
+	}
+	return &self.staticTrueValue, nil
+}
+
 func (self *BasicRuntime) CommandPOKE(expr *BasicASTLeaf, lval *BasicValue, rval *BasicValue) (*BasicValue, error) {
 	var err error = nil
 	var addr uintptr
