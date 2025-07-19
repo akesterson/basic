@@ -1,0 +1,4 @@
+10 DEF ADDTWO(A#, B#)
+20 C# = A# + B#
+30 RETURN C#
+40 PRINT ADDTWO(3, 5)
