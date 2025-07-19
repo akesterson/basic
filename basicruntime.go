@@ -30,7 +30,6 @@ type BasicSourceLine struct {
 
 type BasicRuntime struct {
 	nextvariable int
-	nextline int64
 	errno BasicError
 	environment *BasicEnvironment
 	autoLineNumber int64
@@ -90,7 +89,7 @@ func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
 	self.scanner.init(self)
 
 	self.environment.lineno = 0
-	self.nextline = 0
+	self.environment.nextline = 0
 	self.autoLineNumber = 0
 
 	self.eval_clone_identifiers = true
@@ -466,7 +465,7 @@ func (self *BasicRuntime) processLineRunStream(readbuff *bufio.Scanner) {
 			lineno: self.environment.lineno}
 	} else {
 		//fmt.Printf("processLineRunStream exiting\n")
-		self.nextline = 0
+		self.environment.nextline = 0
 		self.setMode(MODE_RUN)
 	}
 }
@@ -509,14 +508,14 @@ func (self *BasicRuntime) processLineRun(readbuff *bufio.Scanner) {
 	var line string
 	var leaf *BasicASTLeaf = nil
 	var err error = nil
-	//fmt.Printf("RUN line %d\n", self.nextline)
-	if ( self.nextline >= MAX_SOURCE_LINES ) {
+	//fmt.Printf("RUN line %d\n", self.environment.nextline)
+	if ( self.environment.nextline >= MAX_SOURCE_LINES ) {
 		self.setMode(self.run_finished_mode)
 		return
 	}
-	line = self.source[self.nextline].code
-	self.environment.lineno = self.nextline
-	self.nextline += 1
+	line = self.source[self.environment.nextline].code
+	self.environment.lineno = self.environment.nextline
+	self.environment.nextline += 1
 	if ( line == "" ) {
 		return
 	}

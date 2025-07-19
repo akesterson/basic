@@ -82,7 +82,7 @@ func (self *BasicRuntime) CommandDLOAD(expr *BasicASTLeaf, lval *BasicValue, rva
 		sourceline.lineno = 0
 	}
 	self.environment.lineno = 0
-	self.nextline = 0
+	self.environment.nextline = 0
 	// Not sure how it will work resetting the runtime's state
 	// from within this function....
 	
@@ -91,7 +91,7 @@ func (self *BasicRuntime) CommandDLOAD(expr *BasicASTLeaf, lval *BasicValue, rva
 		self.parser.zero()
 		self.scanner.zero()
 		self.processLineRunStream(scanner)
-		if ( self.nextline == 0 && self.mode == MODE_RUN ) {
+		if ( self.environment.nextline == 0 && self.mode == MODE_RUN ) {
 			break
 		}
 	}
@@ -150,7 +150,7 @@ func (self *BasicRuntime) CommandGOTO(expr *BasicASTLeaf, lval *BasicValue, rval
 	if ( rval.valuetype != TYPE_INTEGER ) {
 		return nil, errors.New("Expected integer")
 	}
-	self.nextline = rval.intval
+	self.environment.nextline = rval.intval
 	return &self.staticTrueValue, nil
 }
 
@@ -168,7 +168,7 @@ func (self *BasicRuntime) CommandGOSUB(expr *BasicASTLeaf, lval *BasicValue, rva
 	}
 	self.newEnvironment()
 	self.environment.gosubReturnLine = self.environment.lineno + 1
-	self.nextline = rval.intval
+	self.environment.nextline = rval.intval
 	return &self.staticTrueValue, nil
 }
 
@@ -245,7 +245,7 @@ func (self *BasicRuntime) CommandRETURN(expr *BasicASTLeaf, lval *BasicValue, rv
 		rval = &self.staticTrueValue
 		err = nil
 	}
-	self.nextline = self.environment.gosubReturnLine
+	self.environment.nextline = self.environment.gosubReturnLine
 	self.environment = self.environment.parent
 	// if ( rval != nil ) {
 	// 	fmt.Printf("RETURNing %s\n", rval.toString())
@@ -369,7 +369,7 @@ func (self *BasicRuntime) CommandRUN(expr *BasicASTLeaf, lval *BasicValue, rval 
 	//fmt.Println("Processing RUN")
 	self.autoLineNumber = 0
 	if ( expr.right == nil ) {
-		self.nextline = 0
+		self.environment.nextline = 0
 	} else {
 		rval, err = self.evaluate(expr.right)
 		if ( err != nil ) {
@@ -378,10 +378,10 @@ func (self *BasicRuntime) CommandRUN(expr *BasicASTLeaf, lval *BasicValue, rval 
 		if ( rval.valuetype != TYPE_INTEGER ) {
 			return nil, errors.New("Expected integer")
 		}
-		self.nextline = rval.intval
+		self.environment.nextline = rval.intval
 	}
 	self.setMode(MODE_RUN)
-	//fmt.Printf("Set mode %d with nextline %d\n", self.mode, self.nextline)
+	//fmt.Printf("Set mode %d with nextline %d\n", self.mode, self.environment.nextline)
 	return &self.staticTrueValue, nil
 }
 
@@ -636,6 +636,7 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 
 	//fmt.Println("Found NEXT %s, I'm waiting for NEXT %s\n", self.environment.forNextVariable.name, expr.right.identifier)
 	if ( strings.Compare(expr.right.identifier, self.environment.forNextVariable.name) != 0 ) {
+		self.environment.parent.nextline = self.environment.nextline
 		self.prevEnvironment()
 		return &self.staticFalseValue, nil
 	}
@@ -649,6 +650,7 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 	if ( forConditionMet == true ) {
 		//fmt.Println("Exiting loop")
 		if ( self.environment.parent != nil ) {
+			self.environment.parent.nextline = self.environment.nextline
 			self.prevEnvironment()
 		}
 		return &self.staticTrueValue, nil
@@ -659,7 +661,7 @@ func (self *BasicRuntime) CommandNEXT(expr *BasicASTLeaf, lval *BasicValue, rval
 		return nil, err
 	}
 	//fmt.Println("Continuing loop")
-	self.nextline = self.environment.loopFirstLine
+	self.environment.nextline = self.environment.loopFirstLine
 	return &self.staticTrueValue, nil
 }
 
@@ -669,7 +671,7 @@ func (self *BasicRuntime) CommandEXIT(expr *BasicASTLeaf, lval *BasicValue, rval
 		return nil, errors.New("EXIT outside the context of FOR")
 	}
 
-	self.nextline = self.environment.loopExitLine
+	self.environment.nextline = self.environment.loopExitLine
 	self.prevEnvironment()
 	return &self.staticTrueValue, nil
 }

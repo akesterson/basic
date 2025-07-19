@@ -50,6 +50,7 @@ type BasicEnvironment struct {
 	lineno int64
 	values [MAX_VALUES]BasicValue
 	nextvalue int
+	nextline int64
 }
 
 func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironment) {
@@ -63,6 +64,10 @@ func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironme
 	self.forToLeaf = nil
 	if ( self.parent != nil ) {
 		self.lineno = self.parent.lineno
+		self.nextline = self.parent.nextline
+	} else {
+		self.lineno = 0
+		self.nextline = 0
 	}
 }
 
