@@ -32,13 +32,6 @@ type BasicRuntime struct {
 	nextvariable int
 	environment *BasicEnvironment
 	autoLineNumber int64
-	// The default behavior for evaluate() is to clone any value that comes from
-	// an identifier. This allows expressions like `I# + 1` to return a new value
-	// without modifying I#. However some commands (like POINTER), when they are
-	// evaluating an identifier, do not want the cloned value, they want the raw
-	// source value. Those commands will temporarily set this to `false`.
-	eval_clone_identifiers bool
-
 
 	source [MAX_SOURCE_LINES]BasicSourceLine
 	mode int
@@ -71,7 +64,6 @@ func (self *BasicRuntime) zero() {
 	self.environment.zero()
 	self.printBuffer = ""
 	self.userline = ""
-	self.eval_clone_identifiers = true
 }
 
 func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
@@ -90,7 +82,6 @@ func (self *BasicRuntime) init(window *sdl.Window, font *ttf.Font) {
 	self.environment.nextline = 0
 	self.autoLineNumber = 0
 
-	self.eval_clone_identifiers = true
 	self.window = window
 	self.font = font
 
@@ -230,7 +221,7 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 		if ( lval == nil ) {
 			return nil, fmt.Errorf("Identifier %s is undefined", expr.identifier)
 		}
-		if ( self.eval_clone_identifiers == false ) {
+		if ( self.environment.eval_clone_identifiers == false ) {
 			return lval, nil
 		} else {
 			return lval.clone(nil)
