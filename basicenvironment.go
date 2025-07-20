@@ -88,6 +88,7 @@ func (self *BasicEnvironment) init(runtime *BasicRuntime, parent *BasicEnvironme
 		self.nextline = 0
 		self.eval_clone_identifiers = true
 	}
+	self.zero_parser_variables()
 }
 
 func (self *BasicEnvironment) zero() {
@@ -97,6 +98,18 @@ func (self *BasicEnvironment) zero() {
 	self.nextvalue = 0
 	self.errno = 0
 	self.eval_clone_identifiers = true
+}
+
+func (self *BasicEnvironment) zero_parser_variables() {
+	for i, _ := range self.leaves {
+		self.leaves[i].init(LEAF_UNDEFINED)
+	}
+	for i, _ := range self.tokens {
+		self.tokens[i].init()
+	}
+	self.curtoken = 0
+	self.nexttoken = 0
+	self.nextleaf = 0
 }
 
 func (self *BasicEnvironment) newValue() (*BasicValue, error) {
@@ -301,6 +314,6 @@ func (self *BasicEnvironment) assign(lval *BasicASTLeaf , rval *BasicValue) (*Ba
 		return nil, errors.New("Invalid assignment")		
 	}
 	variable.valuetype = rval.valuetype
-	fmt.Printf("Assigned %+v\n", variable)
+	//fmt.Printf("Assigned %+v\n", variable)
 	return tval, nil
 }

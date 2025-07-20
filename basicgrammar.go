@@ -52,6 +52,7 @@ func (self *BasicASTLeaf) init(leaftype BasicASTLeafType) {
 	self.left = nil
 	self.right = nil
 	self.expr = nil
+	self.identifier = ""
 	self.literal_int = 0
 	self.literal_float = 0.0
 	self.literal_string = ""

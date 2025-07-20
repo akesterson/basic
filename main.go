@@ -11,13 +11,16 @@ import (
 )
 
 const (
+	// These values are per-environment. Leaves, tokens and values are static allocated.
 	MAX_LEAVES = 32
 	MAX_TOKENS = 32
 	MAX_VALUES = 64
+	MAX_VARIABLES = 128
+
+	// These values apply to the entire runtime
 	MAX_SOURCE_LINES = 9999
 	MAX_LINE_LENGTH = 256
 	MAX_ARRAY_DEPTH = 64
-	MAX_VARIABLES = 128
 	BASIC_TRUE = -1
 	BASIC_FALSE = 0
 	MODE_REPL = 1

@@ -6,6 +6,7 @@ import (
 	"slices"
 	"reflect"
 	"strings"
+	"runtime/debug"
 )
 
 type BasicToken struct {
@@ -69,15 +70,7 @@ func (self *BasicParser) zero() {
 	if ( self == nil ) {
 		panic("nil self reference!")
 	}
-	for i, _ := range self.runtime.environment.leaves {
-		self.runtime.environment.leaves[i].init(LEAF_UNDEFINED)
-	}
-	for i, _ := range self.runtime.environment.tokens {
-		self.runtime.environment.tokens[i].init()
-	}
-	self.runtime.environment.curtoken = 0
-	self.runtime.environment.nexttoken = 0
-	self.runtime.environment.nextleaf = 0
+	self.runtime.environment.zero_parser_variables()
 }
 
 func (self *BasicParser) newLeaf() (*BasicASTLeaf, error) {
@@ -105,7 +98,6 @@ func (self *BasicParser) parse() (*BasicASTLeaf, error) {
 
 func (self *BasicParser) statement() (*BasicASTLeaf, error) {
 	return self.command()
-	return nil, self.error(fmt.Sprintf("Expected command or expression"))
 }
 
 func (self *BasicParser) commandByReflection(root string, command string) (*BasicASTLeaf, error) {
@@ -122,6 +114,7 @@ func (self *BasicParser) commandByReflection(root string, command string) (*Basi
 	if ( reflector.IsNil() || reflector.Kind() != reflect.Ptr ) {
 		return nil, errors.New("Unable to reflect runtime structure to find command method")
 	}
+	//fmt.Printf("Reflecting command %s%s\n", root, command)
 	rmethod = reflector.MethodByName(fmt.Sprintf("%s%s", root, command))
 	if ( !rmethod.IsValid() ) {
 		// It's not an error to have no parser function, this just means our rval
@@ -667,10 +660,13 @@ func (self *BasicParser) primary() (*BasicASTLeaf, error) {
 		return expr, nil
 	}
 	//fmt.Printf("At curtoken %d\n", self.runtime.environment.curtoken)
+	debug.PrintStack()
 	return nil, self.error("Expected expression or literal")
 }
 
 func (self *BasicParser) error(message string) error {
+	//fmt.Printf("%s\n", message)
+	//fmt.Printf("%s\n", self.runtime.source[self.runtime.environment.lineno].code)
 	self.runtime.environment.errorToken = self.peek()
 	if ( self.runtime.environment.errorToken == nil ) {
 		return errors.New("peek() returned nil token!")

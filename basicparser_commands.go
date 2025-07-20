@@ -118,62 +118,57 @@ func (self *BasicParser) ParseCommandFOR() (*BasicASTLeaf, error) {
 	//    self.runtime.environment.forToLeaf with the TO expression
 	//    self.runtime.environment.loopFirstLine with the first line of the FOR code
 	// Return the FOR +assignment
-	
+
 	var assignment *BasicASTLeaf = nil
 	var operator *BasicToken = nil
+	var newenv *BasicEnvironment = new(BasicEnvironment)
 	var err error = nil
 	var expr *BasicASTLeaf = nil
 	
 	assignment, err = self.assignment()
 	if ( err != nil || !self.match(COMMAND) ) {
-		goto _basicparser_parsecommandfor_error
+		return nil, errors.New("Expected FOR (assignment) TO (expression) [STEP (expression)]")
 	}
 	operator, err = self.previous()
 	if ( err != nil || strings.Compare(operator.lexeme, "TO") != 0 ) {
-		goto _basicparser_parsecommandfor_error
+		return nil, errors.New("Expected FOR (assignment) TO (expression) [STEP (expression)]")
 	}
-	self.runtime.newEnvironment()
-	if ( strings.Compare(self.runtime.environment.parent.waitingForCommand, "NEXT") == 0 ) {
-		self.runtime.environment.forNextVariable = self.runtime.environment.parent.forNextVariable
+	newenv.init(self.runtime, self.runtime.environment)
+	if ( strings.Compare(newenv.parent.waitingForCommand, "NEXT") == 0 ) {
+		newenv.forNextVariable = newenv.parent.forNextVariable
 	}
 	if ( !assignment.left.isIdentifier() ) {
-		goto _basicparser_parsecommandfor_error
+		return nil, errors.New("Expected FOR (assignment) TO (expression) [STEP (expression)]")
 	}
 	//self.runtime.environment.forNextVariable = self.runtime.environment.get(assignment.left.identifier)
-	self.runtime.environment.forToLeaf, err = self.expression()
+	newenv.forToLeaf, err = self.expression()
 	if ( err != nil ) {
-		goto _basicparser_parsecommandfor_enverror
+		return nil, err
 	}
 	if ( self.match(COMMAND) ) {
 		operator, err = self.previous()
 		if ( err != nil || strings.Compare(operator.lexeme, "STEP") != 0) {
-			goto _basicparser_parsecommandfor_error
+			return nil, errors.New("Expected FOR (assignment) TO (expression) [STEP (expression)]")
 		}
-		self.runtime.environment.forStepLeaf, err = self.expression()
+		newenv.forStepLeaf, err = self.expression()
 		if ( err != nil ) {
-			goto _basicparser_parsecommandfor_enverror
+			return nil, err
 		}
 	} else {
 		// According to Dartmouth BASIC, we should not try to detect negative steps,
 		// it is either explicitly set or assumed to be +1
-		self.runtime.environment.forStepLeaf, err = self.newLeaf()
-		self.runtime.environment.forStepLeaf.newLiteralInt("1")
+		newenv.forStepLeaf, err = self.newLeaf()
+		newenv.forStepLeaf.newLiteralInt("1")
 	}
-	self.runtime.environment.loopFirstLine = (self.runtime.environment.lineno + 1)
+	newenv.loopFirstLine = (self.runtime.environment.lineno + 1)
 	expr, err = self.newLeaf()
 	if ( err != nil ) {
-		goto _basicparser_parsecommandfor_enverror
+		return nil, err
 	}
 	expr.newCommand("FOR", assignment)
 	//fmt.Println(expr.toString())
+	self.runtime.environment = newenv
 	return expr, nil
-	
-_basicparser_parsecommandfor_error:
-	self.runtime.prevEnvironment()
-	return nil, errors.New("Expected FOR (assignment) TO (expression) [STEP (expression)]")	
-_basicparser_parsecommandfor_enverror:
-	self.runtime.prevEnvironment()
-	return nil, err
 }
 
 func (self *BasicParser) ParseCommandREAD() (*BasicASTLeaf, error) {

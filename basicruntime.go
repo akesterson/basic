@@ -179,7 +179,7 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 	}
 	lval.init()
 
-	fmt.Printf("Evaluating leaf type %d\n", expr.leaftype)
+	//fmt.Printf("Evaluating leaf type %d\n", expr.leaftype)
 	switch (expr.leaftype) {
 	case LEAF_GROUPING: return self.evaluate(expr.expr)
 	case LEAF_BRANCH:
@@ -265,20 +265,20 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 			return nil, errors.New(fmt.Sprintf("Don't know how to perform operation %d on unary type %d", expr.operator, rval.valuetype))
 		}
 	case LEAF_FUNCTION:
-		fmt.Printf("Processing command %s\n", expr.identifier)
+		//fmt.Printf("Processing command %s\n", expr.identifier)
 		lval, err = self.commandByReflection("Function", expr, lval, rval)
 		if ( err != nil ) {
 			return nil, err
 		} else if ( lval == nil ) {
 			lval, err = self.userFunction(expr, lval, rval)
 			if ( err != nil ) {
-				fmt.Printf("userFunction returned error\n")
+				//fmt.Printf("userFunction returned error\n")
 				return nil, err
 			} else if ( lval != nil ) {
-				fmt.Printf("userFunction returned lval %s\n", lval.toString())
+				//fmt.Printf("userFunction returned lval %s\n", lval.toString())
 				return lval, nil
 			}
-			fmt.Printf("userFunction did not return err and did not return lval\n")
+			//fmt.Printf("userFunction did not return err and did not return lval\n")
 			return nil, err
 		} else if ( lval != nil ) {
 			return lval, nil
@@ -287,28 +287,31 @@ func (self *BasicRuntime) evaluate(expr *BasicASTLeaf, leaftypes ...BasicASTLeaf
 	case LEAF_COMMAND:
 		lval, err = self.commandByReflection("Command", expr, lval, rval)
 		if ( err != nil ) {
+			//fmt.Printf("self.commandByReflection returned error\n")
 			return nil, err
 		} else if ( lval == nil ) {
+			//fmt.Printf("self.commandByReflection returned no value\n")
 			return nil, fmt.Errorf("Unknown command %s", expr.identifier)
 		}
+		//fmt.Printf("self.commandByReflection returned lval=%s err=nil\n", lval.toString())
 		return lval, err
 		
 	case LEAF_BINARY:
-		fmt.Printf("Processing binary leaf\n")
+		//fmt.Printf("Processing binary leaf\n")
 		lval, err = self.evaluate(expr.left)
 		if ( err != nil ) {
-			fmt.Printf("Binary leaf left expression returned error %s\n", err)
+			//fmt.Printf("Binary leaf left expression returned error %s\n", err)
 			return nil, err
 		}
 		rval, err = self.evaluate(expr.right)
 		if ( err != nil ) {
-			fmt.Printf("Binary leaf right expression returned error %s\n", err)
+			//fmt.Printf("Binary leaf right expression returned error %s\n", err)
 			return nil, err
 		}
-		fmt.Printf("PROCEEDING WITH BINARY %+v\n", expr)
+		//fmt.Printf("PROCEEDING WITH BINARY %+v\n", expr)
 		switch (expr.operator) {
 		case ASSIGNMENT:
-			fmt.Printf("Processing assignment\n")
+			//fmt.Printf("Processing assignment\n")
 			return self.environment.assign(expr.left, rval)
 		case MINUS:
 			return lval.mathMinus(rval)
@@ -409,6 +412,7 @@ func (self *BasicRuntime) commandByReflection(rootKey string, expr *BasicASTLeaf
 	if ( reflector.IsNil() || reflector.Kind() != reflect.Ptr ) {
 		return nil, errors.New("Unable to reflect runtime structure to find command method")
 	}
+	//fmt.Printf("reflecting %s%s\n", rootKey, strings.ToUpper(expr.identifier))
 	rmethod = reflector.MethodByName(fmt.Sprintf("%s%s", rootKey, strings.ToUpper(expr.identifier)))
 	if ( !rmethod.IsValid() ) {
 		return nil, nil
@@ -434,7 +438,7 @@ func (self *BasicRuntime) interpret(expr *BasicASTLeaf) (*BasicValue, error) {
 			return &self.staticTrueValue, nil
 		}
 	}
-	fmt.Printf("Interpreting %+v\n", expr)
+	//fmt.Printf("Interpreting %d : %+v\n", self.environment.lineno, expr)
 	value, err = self.evaluate(expr)
 	if ( err != nil ) {
 		self.basicError(RUNTIME, err.Error())
