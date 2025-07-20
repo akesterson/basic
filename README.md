@@ -51,7 +51,7 @@ The following commands/verbs are implemented:
 * `AUTO n` : Turn automatic line numbering on/off at increments of `n`
 * `REM` : everything after this is a comment
 * `DATA LITERAL[, ...]`: Define a series of literal values that can be read by a preceding `READ` verb
-* `DEF FN(X, ...) = expression` : Define a function with arguments that performs a given expression
+* `DEF FN(X, ...) = expression` : Define a function with arguments that performs a given expression. See also "Subroutines", below.
 * `DELETE [n-n]`: Delete some portion of the lines in the current program
   * `DELETE`: Delete ALL lines in the program
   * `DELETE n-n`: List lines between `n` and `n` (inclusive)
@@ -118,6 +118,20 @@ The following functions are implemented
 * `TAN(X#|X%)`: Returns the tangent of the float or integer variable X. Input and output are in radians.
 * `VAL(X$)`: Returns the float value of the number in X$
 * `XOR(X#, Y#)`: Performs a bitwise exclusive OR on the two integer arguments
+
+## Subroutines
+
+In addition to `DEF`, `GOTO` and `GOSUB`, this BASIC also implements subroutines that accept arguments, return a value, and can be called as functions. Example
+
+```
+10 DEF ADDTWO(A#, B#)
+20 C# = A# + B#
+30 RETURN C#
+40 D# = ADDTWO(3, 5)
+50 PRINT D#
+```
+
+Subroutines must be defined before they are called. Subroutines share the global variable scope withe rest of the program. (This will likely change in the near future.)
 
 ## What Isn't Implemented / Isn't Working
 

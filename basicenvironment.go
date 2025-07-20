@@ -125,9 +125,9 @@ func (self *BasicEnvironment) newValue() (*BasicValue, error) {
 
 func (self *BasicEnvironment) waitForCommand(command string) {
 	if ( len(self.waitingForCommand) != 0 ) {
-		panic("Can't wait on multiple commands in the same environment")
+		panic(fmt.Sprintf("Can't wait on multiple commands in the same environment : %s", self.waitingForCommand))
 	}
-	//fmt.Printf("Environment will wait for command %s\n", command)
+	//fmt.Printf("Environment %p will wait for command %s\n", self, command)
 	self.waitingForCommand = command
 }
 
@@ -155,7 +155,7 @@ func (self *BasicEnvironment) isWaitingForCommand(command string) bool {
 }
 
 func (self *BasicEnvironment) stopWaiting(command string) {
-	//fmt.Printf("Environment stopped waiting for command %s\n", command)
+	//fmt.Printf("Environment %p stopped waiting for command %s\n", self, command)
 	self.waitingForCommand = ""
 }
 

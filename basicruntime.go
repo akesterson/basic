@@ -392,7 +392,7 @@ func (self *BasicRuntime) userFunction(expr *BasicASTLeaf, lval *BasicValue, rva
 				self.processLineRun(self.readbuff)
 			}
 			// collect the result from the child environment
-			fmt.Printf("Subroutine returning %s\n", fndef.environment.returnValue.toString())
+			//fmt.Printf("Subroutine returning %s\n", fndef.environment.returnValue.toString())
 			return &fndef.environment.returnValue, nil
 		}
 	}
