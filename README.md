@@ -1,13 +1,13 @@
 This BASIC is styled after [Commodore BASIC 7.0](http://www.jbrain.com/pub/cbm/manuals/128/C128PRG.pdf) and the [Dartmouth BASIC from 1964](https://www.dartmouth.edu/basicfifty/basic.html). The scanner, parser and runtime were initially built with the instructions for the Java implementation of Lox in [https://craftinginterpreters.com](https://craftinginterpreters.com), but I got impatient and struck off on my own pretty much as soon as I got commands working.
 
 ```
-make basic.exe
+make
 
 # To use the interactive REPL
-./basic.exe
+./basic
 
 # To run a basic file from the command line
-./basic ./scripts/functions.bas
+./basic ./tests/language/functions.bas
 ```
 
 # What Works?
